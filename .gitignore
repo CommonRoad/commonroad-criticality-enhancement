@@ -1,0 +1,6 @@
+.idea
+__pycache__
+site
+*.pyc
+public
+.coverage

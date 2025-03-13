@@ -1,13 +1,79 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/pipeline/#customization
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+image: python:3.9
+
 stages:
-- test
-sast:
+  - linting
+  - test
+  - deploy
+
+before_script:
+  - pip install poetry
+  - poetry config virtualenvs.in-project true
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
+  # if job is triggered by a schedule, run poetry update to update dependencies
+  - if [ "$CI_PIPELINE_SOURCE" == "schedule" ]; then poetry update; fi
+  - poetry install --with tests
+  - source .venv/bin/activate
+
+.run_test_with_coverage: &run_test_with_coverage
+  - coverage run tests/test_basic.py
+  - coverage report -m || true
+
+## linting
+pre_commit:
+  stage: linting
+  before_script:
+    - pip install pre-commit
+  script:
+    - pre-commit run --all-files --show-diff-on-failure
+
+## test
+test_python_versions:
   stage: test
-include:
-- template: Security/SAST.gitlab-ci.yml
+  image: python:$PYTHON_VERSIONS
+  parallel:
+    matrix:
+      - PYTHON_VERSIONS: [ "3.9", "3.10", "3.11" ]
+  script:
+    - *run_test_with_coverage
+
+test_latest_python_version_with_coverage:
+  stage: test
+  image: python:3.12
+  script:
+    - *run_test_with_coverage
+    - coverage xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+## deploy
+pages:
+  # push the latest documentation of the main branch to the Gitlab pages.
+  # available at https://cps.pages.gitlab.lrz.de/commonroad/commonroad-template
+  stage: deploy
+  # when: manual
+  only:
+    - dev
+  publish: site
+  script:
+    - poetry install --with docs
+    - mkdocs build
+  artifacts:
+    paths:
+      - site
+  environment:
+    name: Gitlab Pages
+    url: https://cps.pages.gitlab.lrz.de/commonroad/commonroad-template
+
+build_and_push_to_pypi_test:
+  stage: deploy
+  when: manual
+  only:
+    - main
+  script:
+    - poetry config repositories.test https://test.pypi.org/legacy/  # skip for official pypi
+    - poetry build
+    - poetry publish --repository test -u __token__ -p ${CR_PYPI_TEST_API_TOKEN}  # use ${CR_PYPI_RELEASE_API_TOKEN} for official pypi
