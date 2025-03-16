@@ -2,16 +2,18 @@
 FROM python:3.10 AS build
 
 RUN pip install poetry
+RUN poetry self add poetry-plugin-export
 WORKDIR /app
 
 COPY crtemplate /app/crtemplate
 COPY pyproject.toml /app/
+COPY poetry.lock /app/
 COPY README.md /app/
 
 RUN poetry export -o requirements.txt --without-hashes
 RUN poetry build -f wheel
 
-# FROM python:3.10-slim AS app
+FROM python:3.10-slim AS app
 
 # RUN apt-get update && apt-get install -y gcc cmake
 
