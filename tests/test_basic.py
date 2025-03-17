@@ -1,16 +1,19 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'crtemplate')))
 import pathlib
 import unittest
 
 from commonroad.common.file_reader import CommonRoadFileReader
 
-import crtemplate
-from crtemplate.main import TemplateClass
+from main import TemplateClass
 
 
 class TemplateClassTest(unittest.TestCase):
     def setUp(self):
         scenario, _ = CommonRoadFileReader(
-            pathlib.Path(crtemplate.__file__).parent.joinpath(
+            pathlib.Path(__file__).parent.joinpath(
                 "./../scenarios/ZAM_Tjunction-1_307_T-1.xml"
             )
         ).open()
