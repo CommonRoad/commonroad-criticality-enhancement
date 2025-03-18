@@ -21,4 +21,4 @@ class TemplateClassTest(unittest.TestCase):
 
     def test_number_of_lanelets(self):
         self.assertEqual(self.object.return_number_of_lanelets(), 12)
-        print("hello world")
+        print("hello world!!")
