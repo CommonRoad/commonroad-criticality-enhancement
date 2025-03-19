@@ -57,10 +57,6 @@ pages:
   # push the latest documentation of the main branch to the Gitlab pages.
   # available at https://cps.pages.gitlab.lrz.de/commonroad/commonroad-template
   stage: deploy
-  # when: manual
-  workflow:
-  rules:
-    - if: '$CI_COMMIT_BRANCH'
   publish: site
   script:
     - poetry install --with docs
