@@ -10,7 +10,7 @@ dynamic = ["dependencies"]
 
 [tool.poetry.dependencies]
 python = ">=3.9, <4"
-commonroad-io = { git = "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/cps/commonroad/commonroad-io.git", branch = "develop" }
+commonroad-io = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-io.git", branch = "develop" }
 
 [tool.poetry.group.tests]
 optional = true
