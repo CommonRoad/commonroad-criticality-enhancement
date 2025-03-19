@@ -26,4 +26,3 @@ RUN pip install /app/${WHEEL_NAME} && rm /app/${WHEEL_NAME}
 
 ENTRYPOINT ["python", "/app/crtemplate/main.py"]
 CMD ["--help"]
-

@@ -1,16 +1,15 @@
-import sys
 import os
+import sys
 
 # Add the parent directory (my_project) to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'crtemplate')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "crtemplate")))
 
 import pathlib
 
 from commonroad.common.file_reader import CommonRoadFileReader
 
-#import crtemplate
-#from crtemplate.main import TemplateClass
-
+# import crtemplate
+# from crtemplate.main import TemplateClass
 from main import TemplateClass
 
 scenario, planning_problem = CommonRoadFileReader(
