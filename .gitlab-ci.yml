@@ -12,6 +12,7 @@ before_script:
   - pip install poetry
   - poetry config virtualenvs.in-project true
   - git config --global url."https://oauth2:glpat-HfTXpVpUXzioU9h8aMcw@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
+  - poetry config http-basic.gitlab-ci-token ge87fir glpat-HfTXpVpUXzioU9h8aMcw@gitlab.lrz.de
   # if job is triggered by a schedule, run poetry update to update dependencies
   - if [ "$CI_PIPELINE_SOURCE" == "schedule" ]; then poetry update; fi
   - poetry install --with tests
