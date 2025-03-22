@@ -10,6 +10,7 @@ from main import TemplateClass
 
 print("hello world")
 
+
 class TemplateClassTest(unittest.TestCase):
     def setUp(self):
         scenario, _ = CommonRoadFileReader(
