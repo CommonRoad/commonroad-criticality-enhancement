@@ -8,6 +8,7 @@ import unittest
 from commonroad.common.file_reader import CommonRoadFileReader
 from main import TemplateClass
 
+print("hello world")
 
 class TemplateClassTest(unittest.TestCase):
     def setUp(self):
@@ -18,4 +19,3 @@ class TemplateClassTest(unittest.TestCase):
 
     def test_number_of_lanelets(self):
         self.assertEqual(self.object.return_number_of_lanelets(), 12)
-        print("hello world")
