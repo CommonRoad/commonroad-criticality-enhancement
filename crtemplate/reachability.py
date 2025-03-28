@@ -59,9 +59,15 @@ def compute_full_drivable_area(reach_interface):
     return drivable_area
 
 
-# Computes the derivative of the reachable set area with respect to ego vehicle velocity using the h-method.
-def differentiate_reachable_set_wrt_velocity(reach_interface, vehicle, h=1e-3):
+# Computes the derivative of the reachable set area with respect to vehicle velocity using the h-method
+# TODO adjust new positions
+def differentiate_reachable_set_wrt_velocity(reach_interface, vehicle):
     original_velocity = vehicle.velocity
+    h = original_velocity / 50
+
+    derivative = np.array(
+        [-1.0 for i in range(reach_interface.step_start, reach_interface.step_end + 1)]
+    )
 
     # Compute reachable area fororiginal velocity
     reach_interface.compute_reachable_sets()
@@ -73,32 +79,43 @@ def differentiate_reachable_set_wrt_velocity(reach_interface, vehicle, h=1e-3):
     area_changed_velocity = compute_full_drivable_area(reach_interface)
 
     # Derivative using h method
-    derivative = (area_changed_velocity - area_original) / h
+    for time_step in range(reach_interface.step_start, reach_interface.step_end + 1):
+        derivative[time_step] = (area_changed_velocity[time_step] - area_original[time_step]) / h
 
     vehicle.velocity = original_velocity
 
     return derivative
 
 
-# TODO adjust the h_y if necessary: one function for x and y or two separate
+# TODO adjust the h_y if necessary: one function for x and y or two separate, ego vehicle position?
 
 
-def differentiate_reachable_set_wrt_position(reach_interface, vehicle, h_x=0.001):
-    original_position = vehicle.x
+def differentiate_reachable_set_wrt_position(reach_interface, vehicle, scenario_max_time):
+    original_position = vehicle.position
+
+    delta_x = int(np.ceil(scenario_max_time / 10))
+    delta_x = max(delta_x, 1)
+
+    derivative = np.array(
+        [-1.0 for i in range(reach_interface.step_start, reach_interface.step_end + 1)]
+    )
 
     # Compute reachable area fororiginal velocity
     reach_interface.compute_reachable_sets()
     area_original = compute_full_drivable_area(reach_interface)
 
     # Slightly increase velocity
-    vehicle.x += h_x
+    vehicle.position = (vehicle.position[0] + delta_x, vehicle.position[1])
     reach_interface.compute_reachable_sets()
     area_changed_position = compute_full_drivable_area(reach_interface)
 
     # Derivative using h method
-    derivative = (area_changed_position - area_original) / h_x
+    for time_step in range(reach_interface.step_start, reach_interface.step_end + 1):
+        derivative[time_step] = (
+            area_changed_position[time_step] - area_original[time_step]
+        ) / delta_x
 
-    vehicle.x = original_position
+    vehicle.position = original_position
 
     return derivative
 
@@ -108,8 +125,8 @@ def get_profile_matrix(scenario):
 
     # Compute reachability profiles for every vehicle (does not include ego vehicle)
     for obs in scenario.dynamic_obstacles:
-        profile_pos = differentiate_reachable_set_wrt_other_vehicle_position(scenario, obs)
-        profile_vel = differentiate_reachable_set_wrt_other_vehicle_velocity(scenario, obs)
+        profile_pos = differentiate_reachable_set_wrt_position(scenario, obs)
+        profile_vel = differentiate_reachable_set_wrt_velocity(scenario, obs)
 
         result.append(profile_pos)
         result.append(profile_vel)
