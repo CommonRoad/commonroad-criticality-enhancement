@@ -1,5 +1,5 @@
 [project]
-name = "crtemplate"
+name = "enhance_criticality"
 version = "0.1.4"
 description = "CommonRoad Python template repository."
 authors = [{name = "Cyber-Physical Systems Group, Technical University of Munich", email = "<commonroad@lists.lrz.de>"}]
@@ -38,7 +38,7 @@ build-backend = "poetry.core.masonry.api"
 
 # Testing
 [tool.coverage.run]
-source = ["crtemplate"]
+source = ["enhance_criticality"]
 
 # Formatting
 [tool.ruff]
