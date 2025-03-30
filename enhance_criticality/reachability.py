@@ -63,6 +63,8 @@ def compute_full_drivable_area(reach_interface):
 # TODO adjust new positions
 def differentiate_reachable_set_wrt_velocity(reach_interface, scenario_name, vehicle):
     original_velocity = vehicle.initial_state.velocity
+    if original_velocity < 1:
+        original_velocity = 1
     h = original_velocity / 10
 
     derivative = np.array(
