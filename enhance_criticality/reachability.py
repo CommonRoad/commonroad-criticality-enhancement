@@ -11,7 +11,7 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 
 # Loads a scenario from an xml file. params: scenario (str) - name of the scenario
 # Computes reachable set of ego vehicle and outputs it as a gif
-def load_scenario_and_compute_reachability(scenario_name):
+def load_scenario_and_compute_reachability(scenario_name) -> ReachableSetInterface:
     # Build configuration
     config = ConfigurationBuilder(path_root="../..").build_configuration(scenario_name)
     config.update()
@@ -37,6 +37,8 @@ def load_scenario_and_compute_reachability(scenario_name):
 def compute_drivable_slice_area(drivable_slice):
     area = 0
 
+    print("Drivable Slice: ", drivable_slice)
+
     for region in drivable_slice:
         width = region.p_lon_max - region.p_lon_min
         height = region.p_lat_max - region.p_lat_min
@@ -60,8 +62,9 @@ def compute_full_drivable_area(reach_interface):
 
 
 # Computes the derivative of the reachable set area with respect to vehicle velocity using the h-method
-# TODO adjust new positions
-def differentiate_reachable_set_wrt_velocity(reach_interface, scenario_name, vehicle):
+def differentiate_reachable_set_wrt_velocity(
+    scenario, planning_problem_set, reach_interface: ReachableSetInterface, vehicle
+):
     original_velocity = vehicle.initial_state.velocity
     if original_velocity < 1:
         original_velocity = 1
@@ -82,9 +85,9 @@ def differentiate_reachable_set_wrt_velocity(reach_interface, scenario_name, veh
     print("modified velocity: ", vehicle.initial_state.velocity)
 
     # Save the modified scenario
-    temp_filename = os.path.join("scenarios", "modified_scenario.xml")
+    temp_file = os.path.join("scenarios", "modified_scenario.xml")
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
-    writer.write_to_file(temp_filename, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
+    writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
 
     # Reload the modified scenario
     new_config = ConfigurationBuilder(path_root="../..").build_configuration("modified_scenario")
@@ -106,10 +109,13 @@ def differentiate_reachable_set_wrt_velocity(reach_interface, scenario_name, veh
     return derivative
 
 
-# TODO adjust the h_y if necessary: one function for x and y or two separate, ego vehicle position?
-
-
-def differentiate_reachable_set_wrt_position(reach_interface, vehicle, scenario_max_time):
+def differentiate_reachable_set_wrt_position(
+    scenario,
+    planning_problem_set,
+    reach_interface: ReachableSetInterface,
+    vehicle,
+    scenario_max_time,
+):
     original_position = vehicle.initial_state.position
 
     delta_x = int(np.ceil(scenario_max_time / 10))
@@ -132,9 +138,9 @@ def differentiate_reachable_set_wrt_position(reach_interface, vehicle, scenario_
     print("modified position: ", vehicle.initial_state.position)
 
     # Save the modified scenario
-    temp_filename = os.path.join("scenarios", "modified_scenario.xml")
+    temp_file = os.path.join("scenarios", "modified_scenario.xml")
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
-    writer.write_to_file(temp_filename, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
+    writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
 
     # Reload the modified scenario
     new_config = ConfigurationBuilder(path_root="../..").build_configuration("modified_scenario")
@@ -158,23 +164,25 @@ def differentiate_reachable_set_wrt_position(reach_interface, vehicle, scenario_
 
 
 def get_profile_matrix(
-    scenario, planning_problem, reach_interface, scenario_name, scenario_max_time
+    scenario, planning_problem_set, planning_problem, reach_interface, scenario_max_time
 ):
     result = []
 
     # Compute reachability profiles for every vehicle (does not include ego vehicle)
     for obs in scenario.dynamic_obstacles:
         profile_pos = differentiate_reachable_set_wrt_position(
-            reach_interface, obs, scenario_max_time
+            scenario, planning_problem_set, reach_interface, obs, scenario_max_time
         )
-        profile_vel = differentiate_reachable_set_wrt_velocity(reach_interface, scenario_name, obs)
+        profile_vel = differentiate_reachable_set_wrt_velocity(
+            scenario, planning_problem_set, reach_interface, obs
+        )
 
         result.append(profile_pos)
         result.append(profile_vel)
 
     # Compute reachability profile for the ego vehicle
     ego_vel = differentiate_reachable_set_wrt_velocity(
-        reach_interface, scenario_name, planning_problem
+        scenario, planning_problem_set, reach_interface, planning_problem
     )
 
     result.append(ego_vel)
@@ -195,4 +203,6 @@ planning_problem = list(planning_problem_set.planning_problem_dict.values())[0]
 
 # Print the initial state of the ego vehicle
 print(planning_problem.initial_state)
-profile_matrix = get_profile_matrix(scenario, planning_problem, reach_interface, scenario_name, 5)
+profile_matrix = get_profile_matrix(
+    scenario, planning_problem_set, planning_problem, reach_interface, 5
+)
