@@ -9,7 +9,7 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 
 
 # Minimize changes in velocity by trying to achive reference area
-def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input=1):
+def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
     delta_a_0 = area_original
     a_ref = np.empty([len(area_original)])
     for i in range(0, len(a_ref)):
@@ -93,8 +93,8 @@ def perform_binary_search_velocity(
 def optimize_velocity(
     scenario,
     planning_problem_set,
+    scenario_name,
     vehicle,
-    scenario_path_root: str,
     steps: int,
     iterations: int = 10,
     a_ref_input: float = 1.0,
@@ -106,13 +106,7 @@ def optimize_velocity(
 
         # Try computing reachability with current velocity
         try:
-            config = ConfigurationBuilder(
-                path_root=scenario_path_root
-            ).build_configuration_from_scenario(scenario, planning_problem_set)
-            config.update()
-
-            reach_interface = ReachableSetInterface(config)
-            reach_interface.compute_reachable_sets()
+            reach_interface = reachability.compute_reachable_sets(scenario_name)
 
         except Exception as e:
             print(f"Reachability failed: {e}")
@@ -128,30 +122,30 @@ def optimize_velocity(
         # Compute area and profile matrix
         area_original = reachability.compute_full_drivable_area(reach_interface)
         profile_matrix = reachability.get_profile_matrix(
-            scenario, planning_problem_set, reach_interface, steps
+            scenario, planning_problem_set, reach_interface
         )
 
         # Solve QP
         try:
             d_x = optimize_iteration(area_original, profile_matrix, steps, a_ref_input=a_ref_input)
             if d_x.value is None:
-                raise ValueError("QP did not solve to optimality.")
+                raise ValueError("QP was not solved completely")
         except Exception as e:
             print(f"QP optimization failed: {e}")
             return vehicle.initial_state.velocity
 
         # Update velocity
-        velocity_update = float(d_x.value[-1]) * 9  # Last element is ego velocity delta
+        # TODO for now it updates the velocity for the last vehicle, which is the ego vehicle
+        velocity_update = float(d_x.value[-1]) * 9
         last_change = velocity_update
         vehicle.initial_state.velocity += velocity_update
 
-        # Update vehicle in the scenario (for consistency in future iterations)
-        for obs in scenario.dynamic_obstacles:
-            if obs.obstacle_id == vehicle.obstacle_id:
-                obs.initial_state.velocity = vehicle.initial_state.velocity
+        # Update scenario
+        modified_scenario_name = reachability.save_modified_scenario()
+        _ = reachability.compute_reachable_sets(modified_scenario_name)
 
         print(
-            f"Optimization solution: Δv = {velocity_update:.4f}, new velocity = {vehicle.initial_state.velocity:.4f}"
+            f"Optimization solution: Δv = {velocity_update:.4f}, new velocity = {vehicle.initial_state.velocity:.4f}. The new scenario was saved in modified_scenario.xml "
         )
 
     return vehicle.initial_state.velocity
