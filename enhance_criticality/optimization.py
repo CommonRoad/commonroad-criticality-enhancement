@@ -89,7 +89,6 @@ def perform_binary_search_velocity(
     return feasible_velocity
 
 
-# TODO Fix this method
 def optimize_velocity(
     scenario,
     planning_problem_set,
@@ -122,7 +121,7 @@ def optimize_velocity(
         # Compute area and profile matrix
         area_original = reachability.compute_full_drivable_area(reach_interface)
         profile_matrix = reachability.get_profile_matrix(
-            scenario, planning_problem_set, reach_interface
+            scenario, planning_problem_set[0], reach_interface
         )
 
         # Solve QP
@@ -136,6 +135,7 @@ def optimize_velocity(
 
         # Update velocity
         # TODO for now it updates the velocity for the last vehicle, which is the ego vehicle
+        # TODO check if it should be * 9
         velocity_update = float(d_x.value[-1]) * 9
         last_change = velocity_update
         vehicle.initial_state.velocity += velocity_update
@@ -145,7 +145,7 @@ def optimize_velocity(
         _ = reachability.compute_reachable_sets(modified_scenario_name)
 
         print(
-            f"Optimization solution: Δv = {velocity_update:.4f}, new velocity = {vehicle.initial_state.velocity:.4f}. The new scenario was saved in modified_scenario.xml "
+            f"Optimization solution: Δv = {velocity_update:.4f}, new velocity = {vehicle.initial_state.velocity:.4f}"
         )
 
     return vehicle.initial_state.velocity

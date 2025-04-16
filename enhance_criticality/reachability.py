@@ -67,6 +67,7 @@ def save_modified_scenario(scenario, planning_problem_set) -> str:
     temp_file = os.path.join("scenarios", "modified_scenario.xml")
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
     writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
+    print("The new scenario was saved in modified_scenario.xml")
     return "modified_scenario"
 
 
@@ -191,17 +192,3 @@ def get_profile_matrix(scenario, planning_problem_set, reach_interface):
     # Transform List to matrix
     profile_matrix = np.vstack(result)
     return profile_matrix
-
-
-# scenario_name = "ZAM_Tjunction-1_307_T-1"
-# reach_interface = load_scenario_and_compute_reachability(scenario_name)
-
-# scenario_file = pathlib.Path(__file__).parent.joinpath("./../scenarios/ZAM_Tjunction-1_307_T-1.xml")
-# scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
-
-
-# # Print the initial state of the ego vehicle
-# print(planning_problem.initial_state)
-# profile_matrix = get_profile_matrix(
-#     scenario, planning_problem_set, reach_interface, 5
-# )

@@ -1,29 +1,41 @@
-from commonroad.scenario.scenario import Scenario
+import argparse
+import pathlib
+
+from commonroad.common.file_reader import CommonRoadFileReader
+from optimization import optimize_velocity
+from reachability import load_scenario_and_compute_reachability
 
 
-class TemplateClass:
-    """
-    This is a class in the CommonRoad Template repository.
-    """
+# CLI
+def main():
+    parser = argparse.ArgumentParser(
+        description="Process a CommonRoad scenario and run optimization"
+    )
+    # parser.add_argument("scenario_path", type=str, help="Path to the CommonRoad XML scenario file.")
+    parser.add_argument("--scenario", required=True)
+    # parser.add_argument("--iterations", type=int, default=10)
+    # parser.add_argument("--a_ref", type=float, default=1.0)
 
-    def __init__(self, scenario: Scenario) -> None:
-        """
-        Initialize a TemplateClass object.
+    args = parser.parse_args()
 
-        :param scenario: CommonRoad Scenario.
-        :returns: TemplateClass object.
-        :raises ValueError: If input is not a CommonRoad scenario.
-        """
-        if not isinstance(scenario, Scenario):
-            raise ValueError("Input is not a CommonRoad scenario")
+    run_full_optimization_pipeline(args.scenario)
 
-        self.scenario = scenario
 
-    def return_number_of_lanelets(self) -> int:
-        """
-        Compute number of lanelets of a scenario contained in TemplateClass object.
+def run_full_optimization_pipeline(
+    scenario_name: str, iterations: int = 5, a_ref_input: float = 1.0
+):
+    reach_interface = load_scenario_and_compute_reachability(scenario_name)
 
-        :returns: Number_of_lanelets: Number of lanelets in the scenario.
-        """
-        number_of_lanelets = len(self.scenario.lanelet_network.lanelets)
-        return number_of_lanelets
+    scenario_file = pathlib.Path(__file__).parent.joinpath(f"./../scenarios/{scenario_name}.xml")
+    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+
+    # Print the initial state of the ego vehicle
+    # print(planning_problem.initial_state)
+
+    final_velocity = optimize_velocity(
+        scenario, planning_problem_set, scenario_name, vehicle=planning_problem_set, steps=10
+    )
+
+
+if __name__ == "__main__":
+    main()
