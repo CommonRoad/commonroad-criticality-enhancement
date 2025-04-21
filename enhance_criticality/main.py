@@ -12,17 +12,17 @@ def main():
         description="Process a CommonRoad scenario and run optimization"
     )
     # parser.add_argument("scenario_path", type=str, help="Path to the CommonRoad XML scenario file.")
-    parser.add_argument("--scenario", required=True)
+    # parser.add_argument("--scenario", required=True)
     # parser.add_argument("--iterations", type=int, default=10)
     # parser.add_argument("--a_ref", type=float, default=1.0)
 
     args = parser.parse_args()
 
-    run_full_optimization_pipeline(args.scenario)
+    run_full_optimization_pipeline("ZAM_Tjunction-1_307_T-1", [("ego", "velocity")])
 
 
 def run_full_optimization_pipeline(
-    scenario_name: str, iterations: int = 5, a_ref_input: float = 1.0
+    scenario_name: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0
 ):
     reach_interface = load_scenario_and_compute_reachability(scenario_name)
 
@@ -33,7 +33,11 @@ def run_full_optimization_pipeline(
     # print(planning_problem.initial_state)
 
     final_velocity = optimize_velocity(
-        scenario, planning_problem_set, scenario_name, vehicle=planning_problem_set, steps=10
+        scenario,
+        planning_problem_set,
+        scenario_name,
+        vehicle=planning_problem_set,
+        decision_variables=decision_variables,
     )
 
 

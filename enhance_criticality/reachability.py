@@ -164,31 +164,72 @@ def differentiate_reachable_set_wrt_position(
     return derivative
 
 
-def get_profile_matrix(scenario, planning_problem_set, reach_interface):
+# def get_profile_matrix(scenario, planning_problem_set, reach_interface):
+#     result = []
+#     scenario_max_time = reach_interface.step_end - reach_interface.step_start + 1
+
+#     # Compute reachability profiles for every vehicle (does not include ego vehicle)
+#     for obs in scenario.dynamic_obstacles:
+#         profile_pos = differentiate_reachable_set_wrt_position(
+#             scenario, planning_problem_set, reach_interface, obs, scenario_max_time
+#         )
+#         profile_vel = differentiate_reachable_set_wrt_velocity(
+#             scenario, planning_problem_set, reach_interface, obs
+#         )
+
+#         result.append(profile_pos)
+#         result.append(profile_vel)
+
+#     # Compute reachability profile for the ego vehicle
+#     # Get the first planning problem (this is the ego vehicle's problem)
+#     planning_problem = list(planning_problem_set.planning_problem_dict.values())[0]
+#     ego_vel = differentiate_reachable_set_wrt_velocity(
+#         scenario, planning_problem_set, reach_interface, planning_problem
+#     )
+
+#     result.append(ego_vel)
+
+#     # Transform List to matrix
+#     profile_matrix = np.vstack(result)
+#     return profile_matrix
+
+
+def get_profile_matrix(scenario, planning_problem_set, reach_interface, decision_variables):
     result = []
+    profile_index_map = {}
     scenario_max_time = reach_interface.step_end - reach_interface.step_start + 1
 
-    # Compute reachability profiles for every vehicle (does not include ego vehicle)
-    for obs in scenario.dynamic_obstacles:
-        profile_pos = differentiate_reachable_set_wrt_position(
-            scenario, planning_problem_set, reach_interface, obs, scenario_max_time
-        )
-        profile_vel = differentiate_reachable_set_wrt_velocity(
-            scenario, planning_problem_set, reach_interface, obs
-        )
+    row_idx = 0  # Keeps track of the profile_matrix row index
 
-        result.append(profile_pos)
-        result.append(profile_vel)
+    # Compute derivatives for each given decision variable
+    for vehicle_id, variable_type in decision_variables:
+        if vehicle_id == "ego":
+            vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
+        else:
+            vehicle = next(
+                (v for v in scenario.dynamic_obstacles if v.obstacle_id == vehicle_id), None
+            )
 
-    # Compute reachability profile for the ego vehicle
-    # Get the first planning problem (this is the ego vehicle's problem)
-    planning_problem = list(planning_problem_set.planning_problem_dict.values())[0]
-    ego_vel = differentiate_reachable_set_wrt_velocity(
-        scenario, planning_problem_set, reach_interface, planning_problem
-    )
+        if vehicle is None:
+            print(f"Vehicle {vehicle_id} not found.")
+            continue
 
-    result.append(ego_vel)
+        if variable_type == "velocity":
+            deriv = differentiate_reachable_set_wrt_velocity(
+                scenario, planning_problem_set, reach_interface, vehicle
+            )
+        elif variable_type == "position":
+            deriv = differentiate_reachable_set_wrt_position(
+                scenario, planning_problem_set, reach_interface, vehicle, scenario_max_time
+            )
+        else:
+            print(f"Unknown variable type: {variable_type}")
+            continue
+
+        result.append(deriv)
+        profile_index_map[(vehicle_id, variable_type)] = row_idx
+        row_idx += 1
 
     # Transform List to matrix
     profile_matrix = np.vstack(result)
-    return profile_matrix
+    return profile_matrix, profile_index_map

@@ -17,7 +17,7 @@ def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
         delta_a_0[i] = delta_a_0[i] - a_ref[i]
 
     B = np.transpose(profile_matrix)
-    Q = np.identity(steps + 1)
+    Q = np.identity(steps)
 
     W = np.dot(np.transpose(B), Q)
     W = np.dot(W, B)
@@ -36,7 +36,7 @@ def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
 
     # TODO is it c_transposed?
 
-    opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c * d_x), constraints)
+    opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x), constraints)
     opt_prob.solve(solver=cv.ECOS, verbose=False)
 
     return d_x
@@ -94,58 +94,96 @@ def optimize_velocity(
     planning_problem_set,
     scenario_name,
     vehicle,
-    steps: int,
-    iterations: int = 10,
+    decision_variables: list,
+    iterations: int = 1,
     a_ref_input: float = 1.0,
 ):
     last_change = 0.0
 
-    for i in range(iterations):
-        print(f"Iteration {i+1}: Starting with velocity = {vehicle.initial_state.velocity}")
+    for var in decision_variables:
+        for i in range(iterations):
+            # Try computing reachability with current velocity
+            try:
+                reach_interface = reachability.compute_reachable_sets(scenario_name)
+                steps = reach_interface.step_end - reach_interface.step_start + 1
 
-        # Try computing reachability with current velocity
-        try:
-            reach_interface = reachability.compute_reachable_sets(scenario_name)
+            except Exception as e:
+                print(f"Reachability failed: {e}")
 
-        except Exception as e:
-            print(f"Reachability failed: {e}")
-            # Run binary search between previous valid and current velocity
-            return perform_binary_search_velocity(
-                scenario,
-                planning_problem_set,
-                vehicle,
-                x_before=vehicle.initial_state.velocity - last_change,
-                x_after=vehicle.initial_state.velocity,
+            # Compute area and profile matrix
+            area_original = reachability.compute_full_drivable_area(reach_interface)
+            profile_matrix, profile_index_map = reachability.get_profile_matrix(
+                scenario, planning_problem_set, reach_interface, decision_variables
             )
 
-        # Compute area and profile matrix
-        area_original = reachability.compute_full_drivable_area(reach_interface)
-        profile_matrix = reachability.get_profile_matrix(
-            scenario, planning_problem_set[0], reach_interface
-        )
+            # Solve QP
+            try:
+                d_x = optimize_iteration(
+                    area_original, profile_matrix, steps, a_ref_input=a_ref_input
+                )
+                if d_x.value is None:
+                    raise ValueError("QP was not solved completely")
+            except Exception as e:
+                print(f"QP optimization failed: {e}")
 
-        # Solve QP
-        try:
-            d_x = optimize_iteration(area_original, profile_matrix, steps, a_ref_input=a_ref_input)
-            if d_x.value is None:
-                raise ValueError("QP was not solved completely")
-        except Exception as e:
-            print(f"QP optimization failed: {e}")
-            return vehicle.initial_state.velocity
+            # Update variable
+            vehicle_id, variable_type = var
+            if vehicle_id == "ego":
+                target_vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
+            else:
+                target_vehicle = next(
+                    (veh for veh in scenario.dynamic_obstacles if veh.obstacle_id == vehicle_id),
+                    None,
+                )
 
-        # Update velocity
-        # TODO for now it updates the velocity for the last vehicle, which is the ego vehicle
-        # TODO check if it should be * 9
-        velocity_update = float(d_x.value[-1]) * 9
-        last_change = velocity_update
-        vehicle.initial_state.velocity += velocity_update
+            if target_vehicle is None:
+                print(f"Vehicle with ID {vehicle_id} not found.")
+                continue
 
-        # Update scenario
-        modified_scenario_name = reachability.save_modified_scenario()
-        _ = reachability.compute_reachable_sets(modified_scenario_name)
+            # Get the index of the variable in d_x corresponding to the current loop variable
+            # Assumes order of profile_matrix rows aligns with decision_variables
+            var_index = profile_index_map.get((vehicle_id, variable_type))
 
-        print(
-            f"Optimization solution: Δv = {velocity_update:.4f}, new velocity = {vehicle.initial_state.velocity:.4f}"
-        )
+            if var_index is None:
+                print(f"No profile found for ({vehicle_id}, {variable_type})")
+                continue
 
-    return vehicle.initial_state.velocity
+            # TODO scale factor 9
+            delta = float(d_x.value[var_index]) * 9
+            last_change = delta
+
+            # Apply the update
+            if variable_type == "velocity":
+                target_vehicle.initial_state.velocity += delta
+                print(
+                    f"Updated velocity of vehicle {vehicle_id} by {delta:.4f} to {target_vehicle.initial_state.velocity:.4f}"
+                )
+            elif variable_type == "position":
+                target_vehicle.initial_state.position = (
+                    vehicle.initial_state.position[0] + delta,
+                    vehicle.initial_state.position[1],
+                )
+                print(
+                    f"Updated position of vehicle {vehicle_id} to {target_vehicle.initial_state.position}"
+                )
+            else:
+                print(f"Unknown variable type: {variable_type}")
+
+            # Update scenario
+            modified_scenario_name = reachability.save_modified_scenario(
+                scenario, planning_problem_set
+            )
+
+            try:
+                reach_interface = reachability.compute_reachable_sets(scenario_name)
+
+            except Exception as e:
+                print(f"Reachability failed: {e}. Performing binary search.")
+                # Run binary search between previous valid and current velocity
+                return perform_binary_search_velocity(
+                    scenario,
+                    planning_problem_set,
+                    vehicle,
+                    x_before=vehicle.initial_state.velocity - last_change,
+                    x_after=vehicle.initial_state.velocity,
+                )
