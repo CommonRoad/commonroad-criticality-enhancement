@@ -95,7 +95,7 @@ def optimize_velocity(
     scenario_name,
     vehicle,
     decision_variables: list,
-    iterations: int = 1,
+    iterations: int = 10,
     a_ref_input: float = 1.0,
 ):
     last_change = 0.0
@@ -148,8 +148,7 @@ def optimize_velocity(
                 print(f"No profile found for ({vehicle_id}, {variable_type})")
                 continue
 
-            # TODO scale factor 9
-            delta = float(d_x.value[var_index]) * 9
+            delta = float(d_x.value[var_index]) * 0.5
             last_change = delta
 
             # Apply the update
@@ -175,7 +174,7 @@ def optimize_velocity(
             )
 
             try:
-                reach_interface = reachability.compute_reachable_sets(scenario_name)
+                reach_interface = reachability.compute_reachable_sets(modified_scenario_name)
 
             except Exception as e:
                 print(f"Reachability failed: {e}. Performing binary search.")
@@ -183,7 +182,7 @@ def optimize_velocity(
                 return perform_binary_search_velocity(
                     scenario,
                     planning_problem_set,
-                    vehicle,
-                    x_before=vehicle.initial_state.velocity - last_change,
-                    x_after=vehicle.initial_state.velocity,
+                    target_vehicle,
+                    x_before=target_vehicle.initial_state.velocity - last_change,
+                    x_after=target_vehicle.initial_state.velocity,
                 )
