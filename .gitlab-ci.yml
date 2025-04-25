@@ -36,6 +36,8 @@ test_python_versions:
       - PYTHON_VERSIONS: [ "3.9", "3.10", "3.11" ]
   script:
     - *run_test_with_coverage
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
 
 test_latest_python_version_with_coverage:
   stage: test
@@ -49,6 +51,8 @@ test_latest_python_version_with_coverage:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+  rules:
+    - if: '$CI_COMMIT_BRANCH'  
 
 ## deploy
 pages:
