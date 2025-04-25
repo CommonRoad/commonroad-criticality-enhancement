@@ -15,6 +15,7 @@ before_script:
   - source .venv/bin/activate
 
 .run_test_with_coverage: &run_test_with_coverage
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)
   - coverage run tests/test_basic.py
   - coverage report -m || true
 
@@ -77,3 +78,5 @@ build_and_push_to_pypi_test:
     - poetry config repositories.test https://test.pypi.org/legacy/  # skip for official pypi
     - poetry build
     - poetry publish --repository test -u __token__ -p ${CR_PYPI_TEST_API_TOKEN}  # use ${CR_PYPI_RELEASE_API_TOKEN} for official pypi
+
+
