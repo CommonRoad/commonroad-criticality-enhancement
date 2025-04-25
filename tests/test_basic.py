@@ -3,12 +3,11 @@ import sys
 import unittest
 
 import numpy as np
-import ../enhance_criticality
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "enhance_criticality"))
 )
-from enhance_criticality.reachability import (
+from reachability import (
     compute_drivable_slice_area,
     compute_full_drivable_area,
     differentiate_reachable_set_wrt_position,
