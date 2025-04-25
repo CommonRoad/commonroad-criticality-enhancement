@@ -11,6 +11,7 @@ dynamic = ["dependencies"]
 [tool.poetry.dependencies]
 python = ">=3.9, <4"
 commonroad-io = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-io.git", branch = "develop" }
+commonroad-reach = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-reachable-set.git", branch = "main" }
 
 [tool.poetry.group.tests]
 optional = true
