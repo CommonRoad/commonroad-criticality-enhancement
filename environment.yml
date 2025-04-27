@@ -1,0 +1,18 @@
+name: thesis
+channels:
+- conda-forge
+- defaults
+dependencies:
+- python=3.10
+- cvxpy
+- pip
+- ecos
+- pip:
+  - commonroad-io
+  - commonroad_reach
+
+# **IMPORTANT**
+# NOTE: This script converts a pyproject.toml file to an environment.yml file for conda.
+# It assumes that the pyproject.toml file is in the same directory as this script.
+
+# conda command to create the environment: conda env create -f environment.yml
