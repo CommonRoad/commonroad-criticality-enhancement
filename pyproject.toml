@@ -9,8 +9,10 @@ license = "BSD-3-Clause"
 dynamic = ["dependencies"]
 
 [tool.poetry.dependencies]
-python = ">=3.9, <4"
+python = ">=3.9, <3.12"
 commonroad-io = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-io.git", branch = "develop" }
+commonroad-reach = "^2025.1.0"
+cvxpy = "^1.6.5"
 
 [tool.poetry.group.tests]
 optional = true
