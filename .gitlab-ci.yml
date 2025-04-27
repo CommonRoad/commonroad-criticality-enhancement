@@ -6,8 +6,8 @@ stages:
   - deploy
 
 before_script:
-  - sudo apt update
-  - sudo apt install libgl1
+  - apt-get update
+  - apt-get install libgl1
   - pip install poetry
   - poetry config virtualenvs.in-project true
   - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
