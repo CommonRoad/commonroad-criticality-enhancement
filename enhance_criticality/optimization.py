@@ -10,34 +10,36 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 
 # Minimize changes in velocity by trying to achive reference area
 def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
-    delta_a_0 = area_original
-    a_ref = np.empty([len(area_original)])
-    for i in range(0, len(a_ref)):
-        a_ref[i] = a_ref_input
-        delta_a_0[i] = delta_a_0[i] - a_ref[i]
+    delta_a_0 = np.copy(area_original) - a_ref_input
 
-    B = np.transpose(profile_matrix)
+    # B = np.transpose(profile_matrix)
+    B = profile_matrix.T
     Q = np.identity(steps)
 
-    W = np.dot(np.transpose(B), Q)
-    W = np.dot(W, B)
+    # W = np.dot(np.transpose(B), Q)
+    # W = np.dot(W, B)
+    W= B.T @ Q @ B
+    c = 2 * (delta_a_0.T @ Q @ B)
 
-    delta_a_0_transposed = np.transpose(delta_a_0)
 
-    q_b = np.dot(Q, B)
-    q_transposed_b = np.dot(np.transpose(Q), B)
-    c = q_b + q_transposed_b
-    c = np.dot(delta_a_0_transposed, c)
+    # delta_a_0_transposed = np.transpose(delta_a_0)
 
-    d_x = cv.Variable(len(profile_matrix))
-    constraints = []
+    # q_b = np.dot(Q, B)
+    # q_transposed_b = np.dot(np.transpose(Q), B)
+    # c = q_b + q_transposed_b
+    # c = np.dot(delta_a_0_transposed, c)
+
+    d_x = cv.Variable(B.shape[1])
+    constraints = [
+        d_x >= -10,
+        d_x <= 10
+    ]
     # print('d_x:', d_x.size, 'W:', W.shape)
     # print('c:', c.shape)
 
-    # TODO is it c_transposed?
 
     opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x), constraints)
-    opt_prob.solve(solver=cv.ECOS, verbose=False)
+    opt_prob.solve(solver=cv.ECOS, verbose=True)
 
     return d_x
 
