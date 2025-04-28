@@ -1,9 +1,10 @@
 import os
-from commonroad_reach.utility import visualization as util_visual
+
 import numpy as np
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
+from commonroad_reach.utility import visualization as util_visual
 
 
 # Loads a scenario from an xml file. params: scenario (str) - name of the scenario

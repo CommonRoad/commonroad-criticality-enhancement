@@ -1,18 +1,15 @@
 import os
 import sys
+
 # Add the parent directory (my_project) to the system path
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "enhance_criticality"))
 )
-from optimization import optimize_velocity
-from reachability import load_scenario_and_compute_reachability
-
 import pathlib
 
 from commonroad.common.file_reader import CommonRoadFileReader
-
-
-
+from optimization import optimize_velocity
+from reachability import load_scenario_and_compute_reachability
 
 
 def run_full_optimization_pipeline(
@@ -33,5 +30,6 @@ def run_full_optimization_pipeline(
         vehicle=planning_problem_set,
         decision_variables=decision_variables,
     )
+
 
 run_full_optimization_pipeline("ZAM_Tjunction-1_307_T-1", [("ego", "velocity")])

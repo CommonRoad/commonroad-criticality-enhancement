@@ -18,9 +18,8 @@ def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
 
     # W = np.dot(np.transpose(B), Q)
     # W = np.dot(W, B)
-    W= B.T @ Q @ B
+    W = B.T @ Q @ B
     c = 2 * (delta_a_0.T @ Q @ B)
-
 
     # delta_a_0_transposed = np.transpose(delta_a_0)
 
@@ -30,13 +29,9 @@ def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
     # c = np.dot(delta_a_0_transposed, c)
 
     d_x = cv.Variable(B.shape[1])
-    constraints = [
-        d_x >= -10,
-        d_x <= 10
-    ]
+    constraints = [d_x >= -10, d_x <= 10]
     # print('d_x:', d_x.size, 'W:', W.shape)
     # print('c:', c.shape)
-
 
     opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x), constraints)
     opt_prob.solve(solver=cv.ECOS, verbose=True)
