@@ -18,7 +18,7 @@ def main():
 
     args = parser.parse_args()
 
-    run_full_optimization_pipeline("ZAM_Tjunction-1_307_T-1", [("ego", "velocity")])
+    run_full_optimization_pipeline("DEU_Test-1_1_T-1", [("ego", "velocity")])
 
 
 def run_full_optimization_pipeline(

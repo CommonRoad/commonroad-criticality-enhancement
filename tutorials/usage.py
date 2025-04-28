@@ -31,5 +31,7 @@ def run_full_optimization_pipeline(
         decision_variables=decision_variables,
     )
 
+    _ = load_scenario_and_compute_reachability("modified_scenario")
 
-run_full_optimization_pipeline("ZAM_Tjunction-1_307_T-1", [("ego", "velocity")])
+
+run_full_optimization_pipeline("DEU_Test-1_1_T-1", [("ego", "velocity")])

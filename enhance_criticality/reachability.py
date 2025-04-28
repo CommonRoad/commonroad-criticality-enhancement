@@ -24,7 +24,7 @@ def load_scenario_and_compute_reachability(scenario_name) -> ReachableSetInterfa
     print("The drivable area at the start is:", drivable_area[0])
 
     # Plot computation results
-    # util_visual.plot_scenario_with_reachable_sets(reach_interface, figsize=(7, 7))
+    util_visual.plot_scenario_with_reachable_sets(reach_interface, figsize=(7, 7))
 
     return reach_interface
 
@@ -234,3 +234,7 @@ def get_profile_matrix(scenario, planning_problem_set, reach_interface, decision
     # Transform List to matrix
     profile_matrix = np.vstack(result)
     return profile_matrix, profile_index_map
+
+
+scenario = "DEU_Test-1_1_T-1"
+reachable_sets = load_scenario_and_compute_reachability(scenario)

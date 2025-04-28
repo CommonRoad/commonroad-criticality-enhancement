@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu" affiliation="Technical University of Munich" source="hand-crafted" benchmarkID="DEU_Test-1_1_T-1" date="2025-04-28">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu" affiliation="Technical University of Munich" source="hand-crafted" benchmarkID="DEU_Test-1_1_T-1" date="2021-03-30">
   <location>
     <geoNameId>-999</geoNameId>
-    <gpsLatitude>999.0</gpsLatitude>
-    <gpsLongitude>999.0</gpsLongitude>
+    <gpsLatitude>999</gpsLatitude>
+    <gpsLongitude>999</gpsLongitude>
   </location>
   <scenarioTags>
     <highway/>
@@ -2513,9 +2513,6 @@
       </rectangle>
     </shape>
     <initialState>
-      <time>
-        <exact>0</exact>
-      </time>
       <position>
         <point>
           <x>65.0</x>
@@ -2525,18 +2522,9 @@
       <orientation>
         <exact>0.3</exact>
       </orientation>
-      <velocity>
-        <exact>0.0</exact>
-      </velocity>
-      <acceleration>
-        <exact>0.0</exact>
-      </acceleration>
-      <yawRate>
-        <exact>0.0</exact>
-      </yawRate>
-      <slipAngle>
-        <exact>0.0</exact>
-      </slipAngle>
+      <time>
+        <exact>0</exact>
+      </time>
     </initialState>
   </staticObstacle>
   <dynamicObstacle id="6">
@@ -2548,9 +2536,6 @@
       </rectangle>
     </shape>
     <initialState>
-      <time>
-        <exact>0</exact>
-      </time>
       <position>
         <point>
           <x>17.0</x>
@@ -2560,18 +2545,12 @@
       <orientation>
         <exact>0.0</exact>
       </orientation>
+      <time>
+        <exact>0</exact>
+      </time>
       <velocity>
         <exact>10.0</exact>
       </velocity>
-      <acceleration>
-        <exact>0.0</exact>
-      </acceleration>
-      <yawRate>
-        <exact>0.0</exact>
-      </yawRate>
-      <slipAngle>
-        <exact>0.0</exact>
-      </slipAngle>
     </initialState>
     <trajectory>
       <state>
@@ -3257,7 +3236,7 @@
       <state>
         <position>
           <point>
-            <x>58.0</x>
+            <x>58.000000</x>
             <y>2.0</y>
           </point>
         </position>
@@ -3342,7 +3321,7 @@
       <state>
         <position>
           <point>
-            <x>63.0</x>
+            <x>63.000000</x>
             <y>2.0</y>
           </point>
         </position>
@@ -3751,9 +3730,6 @@
   </dynamicObstacle>
   <planningProblem id="8">
     <initialState>
-      <time>
-        <exact>0</exact>
-      </time>
       <position>
         <point>
           <x>35.1</x>
@@ -3763,12 +3739,12 @@
       <orientation>
         <exact>0.0</exact>
       </orientation>
+      <time>
+        <exact>0</exact>
+      </time>
       <velocity>
-        <exact>30.8686</exact>
+        <exact>12.0</exact>
       </velocity>
-      <acceleration>
-        <exact>0.0</exact>
-      </acceleration>
       <yawRate>
         <exact>0.0</exact>
       </yawRate>
