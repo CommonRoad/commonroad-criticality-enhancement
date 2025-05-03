@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import os
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
 import cvxpy as cv
+import file_modification
+import matplotlib.pyplot as plt
 import numpy as np
 import reachability
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
@@ -10,7 +16,11 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 
 # Minimize changes in velocity by trying to achive reference area
 def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
-    delta_a_0 = np.copy(area_original) - a_ref_input
+    a_ref = area_original.copy() * 1.5
+    delta_a_0 = np.copy(area_original) - a_ref
+
+    # assert profile_matrix.shape[0] == len(area_original) == steps, \
+    #     "Mismatch between area, profile matrix, and step count"
 
     # B = np.transpose(profile_matrix)
     B = profile_matrix.T
@@ -166,7 +176,7 @@ def optimize_velocity(
                 print(f"Unknown variable type: {variable_type}")
 
             # Update scenario
-            modified_scenario_name = reachability.save_modified_scenario(
+            modified_scenario_name = file_modification.save_modified_scenario(
                 scenario, planning_problem_set
             )
 

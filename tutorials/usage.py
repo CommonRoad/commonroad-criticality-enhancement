@@ -5,6 +5,7 @@ import sys
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "enhance_criticality"))
 )
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
 import pathlib
 
 from commonroad.common.file_reader import CommonRoadFileReader

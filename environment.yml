@@ -7,9 +7,25 @@ dependencies:
 - cvxpy
 - pip
 - ecos
+# only needed to run the pre-commits
+- pre-commit
+# dependencies for commonroad-reach-flow
+- spot
+- boost
+- eigen
+- yaml-cpp
+- spdlog
+- pybind11
+- gtest
+- gcc_linux-64=10.4.0
+- gxx_linux-64=10.4.0
 - pip:
-  - commonroad-io
-  - commonroad_reach
+  - commonroad-clcs==2025.1.1
+  - commonroad-drivability-checker==2024.1
+  - commonroad-io==2024.3
+  - commonroad-reach==2024.1
+  - commonroad-route-planner==2024.1.1
+  - commonroad-vehicle-models==3.0.2
 
 # **IMPORTANT**
 # NOTE: This script converts a pyproject.toml file to an environment.yml file for conda.

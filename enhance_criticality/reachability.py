@@ -1,7 +1,7 @@
 import os
 
+import file_modification
 import numpy as np
-from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.utility import visualization as util_visual
@@ -64,14 +64,6 @@ def compute_reachable_sets(scenario_name: str):
     return reach_interface_new
 
 
-def save_modified_scenario(scenario, planning_problem_set) -> str:
-    temp_file = os.path.join("scenarios", "modified_scenario.xml")
-    writer = CommonRoadFileWriter(scenario, planning_problem_set)
-    writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
-    print("The new scenario was saved in modified_scenario.xml")
-    return "modified_scenario"
-
-
 # Computes the derivative of the reachable set area with respect to vehicle velocity using the h-method
 def differentiate_reachable_set_wrt_velocity(
     scenario, planning_problem_set, reach_interface: ReachableSetInterface, vehicle
@@ -96,7 +88,7 @@ def differentiate_reachable_set_wrt_velocity(
     print("modified velocity: ", vehicle.initial_state.velocity)
 
     # Save the modified scenario
-    save_modified_scenario(scenario, planning_problem_set)
+    file_modification.save_modified_scenario(scenario, planning_problem_set)
 
     # Reload the modified scenario
     reach_interface_new = compute_reachable_sets("modified_scenario")
@@ -144,7 +136,9 @@ def differentiate_reachable_set_wrt_position(
     print("modified position: ", vehicle.initial_state.position)
 
     # Save the modified scenario
-    modified_scenario_name = save_modified_scenario(scenario, planning_problem_set)
+    modified_scenario_name = file_modification.save_modified_scenario(
+        scenario, planning_problem_set
+    )
 
     # Reload the modified scenario
     reach_interface_new = compute_reachable_sets(modified_scenario_name)
