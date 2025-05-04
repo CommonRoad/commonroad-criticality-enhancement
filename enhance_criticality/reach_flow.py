@@ -13,6 +13,8 @@ from cr_reach_flow.scenario.resampling import resample_scenario
 from cr_reach_flow.visualization.interactive import InteractiveVisualization
 from cr_reach_flow.visualization.scenario import draw_with_regions, draw_with_slider
 from matplotlib import pyplot as plt
+from shapely.geometry import Polygon
+from shapely.ops import unary_union
 
 
 def plot(profile1, profile2, labels=("Original", "Optimized")):
@@ -28,26 +30,40 @@ def plot(profile1, profile2, labels=("Original", "Optimized")):
     plt.show()
 
 
-def compute_area(graph, reach_interface):
-    areas = np.full((reach_interface.step_end + 1,), -1.0)
-    for t in range(reach_interface.step_start, reach_interface.step_end + 1):
-        nodes = graph.nodes_at_time_step(t)
-        area = sum(
-            (n.region.p_lon_max - n.region.p_lon_min) * (n.region.p_lat_max - n.region.p_lat_min)
-            for n in nodes
-        )
+def compute_area(graph, step_start, step_end):
+    areas = np.full((step_end + 1,), -1.0)
+
+    for t in range(step_start, step_end + 1):
+        try:
+            nodes = graph.get_vertices_at_step(t)
+        except AttributeError:
+            raise RuntimeError(f"Graph does not support time step access at t={t}")
+
+        area = 0.0
+        for node_id in nodes:
+            node = graph[node_id]
+            print(f"Step {t}: Node {node_id}, Region: {getattr(node, 'region', None)}")
+            valid_node_count = sum(
+                1 for node_id in graph.get_vertices_at_step(t) if hasattr(graph[node_id], "region")
+            )
+            print(f"Step {t}: {valid_node_count} nodes with region")
+            if hasattr(node, "region"):
+                region = node.region
+                width = region.p_lon_max - region.p_lon_min
+                height = region.p_lat_max - region.p_lat_min
+                area += width * height
+
         areas[t] = area
+
+    print(areas)
     return areas
 
 
-def create_reach_graph(scenario, planning_problem: PlanningProblem, reach_interface):
-    print("Creating Reach Graph")
-    step_start = reach_interface.step_start
-    step_end = reach_interface.step_end
-    dt = reach_interface.dt
-    initial_uncertainty = reach_interface.initial_uncertainty
-
-    # Define propagation dynamics
+def create_reach_graph():
+    dt = 0.2
+    step_start = 0
+    step_end = 15
+    initial_uncertainty = 0.01
     point_mass_params = core.layers.propagation.PointMassParameters()
     point_mass_params.a_lon_min = -9.5
     point_mass_params.a_lon_max = 11.5
@@ -57,38 +73,55 @@ def create_reach_graph(scenario, planning_problem: PlanningProblem, reach_interf
     point_mass_params.v_lon_max = 50.8
     point_mass_params.v_lat_min = -4.0
     point_mass_params.v_lat_max = 4.0
-
-    # Compute inflation radius
     predicate_config = core.model_checking.PredicateConfiguration()
-    inflation_radius = min(predicate_config.ego_width, predicate_config.ego_length) / 2
-
-    # Create semantic splitter params
+    inflation_radius = (
+        predicate_config.ego_width / 2
+        if predicate_config.ego_width < predicate_config.ego_length
+        else predicate_config.ego_length / 2
+    )
     splitter_params = core.layers.semantic.SemanticSplitterParameters()
     splitter_params.minimum_region_area = 0.01
     splitter_params.lanelet_inflation_radius = inflation_radius
+    # read scenario
+    scenario_path = "scenarios/ZAM_Merge-1_1_T-1.xml"
+    # scenario_path = "scenarios/ZAM_Yield-1_1_T-1.xml"
+    # scenario_path = "scenarios/USA_US101-6_1_T-1.xml"
+    # scenario_path = "scenarios/DEU_Test-1_1_T-1.xml"
+    scenario, planning_problems = CommonRoadFileReader(scenario_path).open()
+    scenario, planning_problems = resample_scenario(scenario, planning_problems, dt)
+    planning_problem = list(planning_problems.planning_problem_dict.values())[0]
 
     # plan route and create clcs
     route = RoutePlanner(scenario, planning_problem).plan_routes().retrieve_first_route()
     splitter_params.route_lanelet_ids = set(route.lanelet_ids)
     reference_path = pycrccosy.Util.resample_polyline(route.reference_path, 2.0)
     clcs = pycrccosy.CurvilinearCoordinateSystem(reference_path)
+    print(f"Route lanelet IDs: {splitter_params.route_lanelet_ids}")
 
     # create reach set executor
-    # cc = CollisionCheckerFactory(step_start, step_end, inflation_radius).create_curvilinear_collision_checker(
-    #     scenario, clcs
-    # )
+    cc = CollisionCheckerFactory(
+        step_start, step_end, inflation_radius
+    ).create_curvilinear_collision_checker(scenario, clcs)
+    # specs = ["G (!Behind_V8 -> LeftOf_V8)"]
+    # specs = ["F G InFrontOf_V8"]
+    # specs = ["G InLanelet_1"]
+    # specs = ["F[10,10] G (LeftOf_V8 -> (Behind_V8 | InFrontOf_V8))"]
+    # specs = [
+    #     """
+    #     G (OnMainCarriageway & Behind_V8 & OnAccessRamp_V8 & F OnMainCarriageway_V8 ->
+    #         !(!OnRightLane & F OnRightLane))
+    #     """
+    # ]
     specs = ["true"]
-
     automaton = core.model_checking.FiniteAutomaton(specs)
     init = core.initializers.base_set.CurvilinearUncertaintyInitializer(
         clcs, *([initial_uncertainty] * 4)
     )
     layers = [
         core.layers.propagation.PointMassPropagator(dt, point_mass_params),
-        core.layers.semantic.SemanticSplitter(automaton, None, dt, clcs, splitter_params),
-        # core.layers.semantic.SemanticSplitter(automaton, scenario_path, dt, clcs, splitter_params),
+        core.layers.semantic.SemanticSplitter(automaton, scenario_path, dt, clcs, splitter_params),
         core.layers.meta.GroupedByAutomatonStates(core.layers.repartition.PositionRepartitioner()),
-        # core.layers.collision.CollisionFilter(cc),
+        core.layers.collision.CollisionFilter(cc),
         core.layers.meta.GroupedByAutomatonStates(core.layers.repartition.PositionRepartitioner()),
     ]
     post = [
@@ -103,11 +136,36 @@ def create_reach_graph(scenario, planning_problem: PlanningProblem, reach_interf
     rs = core.executors.DynamicReachExecutor(
         init, core.layers.meta.Sequential(layers), core.post_processors.meta.Sequential(post)
     )
+    # rs = core.executors.DynamicOtfCorridorExtractor(
+    #     init, core.layers.meta.Sequential(layers), core.post_processors.meta.Sequential(post)
+    # )
+
+    # rs = core.executors.CollisionReachExecutor(dt, params, cc, initial_uncertainty, clcs)
+    # rs = core.executors.CollisionOtfCorridorExtractor(dt, params, cc, initial_uncertainty, clcs)
+
+    # rs = core.executors.SemanticReachExecutor(dt, params, cc, initial_uncertainty, specs, scenario_path, clcs)
+    # rs = core.executors.SemanticOtfCorridorExtractor(dt, params, cc, initial_uncertainty, specs, scenario_path, clcs)
 
     tic = time.perf_counter()
     rs.initialize(*initialize_from_planning_problem(planning_problem))
     toc = time.perf_counter()
     print(f"Initialization took {toc - tic:3f} seconds")
+
+    # for _ in range(1):
+    #     # compute reachable sets
+    #     tic = time.perf_counter()
+    #     rs.compute_next_corridor(step_start + 1, step_end)
+    #     toc = time.perf_counter()
+    #     print(f"Reachable set computation took {toc - tic:3f} seconds")
+    #
+    #     # create corridors
+    #     tic = time.perf_counter()
+    #     driving_corridors = rs.extract_corridors()
+    #     toc = time.perf_counter()
+    #     print(f"Driving corridor extraction took {toc - tic:3f} seconds")
+    #
+    #     for corridor in driving_corridors:
+    #         draw_with_slider(step_start, step_end, scenario, planning_problem, corridor.reach_graph, clcs)
 
     # compute reachable sets
     tic = time.perf_counter()
@@ -121,9 +179,11 @@ def create_reach_graph(scenario, planning_problem: PlanningProblem, reach_interf
     toc = time.perf_counter()
     print(f"Graph creation took {toc - tic:3f} seconds")
 
-    # draw_with_slider(step_start, step_end, scenario, planning_problem, graph, clcs)
+    draw_with_slider(step_start, step_end, scenario, planning_problem, graph, clcs)
 
-    # InteractiveVisualization(scenario, planning_problem, clcs).draw_interactive_reach_graph(graph)
+    InteractiveVisualization(scenario, planning_problem, clcs).draw_interactive_reach_graph(graph)
+
+    compute_area(graph, step_start, step_end)
 
 
 def initialize_from_planning_problem(

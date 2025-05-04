@@ -1,13 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu" affiliation="Technical University of Munich" source="hand-crafted" benchmarkID="DEU_Test-1_1_T-1" date="2025-05-03">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu" affiliation="Technical University of Munich" source="hand-crafted" benchmarkID="DEU_Test-1_1_T-1" date="2025-05-04">
   <location>
     <geoNameId>-999</geoNameId>
     <gpsLatitude>999.0</gpsLatitude>
     <gpsLongitude>999.0</gpsLongitude>
   </location>
   <scenarioTags>
-    <highway/>
     <interstate/>
+    <highway/>
   </scenarioTags>
   <lanelet id="1">
     <leftBound>

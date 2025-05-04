@@ -25,11 +25,11 @@ def main():
 def run_full_optimization_pipeline(
     scenario_name: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0
 ):
-    reach_interface = load_scenario_and_compute_reachability(scenario_name)
-
+    # reach_interface = load_scenario_and_compute_reachability(scenario_name)
+    #
     scenario_file = pathlib.Path(__file__).parent.joinpath(f"./../scenarios/{scenario_name}.xml")
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
-    reach_flow.create_reach_graph(scenario, planning_problem_set, reach_interface)
+    # scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+    reach_flow.create_reach_graph()
 
     # Print the initial state of the ego vehicle
     # print(planning_problem.initial_state)

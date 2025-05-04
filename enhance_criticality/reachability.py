@@ -7,6 +7,7 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 from commonroad_reach.utility import visualization as util_visual
 
 
+#
 # Loads a scenario from an xml file. params: scenario (str) - name of the scenario
 # Computes reachable set of ego vehicle and outputs it as a gif
 def load_scenario_and_compute_reachability(scenario_name) -> ReachableSetInterface:
