@@ -1,7 +1,7 @@
 import argparse
 import pathlib
-import reach_flow
 
+import reach_flow
 from commonroad.common.file_reader import CommonRoadFileReader
 from optimization import optimize_velocity
 from reachability import load_scenario_and_compute_reachability

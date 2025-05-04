@@ -1,10 +1,10 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import time
 from typing import Tuple
 
 import commonroad_dc.pycrccosy as pycrccosy
 import cr_reach_flow.cr_reach_flow_core as core
+import matplotlib.pyplot as plt
+import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad_route_planner.route_planner import RoutePlanner
@@ -13,8 +13,6 @@ from cr_reach_flow.scenario.resampling import resample_scenario
 from cr_reach_flow.visualization.interactive import InteractiveVisualization
 from cr_reach_flow.visualization.scenario import draw_with_regions, draw_with_slider
 from matplotlib import pyplot as plt
-
-
 
 
 def plot(profile1, profile2, labels=("Original", "Optimized")):
@@ -82,7 +80,9 @@ def create_reach_graph(scenario, planning_problem: PlanningProblem, reach_interf
     specs = ["true"]
 
     automaton = core.model_checking.FiniteAutomaton(specs)
-    init = core.initializers.base_set.CurvilinearUncertaintyInitializer(clcs, *([initial_uncertainty] * 4))
+    init = core.initializers.base_set.CurvilinearUncertaintyInitializer(
+        clcs, *([initial_uncertainty] * 4)
+    )
     layers = [
         core.layers.propagation.PointMassPropagator(dt, point_mass_params),
         core.layers.semantic.SemanticSplitter(automaton, None, dt, clcs, splitter_params),
@@ -95,7 +95,9 @@ def create_reach_graph(scenario, planning_problem: PlanningProblem, reach_interf
         core.post_processors.pruning.SemanticFinalStatePruner(automaton),
         core.post_processors.pruning.DanglingNodePruner(),
     ]
-    draw_with_regions(step_start, scenario, planning_problem, layers[1].lanelet_regions, clcs, plt.gca())
+    draw_with_regions(
+        step_start, scenario, planning_problem, layers[1].lanelet_regions, clcs, plt.gca()
+    )
     plt.show()
 
     rs = core.executors.DynamicReachExecutor(
@@ -124,12 +126,17 @@ def create_reach_graph(scenario, planning_problem: PlanningProblem, reach_interf
     # InteractiveVisualization(scenario, planning_problem, clcs).draw_interactive_reach_graph(graph)
 
 
-
-
 def initialize_from_planning_problem(
     planning_problem: PlanningProblem,
 ) -> Tuple[int, float, float, float, float, float]:
     """Create arguments to initialize an executor from a planning problem."""
     state = planning_problem.initial_state
     # the planning problem does not contain an acceleration, so we return 0
-    return state.time_step, state.position[0], state.position[1], state.velocity, 0, state.orientation
+    return (
+        state.time_step,
+        state.position[0],
+        state.position[1],
+        state.velocity,
+        0,
+        state.orientation,
+    )
