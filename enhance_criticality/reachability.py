@@ -20,8 +20,8 @@ def load_scenario_and_compute_reachability(scenario_name) -> ReachableSetInterfa
     reach_interface.compute_reachable_sets()
 
     # Compute the drivable area at each step
-    drivable_area = compute_full_drivable_area(reach_interface)
-    print("The drivable area at the start is:", drivable_area[0])
+    # drivable_area = compute_full_drivable_area(reach_interface)
+    # print("The drivable area at the start is:", drivable_area[0])
 
     # Plot computation results
     util_visual.plot_scenario_with_reachable_sets(reach_interface, figsize=(7, 7))
@@ -230,5 +230,5 @@ def get_profile_matrix(scenario, planning_problem_set, reach_interface, decision
     return profile_matrix, profile_index_map
 
 
-scenario = "DEU_Test-1_1_T-1"
-reachable_sets = load_scenario_and_compute_reachability(scenario)
+# scenario = "DEU_Test-1_1_T-1"
+# reachable_sets = load_scenario_and_compute_reachability(scenario)

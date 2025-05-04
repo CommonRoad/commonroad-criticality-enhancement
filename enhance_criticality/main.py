@@ -1,5 +1,6 @@
 import argparse
 import pathlib
+import reach_flow
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from optimization import optimize_velocity
@@ -28,17 +29,18 @@ def run_full_optimization_pipeline(
 
     scenario_file = pathlib.Path(__file__).parent.joinpath(f"./../scenarios/{scenario_name}.xml")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+    reach_flow.create_reach_graph(scenario, planning_problem_set, reach_interface)
 
     # Print the initial state of the ego vehicle
     # print(planning_problem.initial_state)
 
-    final_velocity = optimize_velocity(
-        scenario,
-        planning_problem_set,
-        scenario_name,
-        vehicle=planning_problem_set,
-        decision_variables=decision_variables,
-    )
+    # final_velocity = optimize_velocity(
+    #     scenario,
+    #     planning_problem_set,
+    #     scenario_name,
+    #     vehicle=planning_problem_set,
+    #     decision_variables=decision_variables,
+    # )
 
 
 if __name__ == "__main__":
