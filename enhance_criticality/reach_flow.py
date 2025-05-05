@@ -31,27 +31,37 @@ def plot(profile1, profile2, labels=("Original", "Optimized")):
 
 
 def compute_area(graph, step_start, step_end):
-    areas = np.full((step_end + 1,), -1.0)
+    areas = np.full((step_end + 1), -1.0)
 
     for t in range(step_start, step_end + 1):
         try:
-            nodes = graph.get_vertices_at_step(t)
+            nodes = graph.get_nodes_at_step(t)
         except AttributeError:
             raise RuntimeError(f"Graph does not support time step access at t={t}")
 
         area = 0.0
-        for node_id in nodes:
-            node = graph[node_id]
-            print(f"Step {t}: Node {node_id}, Region: {getattr(node, 'region', None)}")
-            valid_node_count = sum(
-                1 for node_id in graph.get_vertices_at_step(t) if hasattr(graph[node_id], "region")
-            )
-            print(f"Step {t}: {valid_node_count} nodes with region")
-            if hasattr(node, "region"):
-                region = node.region
-                width = region.p_lon_max - region.p_lon_min
-                height = region.p_lat_max - region.p_lat_min
-                area += width * height
+        for node_ptr in nodes:
+            if hasattr(node_ptr, "set"):
+                node_set = node_ptr.set
+
+                # Extract longitude and latitude bounds
+                try:
+                    lon_min = node_set.p_lon_min
+                    lon_max = node_set.p_lon_max
+                    lat_min = node_set.p_lat_min
+                    lat_max = node_set.p_lat_max
+
+                    # Compute the area
+                    width = lon_max - lon_min
+                    height = lat_max - lat_min
+                    area += width * height
+
+                except AttributeError:
+                    print(f"Warning: Node at step {t} has an incomplete set.")
+                    continue
+            else:
+                print(f"Warning: Node at step {t} has no 'set' attribute.")
+                continue
 
         areas[t] = area
 
@@ -64,6 +74,7 @@ def create_reach_graph():
     step_start = 0
     step_end = 15
     initial_uncertainty = 0.01
+
     point_mass_params = core.layers.propagation.PointMassParameters()
     point_mass_params.a_lon_min = -9.5
     point_mass_params.a_lon_max = 11.5
@@ -82,11 +93,11 @@ def create_reach_graph():
     splitter_params = core.layers.semantic.SemanticSplitterParameters()
     splitter_params.minimum_region_area = 0.01
     splitter_params.lanelet_inflation_radius = inflation_radius
+
     # read scenario
     scenario_path = "scenarios/ZAM_Merge-1_1_T-1.xml"
-    # scenario_path = "scenarios/ZAM_Yield-1_1_T-1.xml"
-    # scenario_path = "scenarios/USA_US101-6_1_T-1.xml"
     # scenario_path = "scenarios/DEU_Test-1_1_T-1.xml"
+
     scenario, planning_problems = CommonRoadFileReader(scenario_path).open()
     scenario, planning_problems = resample_scenario(scenario, planning_problems, dt)
     planning_problem = list(planning_problems.planning_problem_dict.values())[0]

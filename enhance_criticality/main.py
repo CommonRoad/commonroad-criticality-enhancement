@@ -19,7 +19,8 @@ def main():
 
     args = parser.parse_args()
 
-    run_full_optimization_pipeline("DEU_Test-1_1_T-1", [("ego", "velocity")])
+    # run_full_optimization_pipeline("DEU_Test-1_1_T-1", [("ego", "velocity")])
+    run_full_optimization_pipeline("ZAM_Merge-1_1_T-1", [("ego", "velocity")])
 
 
 def run_full_optimization_pipeline(
@@ -27,7 +28,7 @@ def run_full_optimization_pipeline(
 ):
     # reach_interface = load_scenario_and_compute_reachability(scenario_name)
     #
-    scenario_file = pathlib.Path(__file__).parent.joinpath(f"./../scenarios/{scenario_name}.xml")
+    # scenario_file = pathlib.Path(__file__).parent.joinpath(f"./../scenarios/{scenario_name}.xml")
     # scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
     reach_flow.create_reach_graph()
 

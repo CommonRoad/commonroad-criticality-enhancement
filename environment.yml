@@ -8,7 +8,7 @@ dependencies:
 - pip
 - ecos
 # only needed to run the pre-commits
-#- pre-commit
+- pre-commit
 # dependencies for commonroad-reach-flow
 - spot
 - boost
