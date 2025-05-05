@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
-from typing import List, Optional, Tuple
 
 import cvxpy as cv
 import file_modification
-import matplotlib.pyplot as plt
 import numpy as np
 import reachability
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
@@ -14,10 +11,14 @@ from commonroad_reach.data_structure.configuration_builder import ConfigurationB
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 
 
-# Minimize changes in velocity by trying to achive reference area
+# Minimize changes in velocity by trying to achieve reference area
 def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
-    a_ref = area_original.copy() * 1.5
+    a_ref = area_original.copy() * 0.7
     delta_a_0 = np.copy(area_original) - a_ref
+
+    for i in range(steps):
+        if delta_a_0[i] <= 0:
+            raise ValueError("delta_a_0 must be positive")
 
     # assert profile_matrix.shape[0] == len(area_original) == steps, \
     #     "Mismatch between area, profile matrix, and step count"
@@ -39,7 +40,7 @@ def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
     # c = np.dot(delta_a_0_transposed, c)
 
     d_x = cv.Variable(B.shape[1])
-    constraints = [d_x >= -10, d_x <= 10]
+    constraints = [d_x >= -5, d_x <= 5]
     # print('d_x:', d_x.size, 'W:', W.shape)
     # print('c:', c.shape)
 
@@ -161,6 +162,8 @@ def optimize_velocity(
             # Apply the update
             if variable_type == "velocity":
                 target_vehicle.initial_state.velocity += delta
+                if target_vehicle.initial_state.velocity <= 0:
+                    raise ValueError("Velocity cannot be negative")
                 print(
                     f"Updated velocity of vehicle {vehicle_id} by {delta:.4f} to {target_vehicle.initial_state.velocity:.4f}"
                 )
