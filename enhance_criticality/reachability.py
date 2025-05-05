@@ -40,6 +40,9 @@ def compute_drivable_slice_area(drivable_slice):
         height = region.p_lat_max - region.p_lat_min
         area += width * height
 
+    if area <= 0:
+        raise ValueError("Total drivable area is 0 or negative.")
+
     return area
 
 
@@ -70,6 +73,8 @@ def differentiate_reachable_set_wrt_velocity(
     scenario, planning_problem_set, reach_interface: ReachableSetInterface, vehicle
 ):
     original_velocity = vehicle.initial_state.velocity
+    if original_velocity <= 0:
+        raise ValueError(f"Vehicle velocity must be positive, not {original_velocity}.")
     if original_velocity < 1:
         original_velocity = 1
     h = original_velocity / 10
