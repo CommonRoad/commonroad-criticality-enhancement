@@ -5,7 +5,8 @@ import os
 import cvxpy as cv
 import file_modification
 import numpy as np
-import reachability
+import profile_matrix_computation
+import reach_flow
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
@@ -20,24 +21,11 @@ def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
         if delta_a_0[i] <= 0:
             raise ValueError("delta_a_0 must be positive")
 
-    # assert profile_matrix.shape[0] == len(area_original) == steps, \
-    #     "Mismatch between area, profile matrix, and step count"
-
-    # B = np.transpose(profile_matrix)
     B = profile_matrix.T
     Q = np.identity(steps)
 
-    # W = np.dot(np.transpose(B), Q)
-    # W = np.dot(W, B)
     W = B.T @ Q @ B
     c = 2 * (delta_a_0.T @ Q @ B)
-
-    # delta_a_0_transposed = np.transpose(delta_a_0)
-
-    # q_b = np.dot(Q, B)
-    # q_transposed_b = np.dot(np.transpose(Q), B)
-    # c = q_b + q_transposed_b
-    # c = np.dot(delta_a_0_transposed, c)
 
     d_x = cv.Variable(B.shape[1])
     constraints = [d_x >= -5, d_x <= 5]
@@ -112,7 +100,7 @@ def optimize_velocity(
         for i in range(iterations):
             # Try computing reachability with current velocity
             try:
-                reach_interface = reachability.compute_reachable_sets(scenario_name)
+                reach_interface = reach_flow.compute_reachable_sets(scenario_name)
                 steps = reach_interface.step_end - reach_interface.step_start + 1
 
             except Exception as e:
@@ -120,7 +108,7 @@ def optimize_velocity(
 
             # Compute area and profile matrix
             area_original = reachability.compute_full_drivable_area(reach_interface)
-            profile_matrix, profile_index_map = reachability.get_profile_matrix(
+            profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
                 scenario, planning_problem_set, reach_interface, decision_variables
             )
 
@@ -184,7 +172,7 @@ def optimize_velocity(
             )
 
             try:
-                reach_interface = reachability.compute_reachable_sets(modified_scenario_name)
+                reach_interface = reach_flow.compute_reachable_sets(modified_scenario_name)
 
             except Exception as e:
                 print(f"Reachability failed: {e}. Performing binary search.")

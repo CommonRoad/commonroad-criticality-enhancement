@@ -7,7 +7,7 @@ import numpy as np
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "enhance_criticality"))
 )
-from reachability import (
+from reachability_old import (
     compute_drivable_slice_area,
     compute_full_drivable_area,
     differentiate_reachable_set_wrt_position,

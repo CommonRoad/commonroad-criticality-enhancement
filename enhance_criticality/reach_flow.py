@@ -17,6 +17,10 @@ from shapely.geometry import Polygon
 from shapely.ops import unary_union
 
 
+def compute_reachable_sets():
+    return 0
+
+
 def plot(profile1, profile2, labels=("Original", "Optimized")):
     # plt.plot(range(step_start, step_end + 1), area_profile[step_start:step_end + 1])
     steps = range(len(profile1))
@@ -69,7 +73,7 @@ def compute_area(graph, step_start, step_end):
     return areas
 
 
-def create_reach_graph():
+def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
     dt = 0.2
     step_start = 0
     step_end = 15
@@ -95,7 +99,7 @@ def create_reach_graph():
     splitter_params.lanelet_inflation_radius = inflation_radius
 
     # read scenario
-    scenario_path = "scenarios/ZAM_Merge-1_1_T-1.xml"
+    # scenario_path = "scenarios/ZAM_Merge-1_1_T-1.xml"
     # scenario_path = "scenarios/DEU_Test-1_1_T-1.xml"
 
     scenario, planning_problems = CommonRoadFileReader(scenario_path).open()
@@ -113,16 +117,6 @@ def create_reach_graph():
     cc = CollisionCheckerFactory(
         step_start, step_end, inflation_radius
     ).create_curvilinear_collision_checker(scenario, clcs)
-    # specs = ["G (!Behind_V8 -> LeftOf_V8)"]
-    # specs = ["F G InFrontOf_V8"]
-    # specs = ["G InLanelet_1"]
-    # specs = ["F[10,10] G (LeftOf_V8 -> (Behind_V8 | InFrontOf_V8))"]
-    # specs = [
-    #     """
-    #     G (OnMainCarriageway & Behind_V8 & OnAccessRamp_V8 & F OnMainCarriageway_V8 ->
-    #         !(!OnRightLane & F OnRightLane))
-    #     """
-    # ]
     specs = ["true"]
     automaton = core.model_checking.FiniteAutomaton(specs)
     init = core.initializers.base_set.CurvilinearUncertaintyInitializer(
@@ -147,38 +141,12 @@ def create_reach_graph():
     rs = core.executors.DynamicReachExecutor(
         init, core.layers.meta.Sequential(layers), core.post_processors.meta.Sequential(post)
     )
-    # rs = core.executors.DynamicOtfCorridorExtractor(
-    #     init, core.layers.meta.Sequential(layers), core.post_processors.meta.Sequential(post)
-    # )
-
-    # rs = core.executors.CollisionReachExecutor(dt, params, cc, initial_uncertainty, clcs)
-    # rs = core.executors.CollisionOtfCorridorExtractor(dt, params, cc, initial_uncertainty, clcs)
-
-    # rs = core.executors.SemanticReachExecutor(dt, params, cc, initial_uncertainty, specs, scenario_path, clcs)
-    # rs = core.executors.SemanticOtfCorridorExtractor(dt, params, cc, initial_uncertainty, specs, scenario_path, clcs)
 
     tic = time.perf_counter()
     rs.initialize(*initialize_from_planning_problem(planning_problem))
     toc = time.perf_counter()
     print(f"Initialization took {toc - tic:3f} seconds")
 
-    # for _ in range(1):
-    #     # compute reachable sets
-    #     tic = time.perf_counter()
-    #     rs.compute_next_corridor(step_start + 1, step_end)
-    #     toc = time.perf_counter()
-    #     print(f"Reachable set computation took {toc - tic:3f} seconds")
-    #
-    #     # create corridors
-    #     tic = time.perf_counter()
-    #     driving_corridors = rs.extract_corridors()
-    #     toc = time.perf_counter()
-    #     print(f"Driving corridor extraction took {toc - tic:3f} seconds")
-    #
-    #     for corridor in driving_corridors:
-    #         draw_with_slider(step_start, step_end, scenario, planning_problem, corridor.reach_graph, clcs)
-
-    # compute reachable sets
     tic = time.perf_counter()
     rs.compute(step_start + 1, step_end)
     toc = time.perf_counter()

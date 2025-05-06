@@ -10,7 +10,7 @@ import pathlib
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from optimization import optimize_velocity
-from reachability import load_scenario_and_compute_reachability
+from reachability_old import load_scenario_and_compute_reachability
 
 
 def run_full_optimization_pipeline(
