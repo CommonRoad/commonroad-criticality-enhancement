@@ -7,7 +7,7 @@ import reach_flow
 
 # Computes the derivative of the reachable set area with respect to vehicle velocity using the h-method
 def differentiate_reachable_set_wrt_velocity(
-    scenario, planning_problem_set, step_start, step_end, vehicle
+    scenario, planning_problem_set, scenario_path, step_start, step_end, vehicle
 ):
     original_velocity = vehicle.initial_state.velocity
     if original_velocity <= 0:
@@ -18,9 +18,8 @@ def differentiate_reachable_set_wrt_velocity(
 
     derivative = np.array([-1.0 for i in range(step_start, step_end + 1)])
 
-    # Compute reachable area fororiginal velocity
-    reach_flow.compute_reachable_sets()
-    area_original = compute_full_drivable_area(reach_interface)
+    # Compute reachable area for original velocity
+    area_original = reach_flow.compute_drivable_area(scenario_path)
 
     # Slightly increase velocity
     vehicle.initial_state.velocity += h
@@ -29,12 +28,10 @@ def differentiate_reachable_set_wrt_velocity(
     print("modified velocity: ", vehicle.initial_state.velocity)
 
     # Save the modified scenario
-    file_modification.save_modified_scenario(scenario, planning_problem_set)
+    mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
-    # Reload the modified scenario
-    reach_interface_new = compute_reachable_sets("modified_scenario")
-
-    area_changed_velocity = compute_full_drivable_area(reach_interface_new)
+    # Recompute for the modified scenario
+    area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path)
 
     print("original area: ", area_original)
     print("modified area: ", area_changed_velocity)
@@ -51,6 +48,7 @@ def differentiate_reachable_set_wrt_velocity(
 def differentiate_reachable_set_wrt_position(
     scenario,
     planning_problem_set,
+    scenario_path,
     step_start,
     step_end,
     vehicle,
@@ -63,9 +61,8 @@ def differentiate_reachable_set_wrt_position(
 
     derivative = np.array([-1.0 for i in range(step_start, step_end + 1)])
 
-    # Compute reachable area fororiginal velocity
-    reach_flow.compute_reachable_sets()
-    area_original = compute_full_drivable_area(reach_interface)
+    # Compute reachable area for original position
+    area_original = reach_flow.compute_drivable_area(scenario_path)
 
     # Slightly increase velocity
     vehicle.initial_state.position = (
@@ -76,14 +73,10 @@ def differentiate_reachable_set_wrt_position(
     print("modified position: ", vehicle.initial_state.position)
 
     # Save the modified scenario
-    modified_scenario_name = file_modification.save_modified_scenario(
-        scenario, planning_problem_set
-    )
+    mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
-    # Reload the modified scenario
-    reach_interface_new = compute_reachable_sets(modified_scenario_name)
-
-    area_changed_position = compute_full_drivable_area(reach_interface_new)
+    # Recompute for the modified scenario
+    area_changed_position = reach_flow.compute_drivable_area(mod_scenario_path)
 
     print("original area: ", area_original)
     print("modified area: ", area_changed_position)
@@ -99,7 +92,9 @@ def differentiate_reachable_set_wrt_position(
     return derivative
 
 
-def get_profile_matrix(scenario, planning_problem_set, step_start, step_end, decision_variables):
+def get_profile_matrix(
+    scenario, planning_problem_set, scenario_path, step_start, step_end, decision_variables
+):
     result = []
     profile_index_map = {}
     scenario_max_time = step_end - step_start + 1
@@ -121,11 +116,17 @@ def get_profile_matrix(scenario, planning_problem_set, step_start, step_end, dec
 
         if variable_type == "velocity":
             deriv = differentiate_reachable_set_wrt_velocity(
-                scenario, planning_problem_set, step_start, step_end, vehicle
+                scenario, planning_problem_set, scenario_path, step_start, step_end, vehicle
             )
         elif variable_type == "position":
             deriv = differentiate_reachable_set_wrt_position(
-                scenario, planning_problem_set, step_start, step_end, vehicle, scenario_max_time
+                scenario,
+                planning_problem_set,
+                scenario_path,
+                step_start,
+                step_end,
+                vehicle,
+                scenario_max_time,
             )
         else:
             print(f"Unknown variable type: {variable_type}")

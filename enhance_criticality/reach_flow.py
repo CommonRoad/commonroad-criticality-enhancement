@@ -12,13 +12,22 @@ from cr_reach_flow.collision_checker.collision_checker_factory import CollisionC
 from cr_reach_flow.scenario.resampling import resample_scenario
 from cr_reach_flow.visualization.interactive import InteractiveVisualization
 from cr_reach_flow.visualization.scenario import draw_with_regions, draw_with_slider
+
+# from commonroad_reach.visualization.draw_reachability import draw_reach_graph
 from matplotlib import pyplot as plt
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
 
+# TODO Reload Compute the reachable sets and the drivable area and visualize them
+# def draw_reachable_sets():
+#     draw_reach_graph(step=5, graph=graph, clcs=clcs, scenario=scenario, planning_problem=planning_problem)
+#     plt.show()
 
-def compute_reachable_sets():
-    return 0
+
+def compute_drivable_area(scenario_path):
+    graph, step_start, step_end = create_reach_graph(scenario_path)
+    area = compute_area(graph, step_start, step_end)
+    return area
 
 
 def plot(profile1, profile2, labels=("Original", "Optimized")):
@@ -147,22 +156,33 @@ def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
     toc = time.perf_counter()
     print(f"Initialization took {toc - tic:3f} seconds")
 
-    tic = time.perf_counter()
-    rs.compute(step_start + 1, step_end)
-    toc = time.perf_counter()
-    print(f"Reachable set computation took {toc - tic:3f} seconds")
+    try:
+        tic = time.perf_counter()
+        rs.compute(step_start + 1, step_end)
+        toc = time.perf_counter()
+        print(f"Reachable set computation took {toc - tic:3f} seconds")
 
-    # create reachability graph
-    tic = time.perf_counter()
-    graph = rs.get_post_processed_reach_graph()
-    toc = time.perf_counter()
-    print(f"Graph creation took {toc - tic:3f} seconds")
+        # create reachability graph
+        tic = time.perf_counter()
+        graph = rs.get_post_processed_reach_graph()
+        toc = time.perf_counter()
+        print(f"Graph creation took {toc - tic:3f} seconds")
+
+        # Check if the graph contains any reachable nodes
+        has_nodes = any(
+            len(graph.get_nodes_at_step(t)) > 0 for t in range(step_start + 1, step_end + 1)
+        )
+        if not has_nodes:
+            raise RuntimeError("Reachability graph is empty – possibly due to invalid parameters.")
+
+    except RuntimeError as e:
+        print(f"Error computing reachable sets: {e}")
 
     draw_with_slider(step_start, step_end, scenario, planning_problem, graph, clcs)
 
     InteractiveVisualization(scenario, planning_problem, clcs).draw_interactive_reach_graph(graph)
 
-    compute_area(graph, step_start, step_end)
+    return graph, step_start, step_end
 
 
 def initialize_from_planning_problem(

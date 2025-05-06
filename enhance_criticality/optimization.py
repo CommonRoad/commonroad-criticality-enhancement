@@ -1,19 +1,14 @@
 from __future__ import annotations
 
-import os
-
 import cvxpy as cv
 import file_modification
 import numpy as np
 import profile_matrix_computation
 import reach_flow
-from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
-from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
-from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 
 
 # Minimize changes in velocity by trying to achieve reference area
-def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input):
+def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input=1.0):
     a_ref = area_original.copy() * 0.7
     delta_a_0 = np.copy(area_original) - a_ref
 
@@ -53,21 +48,12 @@ def perform_binary_search_velocity(
         # Update ego's velocity
         vehicle.initial_state.velocity = step_velocity
 
-        temp_file = os.path.join("scenarios", "modified_scenario.xml")
-
-        writer = CommonRoadFileWriter(scenario, planning_problem_set)
-        writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
+        mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
         # Reload and compute reachability
         try:
-            new_config = ConfigurationBuilder(path_root="../..").build_configuration(
-                "modified_scenario"
-            )
-            new_config.update()
-            reach_interface_new = ReachableSetInterface(new_config)
-            reach_interface_new.compute_reachable_sets()
             # Check if area can be computed
-            _ = reachability.compute_full_drivable_area(reach_interface_new)
+            _ = reach_flow.create_reach_graph(mod_scenario_path)
 
             # On success search upper half
             feasible_velocity = step_velocity
@@ -85,10 +71,10 @@ def perform_binary_search_velocity(
     return feasible_velocity
 
 
-def optimize_velocity(
+def optimize(
     scenario,
     planning_problem_set,
-    scenario_name,
+    scenario_path,
     vehicle,
     decision_variables: list,
     iterations: int = 10,
@@ -100,16 +86,21 @@ def optimize_velocity(
         for i in range(iterations):
             # Try computing reachability with current velocity
             try:
-                reach_interface = reach_flow.compute_reachable_sets(scenario_name)
-                steps = reach_interface.step_end - reach_interface.step_start + 1
+                graph, step_start, step_end = reach_flow.create_reach_graph(scenario_path)
 
             except Exception as e:
-                print(f"Reachability failed: {e}")
+                raise Exception(f"Reachability failed: {e}")
 
             # Compute area and profile matrix
-            area_original = reachability.compute_full_drivable_area(reach_interface)
+            steps = step_end - step_start + 1
+            area_original = reach_flow.compute_drivable_area(scenario_path)
             profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
-                scenario, planning_problem_set, reach_interface, decision_variables
+                scenario,
+                planning_problem_set,
+                scenario_path,
+                step_start,
+                step_end,
+                decision_variables,
             )
 
             # Solve QP
@@ -167,12 +158,12 @@ def optimize_velocity(
                 print(f"Unknown variable type: {variable_type}")
 
             # Update scenario
-            modified_scenario_name = file_modification.save_modified_scenario(
+            modified_scenario_path = file_modification.save_modified_scenario(
                 scenario, planning_problem_set
             )
 
             try:
-                reach_interface = reach_flow.compute_reachable_sets(modified_scenario_name)
+                _ = reach_flow.create_reach_graph(modified_scenario_path)
 
             except Exception as e:
                 print(f"Reachability failed: {e}. Performing binary search.")
@@ -184,3 +175,4 @@ def optimize_velocity(
                     x_before=target_vehicle.initial_state.velocity - last_change,
                     x_after=target_vehicle.initial_state.velocity,
                 )
+            return target_vehicle.initial_state.velocity
