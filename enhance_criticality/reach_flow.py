@@ -11,13 +11,19 @@ from commonroad_route_planner.route_planner import RoutePlanner
 from cr_reach_flow.collision_checker.collision_checker_factory import CollisionCheckerFactory
 from cr_reach_flow.scenario.resampling import resample_scenario
 from cr_reach_flow.visualization.interactive import InteractiveVisualization
-from cr_reach_flow.visualization.scenario import draw_with_regions, draw_with_slider, draw_with_reach_set
+from cr_reach_flow.visualization.scenario import (
+    draw_with_reach_set,
+    draw_with_regions,
+    draw_with_slider,
+)
 from matplotlib import pyplot as plt
+
 
 def compute_drivable_area(scenario_path):
     graph, step_start, step_end = create_reach_graph(scenario_path)
     area = compute_area(graph, step_start, step_end)
     return area
+
 
 def draw_reach_sets(step_start, step_end, scenario, planning_problem, graph, clcs):
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -198,7 +204,7 @@ def initialize_from_planning_problem(
     )
 
 
-#TODO finish this method that checks for edge cses
+# TODO finish this method that checks for edge cses
 # def validate_reachability_graph(graph, step_start, step_end, velocity_bounds=None, area_threshold=1e-5):
 #
 #     messages = []
