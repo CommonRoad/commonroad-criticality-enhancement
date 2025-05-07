@@ -11,23 +11,18 @@ from commonroad_route_planner.route_planner import RoutePlanner
 from cr_reach_flow.collision_checker.collision_checker_factory import CollisionCheckerFactory
 from cr_reach_flow.scenario.resampling import resample_scenario
 from cr_reach_flow.visualization.interactive import InteractiveVisualization
-from cr_reach_flow.visualization.scenario import draw_with_regions, draw_with_slider
-
-# from commonroad_reach.visualization.draw_reachability import draw_reach_graph
+from cr_reach_flow.visualization.scenario import draw_with_regions, draw_with_slider, draw_with_reach_set
 from matplotlib import pyplot as plt
-from shapely.geometry import Polygon
-from shapely.ops import unary_union
-
-# TODO Reload Compute the reachable sets and the drivable area and visualize them
-# def draw_reachable_sets():
-#     draw_reach_graph(step=5, graph=graph, clcs=clcs, scenario=scenario, planning_problem=planning_problem)
-#     plt.show()
-
 
 def compute_drivable_area(scenario_path):
     graph, step_start, step_end = create_reach_graph(scenario_path)
     area = compute_area(graph, step_start, step_end)
     return area
+
+def draw_reach_sets(step_start, step_end, scenario, planning_problem, graph, clcs):
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for time_step in range(step_start, step_end + 1):
+        draw_with_reach_set(time_step, scenario, planning_problem, graph, clcs, ax)
 
 
 def plot(profile1, profile2, labels=("Original", "Optimized")):
@@ -178,9 +173,11 @@ def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
     except RuntimeError as e:
         print(f"Error computing reachable sets: {e}")
 
-    draw_with_slider(step_start, step_end, scenario, planning_problem, graph, clcs)
+    draw_reach_sets(step_start, step_end, scenario, planning_problem, graph, clcs)
 
-    InteractiveVisualization(scenario, planning_problem, clcs).draw_interactive_reach_graph(graph)
+    # draw_with_slider(step_start, step_end, scenario, planning_problem, graph, clcs)
+    #
+    # InteractiveVisualization(scenario, planning_problem, clcs).draw_interactive_reach_graph(graph)
 
     return graph, step_start, step_end
 
@@ -199,3 +196,48 @@ def initialize_from_planning_problem(
         0,
         state.orientation,
     )
+
+
+#TODO finish this method that checks for edge cses
+# def validate_reachability_graph(graph, step_start, step_end, velocity_bounds=None, area_threshold=1e-5):
+#
+#     messages = []
+#     valid = True
+#
+#     for t in range(step_start, step_end + 1):
+#         nodes = graph.get_nodes_at_step(t)
+#         if not nodes:
+#             messages.append(f"Warning: No reachable nodes at step {t}")
+#             valid = False
+#             continue
+#
+#         for node in nodes:
+#             s = getattr(node, "set", None)
+#             if s is None:
+#                 messages.append(f"Warning: Node at step {t} missing 'set'")
+#                 valid = False
+#                 continue
+#
+#             # Area check
+#             area = (s.p_lon_max - s.p_lon_min) * (s.p_lat_max - s.p_lat_min)
+#             if area < area_threshold:
+#                 messages.append(f"Warning: Node at step {t} has degenerate area ({area:.2e})")
+#                 valid = False
+#
+#             # Velocity check
+#             if velocity_bounds:
+#                 v_lon_min, v_lon_max, v_lat_min, v_lat_max = velocity_bounds
+#                 if not (v_lon_min <= s.v_lon_min <= v_lon_max) or not (v_lon_min <= s.v_lon_max <= v_lon_max):
+#                     messages.append(
+#                         f"Warning: Velocity lon bounds out of range at step {t}: "
+#                         f"[{s.v_lon_min}, {s.v_lon_max}]"
+#                     )
+#                     valid = False
+#                 if not (v_lat_min <= s.v_lat_min <= v_lat_max) or not (v_lat_min <= s.v_lat_max <= v_lat_max):
+#                     messages.append(
+#                         f"Warning: Velocity lat bounds out of range at step {t}: "
+#                         f"[{s.v_lat_min}, {s.v_lat_max}]"
+#                     )
+#                     valid = False
+#
+#     return valid, messages

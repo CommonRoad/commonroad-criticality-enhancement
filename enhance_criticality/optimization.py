@@ -175,4 +175,4 @@ def optimize(
                     x_before=target_vehicle.initial_state.velocity - last_change,
                     x_after=target_vehicle.initial_state.velocity,
                 )
-            return target_vehicle.initial_state.velocity
+    return target_vehicle.initial_state.velocity
