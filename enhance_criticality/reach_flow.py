@@ -3,18 +3,15 @@ from typing import Tuple
 
 import commonroad_dc.pycrccosy as pycrccosy
 import cr_reach_flow.cr_reach_flow_core as core
-import matplotlib.pyplot as plt
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad_route_planner.route_planner import RoutePlanner
 from cr_reach_flow.collision_checker.collision_checker_factory import CollisionCheckerFactory
 from cr_reach_flow.scenario.resampling import resample_scenario
-from cr_reach_flow.visualization.interactive import InteractiveVisualization
 from cr_reach_flow.visualization.scenario import (
     draw_with_reach_set,
     draw_with_regions,
-    draw_with_slider,
 )
 from matplotlib import pyplot as plt
 

@@ -16,12 +16,12 @@ The software is written in Python 3.10.
 
 ```
 conda env create -n myenv -f environment.yaml
-conda env activate myenv
+conda activate myenv
 ```
 - The project uses CommonRoad-reach-flow
-- The dependancies for it are also included in the environment.yaml file
+- The dependencies for it are also included in the environment.yaml file
 - CommonRoad-reach-flow has to be installed by cloning its repository in the python environment
-and running the following command in the CommonRoad-reach-flow reository:
+and running the following command in the CommonRoad-reach-flow repository:
 
 ```
 pip install -v .
