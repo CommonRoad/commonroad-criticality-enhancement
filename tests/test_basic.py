@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 import pathlib
 
 from commonroad.common.file_reader import CommonRoadFileReader
+
 # from optimization import optimize
 
 
