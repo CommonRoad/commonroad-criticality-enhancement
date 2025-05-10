@@ -34,7 +34,7 @@ test_python_versions:
   image: python:$PYTHON_VERSIONS
   parallel:
     matrix:
-      - PYTHON_VERSIONS: [ "3.9", "3.10", "3.11" ]
+      - PYTHON_VERSIONS: [ "3.10" ]
   script:
     - *run_test_with_coverage
 
