@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 import pathlib
 
 from commonroad.common.file_reader import CommonRoadFileReader
-from optimization import optimize
+# from optimization import optimize
 
 
 def test_run_without_err(scenario_path: str, decision_variables: list[tuple[str, str]]):
