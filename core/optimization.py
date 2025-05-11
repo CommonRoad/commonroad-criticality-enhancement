@@ -111,7 +111,7 @@ def optimize(
                 if d_x.value is None:
                     raise ValueError("QP was not solved completely")
             except Exception as e:
-                print(f"QP optimization failed: {e}")
+                print(f"Warning: QP optimization failed: {e}")
 
             # Update variable
             vehicle_id, variable_type = var
@@ -124,7 +124,7 @@ def optimize(
                 )
 
             if target_vehicle is None:
-                print(f"Vehicle with ID {vehicle_id} not found.")
+                print(f"Warning: Vehicle with ID {vehicle_id} not found.")
                 continue
 
             # Get the index of the variable in d_x corresponding to the current loop variable
@@ -132,7 +132,7 @@ def optimize(
             var_index = profile_index_map.get((vehicle_id, variable_type))
 
             if var_index is None:
-                print(f"No profile found for ({vehicle_id}, {variable_type})")
+                print(f"Warning: No profile found for ({vehicle_id}, {variable_type})")
                 continue
 
             delta = float(d_x.value[var_index]) * 0.5
@@ -155,7 +155,7 @@ def optimize(
                     f"Updated position of vehicle {vehicle_id} to {target_vehicle.initial_state.position}"
                 )
             else:
-                print(f"Unknown variable type: {variable_type}")
+                print(f"Warning: Unknown variable type: {variable_type}")
 
             # Update scenario
             modified_scenario_path = file_modification.save_modified_scenario(

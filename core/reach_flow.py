@@ -47,6 +47,8 @@ def compute_area(graph, step_start, step_end):
     for t in range(step_start, step_end + 1):
         try:
             nodes = graph.get_nodes_at_step(t)
+            if not nodes:
+                print(f"Warning: No reachable nodes at step {t}")
         except AttributeError:
             raise RuntimeError(f"Graph does not support time step access at t={t}")
 
@@ -73,7 +75,8 @@ def compute_area(graph, step_start, step_end):
             else:
                 print(f"Warning: Node at step {t} has no 'set' attribute.")
                 continue
-
+        if area < 1e-5:
+            print(f"Warning: Area  at step {t} is too small.")
         areas[t] = area
 
     print(areas)
@@ -174,7 +177,7 @@ def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
             raise RuntimeError("Reachability graph is empty – possibly due to invalid parameters.")
 
     except RuntimeError as e:
-        print(f"Error computing reachable sets: {e}")
+        print(f"Warning: Error computing reachable sets: {e}")
 
     draw_reach_sets(step_start, step_end, scenario, planning_problem, graph, clcs)
 
@@ -199,48 +202,3 @@ def initialize_from_planning_problem(
         0,
         state.orientation,
     )
-
-
-# TODO finish this method that checks for edge cses
-# def validate_reachability_graph(graph, step_start, step_end, velocity_bounds=None, area_threshold=1e-5):
-#
-#     messages = []
-#     valid = True
-#
-#     for t in range(step_start, step_end + 1):
-#         nodes = graph.get_nodes_at_step(t)
-#         if not nodes:
-#             messages.append(f"Warning: No reachable nodes at step {t}")
-#             valid = False
-#             continue
-#
-#         for node in nodes:
-#             s = getattr(node, "set", None)
-#             if s is None:
-#                 messages.append(f"Warning: Node at step {t} missing 'set'")
-#                 valid = False
-#                 continue
-#
-#             # Area check
-#             area = (s.p_lon_max - s.p_lon_min) * (s.p_lat_max - s.p_lat_min)
-#             if area < area_threshold:
-#                 messages.append(f"Warning: Node at step {t} has degenerate area ({area:.2e})")
-#                 valid = False
-#
-#             # Velocity check
-#             if velocity_bounds:
-#                 v_lon_min, v_lon_max, v_lat_min, v_lat_max = velocity_bounds
-#                 if not (v_lon_min <= s.v_lon_min <= v_lon_max) or not (v_lon_min <= s.v_lon_max <= v_lon_max):
-#                     messages.append(
-#                         f"Warning: Velocity lon bounds out of range at step {t}: "
-#                         f"[{s.v_lon_min}, {s.v_lon_max}]"
-#                     )
-#                     valid = False
-#                 if not (v_lat_min <= s.v_lat_min <= v_lat_max) or not (v_lat_min <= s.v_lat_max <= v_lat_max):
-#                     messages.append(
-#                         f"Warning: Velocity lat bounds out of range at step {t}: "
-#                         f"[{s.v_lat_min}, {s.v_lat_max}]"
-#                     )
-#                     valid = False
-#
-#     return valid, messages

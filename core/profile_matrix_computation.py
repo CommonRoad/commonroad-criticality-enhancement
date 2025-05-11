@@ -111,7 +111,7 @@ def get_profile_matrix(
             )
 
         if vehicle is None:
-            print(f"Vehicle {vehicle_id} not found.")
+            print(f"Warning: Vehicle {vehicle_id} not found.")
             continue
 
         if variable_type == "velocity":
@@ -129,7 +129,7 @@ def get_profile_matrix(
                 scenario_max_time,
             )
         else:
-            print(f"Unknown variable type: {variable_type}")
+            print(f"Warning: Unknown variable type: {variable_type}")
             continue
 
         result.append(deriv)
