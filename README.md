@@ -28,7 +28,7 @@ pip install -v .
 ```
 - If errors occur with CMake or libraries not found:
   - Check if environment variables are set correctly for gcc and g++
-  - Delete build folder and rerun the installation
+  - Delete build folder in cr-reach-flow and rerun the installation
 ## Pre-commit hooks
 
 - To run the pre-commit hooks use the following command:

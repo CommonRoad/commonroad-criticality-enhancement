@@ -5,7 +5,7 @@ RUN pip install poetry
 RUN poetry self add poetry-plugin-export
 WORKDIR /app
 
-COPY enhance_criticality /app/enhance_criticality
+COPY core /app/enhance_criticality
 COPY pyproject.toml /app/
 COPY poetry.lock /app/
 COPY README.md /app/
