@@ -40,7 +40,7 @@ build-backend = "poetry.core.masonry.api"
 
 # Testing
 [tool.coverage.run]
-source = ["enhance_criticality"]
+source = ["core"]
 
 # Formatting
 [tool.ruff]
