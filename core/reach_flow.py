@@ -28,6 +28,7 @@ def draw_reach_sets(step_start, step_end, scenario, planning_problem, graph, clc
         draw_with_reach_set(time_step, scenario, planning_problem, graph, clcs, ax)
     plt.show()
 
+
 def draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs):
     fig, ax = plt.subplots(figsize=(10, 6))
     draw_with_reach_set(step_end, scenario, planning_problem, graph, clcs, ax)
