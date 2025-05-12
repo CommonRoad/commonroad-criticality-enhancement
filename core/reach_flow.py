@@ -9,24 +9,14 @@ from commonroad.planning.planning_problem import PlanningProblem
 from commonroad_route_planner.route_planner import RoutePlanner
 from cr_reach_flow.collision_checker.collision_checker_factory import CollisionCheckerFactory
 from cr_reach_flow.scenario.resampling import resample_scenario
-from cr_reach_flow.visualization.scenario import (
-    draw_with_reach_set,
-    draw_with_regions,
-)
+from cr_reach_flow.visualization.scenario import draw_with_reach_set
 from matplotlib import pyplot as plt
 
 
 def compute_drivable_area(scenario_path):
-    graph, step_start, step_end = create_reach_graph(scenario_path)
+    graph, step_start, step_end, planning_problem, clcs = create_reach_graph(scenario_path)
     area = compute_area(graph, step_start, step_end)
     return area
-
-
-def draw_reach_sets(step_start, step_end, scenario, planning_problem, graph, clcs):
-    fig, ax = plt.subplots(figsize=(10, 6))
-    for time_step in range(step_start, step_end + 1):
-        draw_with_reach_set(time_step, scenario, planning_problem, graph, clcs, ax)
-    plt.show()
 
 
 def draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs):
@@ -35,16 +25,17 @@ def draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs):
     plt.show()
 
 
-def plot(profile1, profile2, labels=("Original", "Optimized")):
-    # plt.plot(range(step_start, step_end + 1), area_profile[step_start:step_end + 1])
-    steps = range(len(profile1))
+def plot(area_original, area_modified, labels=("Original", "Optimized")):
+    time_steps = np.arange(len(area_original))
     plt.figure(figsize=(10, 5))
-    plt.plot(steps, profile1, label=labels[0])
-    plt.plot(steps, profile2, label=labels[1])
+    plt.plot(time_steps, area_original, label="Original Scenario", marker="o")
+    plt.plot(time_steps, area_modified, label="Modified Scenario", marker="s")
     plt.xlabel("Time Step")
     plt.ylabel("Drivable Area")
-    plt.title("Drivable Area Over Time")
+    plt.title("Comparison of Drivable Areas Over Time")
+    plt.legend()
     plt.grid(True)
+    plt.tight_layout()
     plt.show()
 
 
@@ -93,7 +84,7 @@ def compute_area(graph, step_start, step_end):
 def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
     dt = 0.2
     step_start = 0
-    step_end = 15
+    step_end = 20
     initial_uncertainty = 0.01
 
     point_mass_params = core.layers.propagation.PointMassParameters()
@@ -114,10 +105,6 @@ def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
     splitter_params = core.layers.semantic.SemanticSplitterParameters()
     splitter_params.minimum_region_area = 0.01
     splitter_params.lanelet_inflation_radius = inflation_radius
-
-    # read scenario
-    # scenario_path = "scenarios/ZAM_Merge-1_1_T-1.xml"
-    # scenario_path = "scenarios/DEU_Test-1_1_T-1.xml"
 
     scenario, planning_problems = CommonRoadFileReader(scenario_path).open()
     scenario, planning_problems = resample_scenario(scenario, planning_problems, dt)
@@ -150,10 +137,6 @@ def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
         core.post_processors.pruning.SemanticFinalStatePruner(automaton),
         core.post_processors.pruning.DanglingNodePruner(),
     ]
-    draw_with_regions(
-        step_start, scenario, planning_problem, layers[1].lanelet_regions, clcs, plt.gca()
-    )
-    plt.show()
 
     rs = core.executors.DynamicReachExecutor(
         init, core.layers.meta.Sequential(layers), core.post_processors.meta.Sequential(post)
@@ -186,13 +169,7 @@ def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
     except RuntimeError as e:
         print(f"Warning: Error computing reachable sets: {e}")
 
-    draw_reach_sets(step_start, step_end, scenario, planning_problem, graph, clcs)
-
-    # draw_with_slider(step_start, step_end, scenario, planning_problem, graph, clcs)
-    #
-    # InteractiveVisualization(scenario, planning_problem, clcs).draw_interactive_reach_graph(graph)
-
-    return graph, step_start, step_end
+    return graph, step_start, step_end, planning_problem, clcs
 
 
 def initialize_from_planning_problem(
