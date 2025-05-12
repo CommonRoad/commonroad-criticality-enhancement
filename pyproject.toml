@@ -1,5 +1,5 @@
 [project]
-name = "enhance_criticality"
+name = "core"
 version = "0.1.4"
 description = "CommonRoad Python template repository."
 authors = [{name = "Cyber-Physical Systems Group, Technical University of Munich", email = "<commonroad@lists.lrz.de>"}]
