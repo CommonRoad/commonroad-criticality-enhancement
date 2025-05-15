@@ -7,8 +7,8 @@ import reach_flow
 
 # Minimize changes in velocity by trying to achieve reference area
 def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input=1.0):
-    # a_ref = np.copy(area_original) * 0.7
-    delta_a_0 = np.copy(area_original) - a_ref_input
+    a_ref = np.copy(area_original) * 0.7
+    delta_a_0 = area_original - a_ref
 
     for i in range(steps):
         if delta_a_0[i] <= 0:
@@ -22,7 +22,8 @@ def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input=1.
     c = 2 * (delta_a_0.T @ Q @ B)
 
     d_x = cv.Variable(B.shape[1])
-    constraints = [d_x >= -5, d_x <= 5]
+    # constraints = [d_x >= -5, d_x <= 5]
+    constraints = [d_x >= 0]
     opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x), constraints)
     opt_prob.solve(solver=cv.ECOS, verbose=False)
 
@@ -148,7 +149,7 @@ def optimize(
                 print(f"Warning: No profile found for ({vehicle_id}, {variable_type})")
                 continue
 
-            delta = float(d_x.value[var_index]) * 0.5
+            delta = (float(d_x.value[var_index])) * 0.5
             last_change = delta
             apply_update(target_vehicle, variable_type, delta)
             print(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")

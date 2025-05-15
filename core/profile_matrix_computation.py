@@ -1,5 +1,3 @@
-import os
-
 import file_modification
 import numpy as np
 import reach_flow
@@ -24,8 +22,8 @@ def differentiate_reachable_set_wrt_velocity(
     # Slightly increase velocity
     vehicle.initial_state.velocity += h
 
-    print("original_velocity: ", original_velocity)
-    print("modified velocity: ", vehicle.initial_state.velocity)
+    # print("original_velocity: ", original_velocity)
+    # print("modified velocity: ", vehicle.initial_state.velocity)
 
     # Save the modified scenario
     mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
@@ -33,8 +31,8 @@ def differentiate_reachable_set_wrt_velocity(
     # Recompute for the modified scenario
     area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path)
 
-    print("original area: ", area_original)
-    print("modified area: ", area_changed_velocity)
+    # print("original area: ", area_original)
+    # print("modified area: ", area_changed_velocity)
 
     # Derivative using h method
     for time_step in range(step_start, step_end + 1):
