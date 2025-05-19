@@ -5,7 +5,7 @@ RUN pip install poetry
 RUN poetry self add poetry-plugin-export
 WORKDIR /app
 
-COPY crtemplate /app/crtemplate
+COPY core /app/enhance_criticality
 COPY pyproject.toml /app/
 COPY poetry.lock /app/
 COPY README.md /app/
@@ -24,5 +24,5 @@ ARG WHEEL_NAME="commonroad-template-2023.1-py3-non-any.whl"
 COPY --from=build /app/dist/${WHEEL_NAME} /app/
 RUN pip install /app/${WHEEL_NAME} && rm /app/${WHEEL_NAME}
 
-ENTRYPOINT ["python", "/app/crtemplate/main.py"]
+ENTRYPOINT ["python", "/app/enhance_criticality/main.py"]
 CMD ["--help"]

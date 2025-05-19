@@ -4,3 +4,5 @@ site
 *.pyc
 public
 .coverage
+output
+.vscode

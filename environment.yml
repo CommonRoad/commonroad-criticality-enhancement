@@ -1,0 +1,34 @@
+name: thesis
+channels:
+- conda-forge
+- defaults
+dependencies:
+- python=3.10
+- cvxpy
+- pip
+- ecos
+# only needed to run the pre-commits
+- pre-commit
+# dependencies for commonroad-reach-flow
+- spot
+- boost
+- eigen
+- yaml-cpp
+- spdlog
+- pybind11
+- gtest
+- gcc_linux-64=10.4.0
+- gxx_linux-64=10.4.0
+- pip:
+  - commonroad-clcs==2025.1.1
+  - commonroad-drivability-checker==2024.1
+  - commonroad-io==2024.3
+  - commonroad-reach==2024.1
+  - commonroad-route-planner==2024.1.1
+  - commonroad-vehicle-models==3.0.2
+
+# **IMPORTANT**
+# NOTE: This script converts a pyproject.toml file to an environment.yml file for conda.
+# It assumes that the pyproject.toml file is in the same directory as this script.
+
+# conda command to create the environment: conda env create -f environment.yml

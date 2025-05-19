@@ -6,6 +6,8 @@ stages:
   - deploy
 
 before_script:
+  - apt-get update
+  - apt-get install -y libgl1
   - pip install poetry
   - poetry config virtualenvs.in-project true
   - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
@@ -32,22 +34,22 @@ test_python_versions:
   image: python:$PYTHON_VERSIONS
   parallel:
     matrix:
-      - PYTHON_VERSIONS: [ "3.9", "3.10", "3.11" ]
+      - PYTHON_VERSIONS: [ "3.10" ]
   script:
     - *run_test_with_coverage
 
-test_latest_python_version_with_coverage:
-  stage: test
-  image: python:3.12
-  script:
-    - *run_test_with_coverage
-    - coverage xml
-  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
+# test_latest_python_version_with_coverage:
+#   stage: test
+#   image: python:3.12
+#   script:
+#     - *run_test_with_coverage
+#     - coverage xml
+#   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+#   artifacts:
+#     reports:
+#       coverage_report:
+#         coverage_format: cobertura
+#         path: coverage.xml
 
 ## deploy
 pages:

@@ -1,22 +1,27 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "crtemplate")))
+# Add the parent directory (my_project) to the system path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "core")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
 import pathlib
-import unittest
 
 from commonroad.common.file_reader import CommonRoadFileReader
-from main import TemplateClass
 
-print("hello world")
+# from optimization import optimize
 
 
-class TemplateClassTest(unittest.TestCase):
-    def setUp(self):
-        scenario, _ = CommonRoadFileReader(
-            pathlib.Path(__file__).parent.joinpath("./../scenarios/ZAM_Tjunction-1_307_T-1.xml")
-        ).open()
-        self.object = TemplateClass(scenario)
+def test_run_without_err(scenario_path: str, decision_variables: list[tuple[str, str]]):
+    scenario_file = pathlib.Path(__file__).parent.joinpath(f"./../{scenario_path}")
+    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
-    def test_number_of_lanelets(self):
-        self.assertEqual(self.object.return_number_of_lanelets(), 12)
+    # optimize(
+    #     scenario,
+    #     planning_problem_set,
+    #     scenario_path,
+    #     vehicle=planning_problem_set,
+    #     decision_variables=decision_variables,
+    # )
+
+
+test_run_without_err("scenarios/ZAM_Merge-1_1_T-1.xml", [("ego", "velocity")])
