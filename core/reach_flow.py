@@ -6,6 +6,7 @@ import cr_reach_flow.cr_reach_flow_core as core
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblem
+from commonroad.scenario.scenario import Scenario
 from commonroad_route_planner.route_planner import RoutePlanner
 from cr_reach_flow.collision_checker.collision_checker_factory import CollisionCheckerFactory
 from cr_reach_flow.scenario.resampling import resample_scenario
@@ -13,19 +14,57 @@ from cr_reach_flow.visualization.scenario import draw_with_reach_set
 from matplotlib import pyplot as plt
 
 
-def compute_drivable_area(scenario_path):
+def compute_drivable_area(scenario_path: str) -> float:
+    """
+    Computes the drivable area for a given scenario.
+
+    Parameters:
+    - scenario_path (str): Path to the scenario file.
+
+    Returns:
+    - float: The computed drivable area.
+    """
     graph, step_start, step_end, planning_problem, clcs = create_reach_graph(scenario_path)
     area = compute_area(graph, step_start, step_end)
     return area
 
 
-def draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs):
+def draw_reach_sets_end(
+    step_end: int,
+    scenario: Scenario,
+    planning_problem: PlanningProblem,
+    graph: object,
+    clcs: object,
+) -> None:
+    """
+    Draws the reachability sets at the final time step.
+
+    Parameters:
+    - step_end (int): The final time step.
+    - scenario: The scenario object.
+    - planning_problem: The planning problem definition.
+    - graph: The reachability graph.
+    - clcs: The list of collision-free trajectory sets.
+
+    Returns:
+    - None
+    """
     fig, ax = plt.subplots(figsize=(10, 6))
     draw_with_reach_set(step_end, scenario, planning_problem, graph, clcs, ax)
     plt.show()
 
 
-def plot(area_original, area_modified, labels=("Original", "Optimized")):
+def plot(area_original: np.ndarray, area_modified: np.ndarray) -> None:
+    """
+    Plots a comparison of drivable area over time for original and modified scenarios.
+
+    Parameters:
+    - area_original (np.ndarray): 1D array of drivable area values for the original scenario.
+    - area_modified (np.ndarray): 1D array of drivable area values for the modified scenario.
+
+    Returns:
+    - None
+    """
     time_steps = np.arange(len(area_original))
     plt.figure(figsize=(10, 5))
     plt.plot(time_steps, area_original, label="Original Scenario", marker="o")
@@ -39,7 +78,18 @@ def plot(area_original, area_modified, labels=("Original", "Optimized")):
     plt.show()
 
 
-def compute_area(graph, step_start, step_end):
+def compute_area(graph: object, step_start: int, step_end: int) -> np.ndarray:
+    """
+    Computes the drivable area between two time steps using the reachability graph.
+
+    Parameters:
+    - graph: The reachability graph structure (type unspecified).
+    - step_start (int): The starting time step.
+    - step_end (int): The ending time step.
+
+    Returns:
+    -  np.ndarray: 1D array of drivable area values for each time step in the range.
+    """
     areas = np.full((step_end + 1), -1.0)
 
     for t in range(step_start, step_end + 1):
@@ -81,7 +131,21 @@ def compute_area(graph, step_start, step_end):
     return areas
 
 
-def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
+def create_reach_graph(scenario_path: str) -> Tuple[object, int, int, PlanningProblem, object]:
+    """
+    Loads a CommonRoad scenario, configures the reachability executor, and computes the reachability graph.
+
+    Parameters:
+    - scenario_path (str): Path to the XML file containing the CommonRoad scenario.
+
+    Returns:
+    - Tuple:
+        - graph (object): The reachability graph with reachable states.
+        - step_start (int): The starting time step used for computation.
+        - step_end (int): The ending time step used for computation.
+        - planning_problem (PlanningProblem): The planning problem extracted from the scenario.
+        - clcs (object): Curvilinear coordinate system generated from the route.
+    """
     dt = 0.2
     step_start = 0
     step_end = 20
@@ -175,7 +239,17 @@ def create_reach_graph(scenario_path="scenarios/ZAM_Merge-1_1_T-1.xml"):
 def initialize_from_planning_problem(
     planning_problem: PlanningProblem,
 ) -> Tuple[int, float, float, float, float, float]:
-    """Create arguments to initialize an executor from a planning problem."""
+    """
+    Extracts the initial state from a PlanningProblem and formats it as a tuple
+    of initialization parameters for an executor or simulator.
+
+    Parameters:
+    - planning_problem (PlanningProblem): The planning problem containing the initial state.
+
+    Returns:
+    - Tuple[int, float, float, float, float, float]: A tuple containing:
+        (time_step, position_x, position_y, velocity, acceleration (0), orientation)
+    """
     state = planning_problem.initial_state
     # the planning problem does not contain an acceleration, so we return 0
     return (

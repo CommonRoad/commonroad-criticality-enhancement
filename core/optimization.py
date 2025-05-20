@@ -1,12 +1,34 @@
+from typing import List, Tuple
+
 import cvxpy as cv
 import file_modification
 import numpy as np
 import profile_matrix_computation
 import reach_flow
+from commonroad.planning.planning_problem import PlanningProblemSet
+from commonroad.scenario.obstacle import DynamicObstacle
+from commonroad.scenario.scenario import Scenario
 
 
-# Minimize changes in velocity by trying to achieve reference area
-def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input=1.0):
+def optimize_iteration(
+    area_original: np.ndarray,
+    profile_matrix: np.ndarray,
+    steps: int,
+    a_ref_input: float = 1.0,
+) -> cv.Variable:
+    """
+    Solves a quadratic program (QP) to compute optimal adjustments to decision variables.
+
+    Parameters:
+    - area_original (np.ndarray): The original drivable area over time.
+    - profile_matrix (np.ndarray): Sensitivity matrix showing how each decision variable affects the area.
+    - steps (int): Number of time steps.
+    - a_ref_input (float, optional): Scalar to modify the area reference target. Default is 1.0.
+
+    Returns:
+    - cv.Variable: The solution variable from the QP optimization.
+    """
+
     a_ref = np.copy(area_original) * 0.7
     delta_a_0 = area_original - a_ref
 
@@ -33,10 +55,30 @@ def optimize_iteration(area_original, profile_matrix, steps: int, a_ref_input=1.
     return d_x
 
 
-# X before and after last QP update
 def perform_binary_search_velocity(
-    scenario, planning_problem_set, vehicle, x_before, x_after, iteration_limit=10
-):
+    scenario: Scenario,
+    planning_problem_set: PlanningProblemSet,
+    vehicle: DynamicObstacle,
+    x_before: float,
+    x_after: float,
+    iteration_limit: int = 10,
+) -> float:
+    """
+    Performs binary search to find the highest feasible velocity between `x_before` and `x_after`
+    that still yields a valid reachability graph.
+
+    Parameters:
+    - scenario (Scenario): The CommonRoad scenario being modified.
+    - planning_problem_set (PlanningProblemSet): Planning problems associated with the scenario.
+    - vehicle (DynamicObstacle): The vehicle whose velocity is being adjusted.
+    - x_before (float): Velocity before last change.
+    - x_after (float): Velocity after last change.
+    - iteration_limit (int, optional): Maximum number of binary search steps. Default is 10.
+
+    Returns:
+    - float: The highest feasible velocity found.
+    """
+
     low = x_before
     high = x_after
     feasible_velocity = x_before
@@ -71,7 +113,18 @@ def perform_binary_search_velocity(
     return feasible_velocity
 
 
-def apply_update(target_vehicle, variable_type, delta):
+def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: float) -> None:
+    """
+    Applies a delta update to a specified decision variable of a vehicle.
+
+    Parameters:
+    - target_vehicle (DynamicObstacle): The vehicle to be modified.
+    - variable_type (str): The variable to update ("velocity" or "position").
+    - delta (float): The amount to adjust the variable by.
+
+    Raises:
+    - ValueError: If the resulting velocity is non-positive or an unsupported variable type is provided.
+    """
     if variable_type == "velocity":
         target_vehicle.initial_state.velocity += delta
         if target_vehicle.initial_state.velocity <= 0:
@@ -84,14 +137,32 @@ def apply_update(target_vehicle, variable_type, delta):
 
 
 def optimize(
-    scenario,
-    planning_problem_set,
-    scenario_path,
-    vehicle,
-    decision_variables: list,
+    scenario: Scenario,
+    planning_problem_set: PlanningProblemSet,
+    scenario_path: str,
+    decision_variables: List[Tuple[str, str]],
     iterations: int = 10,
     a_ref_input: float = 1.0,
-):
+) -> float:
+    """
+    Optimizes scenario variables (velocity or position of vehicles) to influence the drivable area.
+
+    For each variable in `decision_variables`, it runs a loop of QP-based updates to maximize
+    reachability, reverting with binary search if updates lead to invalid configurations.
+
+    Parameters:
+    - scenario (Scenario): The CommonRoad scenario being modified.
+    - planning_problem_set (PlanningProblemSet): The set of planning problems in the scenario.
+    - scenario_path (str): Path to the scenario.
+    - decision_variables (List[Tuple[str, str]]): List of decision variables to optimize.
+        Each tuple is (vehicle_id, variable_type), where variable_type is "velocity" or "position".
+    - iterations (int, optional): Number of optimization iterations to run per variable. Default is 10.
+    - a_ref_input (float, optional): Scalar to modify the area reference target. Default is 1.0.
+
+    Returns:
+    - float: The highest feasible velocity found.
+    """
+
     last_change = 0.0
 
     for var in decision_variables:

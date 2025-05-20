@@ -29,7 +29,6 @@ def run_full_optimization_pipeline(
         scenario,
         planning_problem_set,
         scenario_path,
-        vehicle=planning_problem_set,
         decision_variables=decision_variables,
     )
     print("final_velocity:", final_velocity)
