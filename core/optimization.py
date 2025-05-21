@@ -13,7 +13,8 @@ from commonroad.scenario.scenario import Scenario
 def optimize_iteration(
     area_original: np.ndarray,
     profile_matrix: np.ndarray,
-    steps: int,
+    step_end: int,
+    step_start_opt: int = 6,
     a_ref_input: float = 1.0,
 ) -> cv.Variable:
     """
@@ -22,23 +23,25 @@ def optimize_iteration(
     Parameters:
     - area_original (np.ndarray): The original drivable area over time.
     - profile_matrix (np.ndarray): Sensitivity matrix showing how each decision variable affects the area.
-    - steps (int): Number of time steps.
+    - step_end (int): Last time step.
+    - step_start (int): Time step to start the optimization (default: 4).
     - a_ref_input (float, optional): Scalar to modify the area reference target. Default is 1.0.
 
     Returns:
     - cv.Variable: The solution variable from the QP optimization.
     """
 
-    # a_ref = np.copy(area_original) * 0.7
-    delta_a_0 = area_original - a_ref_input
+    num_steps = step_end - step_start_opt + 1
+    area_sub = area_original[step_start_opt : step_end + 1]
+    profile_sub = profile_matrix[:, step_start_opt : step_end + 1]
 
-    for i in range(steps):
-        if delta_a_0[i] <= 0:
-            delta_a_0[i] = np.copy(area_original)[i]
-            # raise ValueError("delta_a_0 must be positive")
+    delta_a_0 = area_sub - a_ref_input
 
-    B = profile_matrix.T
-    Q = np.identity(steps)
+    delta_a_0 = np.maximum(delta_a_0, 1e-2)
+
+    B = profile_sub.T
+    # B = np.minimum(B, 0)
+    Q = np.identity(num_steps)
 
     W = B.T @ Q @ B
     c = 2 * (delta_a_0.T @ Q @ B)
@@ -46,7 +49,9 @@ def optimize_iteration(
     d_x = cv.Variable(B.shape[1])
     constraints = [d_x >= -5, d_x <= 5]
     # constraints = []
-    opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x), constraints)
+    opt_prob = cv.Problem(
+        cv.Minimize(cv.quad_form(d_x, W) + c @ d_x + +0.1 * cv.norm(d_x, 2)), constraints
+    )
     opt_prob.solve(solver=cv.ECOS, verbose=False)
 
     if d_x.value is None:
@@ -142,7 +147,7 @@ def optimize(
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
     iterations: int = 9,
-    a_ref_input: float = 10.0,
+    a_ref_input: float = 1.0,
 ) -> float:
     """
     Optimizes scenario variables (velocity or position of vehicles) to influence the drivable area.
@@ -177,7 +182,6 @@ def optimize(
                 raise Exception(f"Reachability failed: {e}")
 
             # Compute area and profile matrix
-            steps = step_end - step_start + 1
             area_original = reach_flow.compute_drivable_area(scenario_path)
             profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
                 scenario,
@@ -191,7 +195,7 @@ def optimize(
             # Solve QP
             try:
                 d_x = optimize_iteration(
-                    area_original, profile_matrix, steps, a_ref_input=a_ref_input
+                    area_original, profile_matrix, step_end, a_ref_input=a_ref_input
                 )
                 if d_x.value is None:
                     raise ValueError("QP was not solved completely")

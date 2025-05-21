@@ -125,7 +125,7 @@ def compute_area(graph: object, step_start: int, step_end: int) -> np.ndarray:
                 continue
         if area < 1e-5:
             print(f"Warning: Area  at step {t} is too small.")
-        areas[t] = area
+        areas[t] = area if area > 0 else 0.0
 
     print(areas)
     return areas
