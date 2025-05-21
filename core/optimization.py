@@ -29,8 +29,8 @@ def optimize_iteration(
     - cv.Variable: The solution variable from the QP optimization.
     """
 
-    a_ref = np.copy(area_original) * 0.7
-    delta_a_0 = area_original - a_ref
+    # a_ref = np.copy(area_original) * 0.7
+    delta_a_0 = area_original - a_ref_input
 
     for i in range(steps):
         if delta_a_0[i] <= 0:
@@ -44,8 +44,8 @@ def optimize_iteration(
     c = 2 * (delta_a_0.T @ Q @ B)
 
     d_x = cv.Variable(B.shape[1])
-    # constraints = [d_x >= -5, d_x <= 5]
-    constraints = [d_x >= 0]
+    constraints = [d_x >= -5, d_x <= 5]
+    # constraints = []
     opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x), constraints)
     opt_prob.solve(solver=cv.ECOS, verbose=False)
 
@@ -61,7 +61,7 @@ def perform_binary_search_velocity(
     vehicle: DynamicObstacle,
     x_before: float,
     x_after: float,
-    iteration_limit: int = 10,
+    iteration_limit: int = 3,
 ) -> float:
     """
     Performs binary search to find the highest feasible velocity between `x_before` and `x_after`
@@ -141,8 +141,8 @@ def optimize(
     planning_problem_set: PlanningProblemSet,
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
-    iterations: int = 10,
-    a_ref_input: float = 1.0,
+    iterations: int = 9,
+    a_ref_input: float = 10.0,
 ) -> float:
     """
     Optimizes scenario variables (velocity or position of vehicles) to influence the drivable area.
@@ -187,7 +187,7 @@ def optimize(
                 step_end,
                 decision_variables,
             )
-
+            print(f"Profile: {profile_matrix}")
             # Solve QP
             try:
                 d_x = optimize_iteration(

@@ -45,4 +45,4 @@ def run_full_optimization_pipeline(
     reach_flow.plot(area_original, area_modified)
 
 
-run_full_optimization_pipeline("scenarios/ZAM_Merge-1_1_T-1.xml", [("ego", "velocity")])
+run_full_optimization_pipeline("scenarios/DEU_Reutlingen-5_1_T-1.xml", [("ego", "velocity")])
