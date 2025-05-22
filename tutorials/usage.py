@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 import reach_flow
 
@@ -13,9 +14,9 @@ from optimization import optimize
 
 
 def run_full_optimization_pipeline(
-    scenario_path: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0
-):
-    scenario_file = pathlib.Path(__file__).parent.joinpath(f"./../{scenario_path}")
+    scenario_path: str, decision_variables: list, iterations: int = 9, a_ref_input: float = 1.0
+) -> None:
+    scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
@@ -30,10 +31,12 @@ def run_full_optimization_pipeline(
         planning_problem_set,
         scenario_path,
         decision_variables=decision_variables,
+        iterations=iterations,
+        a_ref_input=a_ref_input,
     )
     print("final_velocity:", final_velocity)
 
-    scenario_file = pathlib.Path(__file__).parent.joinpath(f"./../{scenario_path}")
+    scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(

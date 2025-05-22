@@ -60,16 +60,17 @@ def optimize_iteration(
     return d_x
 
 
-def perform_binary_search_velocity(
+def perform_binary_search(
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
     vehicle: DynamicObstacle,
     x_before: float,
     x_after: float,
+    var_type: str,
     iteration_limit: int = 3,
 ) -> float:
     """
-    Performs binary search to find the highest feasible velocity between `x_before` and `x_after`
+    Performs binary search to find the highest feasible velocity (or position) between `x_before` and `x_after`
     that still yields a valid reachability graph.
 
     Parameters:
@@ -78,22 +79,26 @@ def perform_binary_search_velocity(
     - vehicle (DynamicObstacle): The vehicle whose velocity is being adjusted.
     - x_before (float): Velocity before last change.
     - x_after (float): Velocity after last change.
+    - var_type (str): Type of the variable - "velocity" or "position".
     - iteration_limit (int, optional): Maximum number of binary search steps. Default is 10.
 
     Returns:
-    - float: The highest feasible velocity found.
+    - float: The highest feasible velocity/position found.
     """
 
     low = x_before
     high = x_after
-    feasible_velocity = x_before
+    feasible_var = x_before
 
     for iteration in range(iteration_limit):
-        step_velocity = (low + high) / 2
-        print(f"Binary search iteration {iteration+1}: Trying velocity = {step_velocity:.6f}")
+        step_var = (low + high) / 2
+        print(f"Binary search iteration {iteration+1}: Trying {var_type} = {step_var:.6f}")
 
-        # Update ego's velocity
-        vehicle.initial_state.velocity = step_velocity
+        # Update ego's velocity/position
+        if var_type == "velocity":
+            vehicle.initial_state.velocity = step_var
+        else:
+            vehicle.initial_state.position[0] = step_var
 
         mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
@@ -103,19 +108,19 @@ def perform_binary_search_velocity(
             _ = reach_flow.create_reach_graph(mod_scenario_path)
 
             # On success search upper half
-            feasible_velocity = step_velocity
-            low = step_velocity
+            feasible_var = step_var
+            low = step_var
 
         # Else search lower half
         except Exception:
-            high = step_velocity
+            high = step_var
 
         # Stop early if step size is small
         if abs(high - low) < 1e-4:
             break
 
-    print(f"Binary search complete with best feasible velocity: {feasible_velocity:.6f}")
-    return feasible_velocity
+    print(f"Binary search complete with best feasible {var_type}: {feasible_var:.6f}")
+    return feasible_var
 
 
 def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: float) -> None:
@@ -146,8 +151,8 @@ def optimize(
     planning_problem_set: PlanningProblemSet,
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
-    iterations: int = 9,
-    a_ref_input: float = 1.0,
+    iterations: int,
+    a_ref_input: float,
 ) -> float:
     """
     Optimizes scenario variables (velocity or position of vehicles) to influence the drivable area.
@@ -239,12 +244,23 @@ def optimize(
 
             except Exception as e:
                 print(f"Reachability failed: {e}. Performing binary search.")
+
+                if variable_type == "velocity":
+                    x_before = target_vehicle.initial_state.velocity - last_change
+                    x_after = target_vehicle.initial_state.velocity
+                else:
+                    x_before = target_vehicle.initial_state.position[0] - last_change
+                    x_after = target_vehicle.initial_state.position[0]
                 # Run binary search between previous valid and current velocity
-                return perform_binary_search_velocity(
+                return perform_binary_search(
                     scenario,
                     planning_problem_set,
                     target_vehicle,
-                    x_before=target_vehicle.initial_state.velocity - last_change,
-                    x_after=target_vehicle.initial_state.velocity,
+                    x_before=x_before,
+                    x_after=x_after,
                 )
-    return target_vehicle.initial_state.velocity
+
+    if variable_type == "position":
+        return target_vehicle.initial_state.position[0]
+    else:
+        return target_vehicle.initial_state.velocity
