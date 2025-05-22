@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu, Fabian Höltke, Moritz Klischat" affiliation="Technical University of Munich, Germany" source="OpenStreetMaps, SUMO Traffic Simulator" benchmarkID="DEU_Reutlingen-5_1_T-1" date="2025-05-21">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu, Fabian Höltke, Moritz Klischat" affiliation="Technical University of Munich, Germany" source="OpenStreetMaps, SUMO Traffic Simulator" benchmarkID="DEU_Reutlingen-5_1_T-1" date="2025-05-22">
   <location>
     <geoNameId>2847736</geoNameId>
     <gpsLatitude>48.49144</gpsLatitude>
@@ -7,8 +7,8 @@
   </location>
   <scenarioTags>
     <simulated/>
-    <intersection/>
     <critical/>
+    <intersection/>
   </scenarioTags>
   <lanelet id="1311">
     <leftBound>
@@ -120500,7 +120500,7 @@
         <exact>1.1614</exact>
       </orientation>
       <velocity>
-        <exact>9.6431</exact>
+        <exact>27.7099</exact>
       </velocity>
       <acceleration>
         <exact>0.0</exact>

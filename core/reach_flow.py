@@ -127,7 +127,6 @@ def compute_area(graph: object, step_start: int, step_end: int) -> np.ndarray:
             print(f"Warning: Area  at step {t} is too small.")
         areas[t] = area if area > 0 else 0.0
 
-    print(areas)
     return areas
 
 
@@ -177,15 +176,21 @@ def create_reach_graph(scenario_path: str) -> Tuple[object, int, int, PlanningPr
     # plan route and create clcs
     route = RoutePlanner(scenario, planning_problem).plan_routes().retrieve_first_route()
     splitter_params.route_lanelet_ids = set(route.lanelet_ids)
+    lanelet_ids = splitter_params.route_lanelet_ids
     reference_path = pycrccosy.Util.resample_polyline(route.reference_path, 2.0)
     clcs = pycrccosy.CurvilinearCoordinateSystem(reference_path)
-    print(f"Route lanelet IDs: {splitter_params.route_lanelet_ids}")
+    print(f"Route lanelet IDs: {lanelet_ids}")
 
     # create reach set executor
     cc = CollisionCheckerFactory(
         step_start, step_end, inflation_radius
     ).create_curvilinear_collision_checker(scenario, clcs)
-    specs = ["true"]
+
+    # specs = ["G (InLanelet_13 | InLanelet_522 | InLanelet_946)"]
+    lanelet_conditions = " | ".join(f"InLanelet_{lid}" for lid in lanelet_ids)
+    specs = [f"G ({lanelet_conditions})"]
+    print(specs)
+
     automaton = core.model_checking.FiniteAutomaton(specs)
     init = core.initializers.base_set.CurvilinearUncertaintyInitializer(
         clcs, *([initial_uncertainty] * 4)
