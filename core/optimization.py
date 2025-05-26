@@ -212,6 +212,11 @@ def optimize(
             if vehicle_id == "ego":
                 target_vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
             else:
+                try:
+                    vehicle_id = int(vehicle_id)
+                except ValueError:
+                    print(f"Warning: Vehicle ID '{vehicle_id}' is not a valid integer.")
+                    continue
                 target_vehicle = next(
                     (veh for veh in scenario.dynamic_obstacles if veh.obstacle_id == vehicle_id),
                     None,

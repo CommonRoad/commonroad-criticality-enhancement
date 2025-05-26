@@ -169,9 +169,12 @@ def get_profile_matrix(
         if vehicle_id == "ego":
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
         else:
-            vehicle = next(
-                (v for v in scenario.dynamic_obstacles if v.obstacle_id == vehicle_id), None
-            )
+            try:
+                vid = int(vehicle_id)
+            except ValueError:
+                print(f"Warning: Vehicle ID '{vehicle_id}' is not a valid integer.")
+                continue
+            vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
 
         if vehicle is None:
             print(f"Warning: Vehicle {vehicle_id} not found.")
