@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu, Fabian Höltke, Moritz Klischat" affiliation="Technical University of Munich, Germany" source="Scenario Factory (OpenStreetMaps, SUMO Traffic Simulator)" benchmarkID="BEL_Aarschot-6_1_T-1" date="2025-05-23">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu, Fabian Höltke, Moritz Klischat" affiliation="Technical University of Munich, Germany" source="Scenario Factory (OpenStreetMaps, SUMO Traffic Simulator)" benchmarkID="BEL_Aarschot-6_1_T-1" date="2025-05-27">
   <location>
     <geoNameId>2803429</geoNameId>
     <gpsLatitude>50.98715</gpsLatitude>
     <gpsLongitude>4.83695</gpsLongitude>
   </location>
   <scenarioTags>
+    <simulated/>
     <critical/>
     <intersection/>
-    <simulated/>
   </scenarioTags>
   <lanelet id="27115">
     <leftBound>

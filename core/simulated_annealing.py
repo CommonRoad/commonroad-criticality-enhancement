@@ -29,7 +29,7 @@ def run_simulated_annealing(
     # Optimization loop
     for _ in range(budget):
         candidate = optimizer.ask()
-        loss = compute_drivable_area(candidate.args[0])
+        loss = compute_loss(candidate.args[0])
         optimizer.tell(candidate, loss)
 
     # Return best result
