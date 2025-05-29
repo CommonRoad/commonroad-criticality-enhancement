@@ -1,42 +1,68 @@
+from typing import List, Tuple
+
 import nevergrad as ng
+from file_modification import apply_variables_to_scenario
+from reach_flow import compute_drivable_area
 
 
-def run_simulated_annealing(
-    num_vars: int, lower_bound: float = 0, upper_bound: float = 100, budget: int = 10
-):
+def objective_multi_var(params: List[float], decision_variables: List[Tuple[str, str]]) -> float:
     """
-    Runs Simulated Annealing optimization using Nevergrad to maximize drivable area
-    (or minimize any custom objective function).
+    Applies decision variables (velocity or position changes), runs the pipeline, and returns drivable area.
 
     Parameters:
-    - num_vars (int): The number of decision variables to optimize.
-    - lower_bound (float): The minimum allowable value for decision variables (e.g., min velocity or position). Default is 0.
-    - upper_bound (float): The maximum allowable value for decision variables (e.g., max velocity or position). Default is 100.
-    - budget (int, optional): The number of optimization iterations (calls to the objective function). Default is 10.
+    - params (List[float]): Values corresponding to the decision_variables
+    - decision_variables (List[Tuple[str, str]]): The (vehicle_id, variable_type) for each param
 
     Returns:
-    - best_vars (List[float]): The best decision variable values found during optimization.
-    - best_area (float): The best drivable area found during optimization.
+    - float: The drivable area (we are minimizing it)
     """
-    # Define the variable space
-    parametrization = ng.p.Array(shape=(num_vars,)).set_bounds(lower_bound, upper_bound)
+    try:
+        # Apply the changes to the scenario/planning problem
+        updated_scenario_path = apply_variables_to_scenario(params, decision_variables)
 
-    # Choose Simulated Annealing optimizer
+        # Compute drivable area with your pipeline
+        area = compute_drivable_area(updated_scenario_path)
+        return area  # because we want to minimize
+    except Exception as e:
+        print(f"Error during simulation: {e}")
+        return float("inf")
+
+
+def run_sa_multi_variable(
+    decision_variables: List[Tuple[str, str]],
+    lower_bound: float,
+    upper_bound: float,
+    budget: int = 100,
+) -> Tuple[List[float], float]:
+    """
+    Runs SA optimization over multiple decision variables to minimize drivable area.
+
+    Parameters:
+    - decision_variables (List[Tuple[str, str]]): Variables to optimize, e.g. [("ego", "velocity"), (31, "position")]
+    - lower_bound (float): Min value each variable can take
+    - upper_bound (float): Max value each variable can take
+    - budget (int): Number of evaluations allowed
+
+    Returns:
+    - best_params (List[float]): Best parameter values found
+    - best_area (float): The minimized summed up drivable area
+    """
+    dim = len(decision_variables)
+    parametrization = ng.p.Array(shape=(dim,)).set_bounds(lower_bound, upper_bound)
     optimizer = ng.optimization.optimizerlib.CMandAS2(
         parametrization=parametrization, budget=budget
     )
 
-    # Optimization loop
     for _ in range(budget):
         candidate = optimizer.ask()
-        loss = compute_loss(candidate.args[0])
+        loss = objective_multi_var(candidate.args[0], decision_variables)
         optimizer.tell(candidate, loss)
 
-    # Return best result
     best = optimizer.provide_recommendation()
-    best_vars = best.value
-    best_area = compute_drivable_area(best_vars)
-    return best_vars, best_area
+    best_params = best.value
+    best_area = objective_multi_var(best_params, decision_variables)
+
+    return best_params, best_area
 
 
 # TODO
