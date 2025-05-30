@@ -22,7 +22,7 @@ def objective_multi_var(params: List[float], decision_variables: List[Tuple[str,
 
         # Compute drivable area with your pipeline
         area = compute_drivable_area(updated_scenario_path)
-        return area  # because we want to minimize
+        return sum(area)
     except Exception as e:
         print(f"Error during simulation: {e}")
         return float("inf")
