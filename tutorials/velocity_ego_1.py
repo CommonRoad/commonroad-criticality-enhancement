@@ -7,7 +7,6 @@ import reach_flow
 # Add the parent directory (my_project) to the system path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "core")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
-import pathlib
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from optimization import optimize
