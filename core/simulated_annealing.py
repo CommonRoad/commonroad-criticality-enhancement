@@ -85,15 +85,3 @@ def run_sa_multi_variable(
     )
 
     return best_params, best_area
-
-
-# TODO
-# def optimize_with_method(method: str, ...) -> Tuple[List[float], float]:
-#     if method == "Gradient":
-#         return optimize_with_ecos(...)
-#     elif method == "SA":
-#         return simulated_annealing(...)
-#     else:
-#         raise ValueError("Unsupported optimization method.")
-
-# TODO compare both approaches
