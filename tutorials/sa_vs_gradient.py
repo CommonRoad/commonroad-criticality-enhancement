@@ -44,7 +44,7 @@ def run_comparison_pipeline(
     a_ref_input: float = 1.0,
     sa_bounds: Tuple[float, float] = (5.0, 25.0),
     sa_max_iter: int = 500,
-    sa_initial_temp: float = 5230.0,
+    sa_initial_temp: float = 2000.0,
 ) -> None:
     full_path = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(full_path).open()
@@ -86,5 +86,5 @@ if __name__ == "__main__":
         a_ref_input=1.0,
         sa_bounds=(0.0, 20.0),
         sa_max_iter=10,
-        sa_initial_temp=5000.0,
+        sa_initial_temp=2000.0,
     )

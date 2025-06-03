@@ -6,8 +6,8 @@
     <gpsLongitude>9.20427</gpsLongitude>
   </location>
   <scenarioTags>
-    <intersection/>
     <simulated/>
+    <intersection/>
     <critical/>
   </scenarioTags>
   <lanelet id="1311">

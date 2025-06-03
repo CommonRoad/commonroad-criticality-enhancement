@@ -47,7 +47,7 @@ def run_sa_with_scipy(
     lower_bound: float,
     upper_bound: float,
     max_iter: int = 500,
-    initial_temp: float = 5230.0,
+    initial_temp: float = 2000.0,
 ) -> Tuple[List[float], List[float]]:
     """
     Runs simulated annealing optimization on decision variables to minimize drivable area.
@@ -57,8 +57,8 @@ def run_sa_with_scipy(
     - decision_variables (List[Tuple[str, str]]): Variables to optimize, e.g. [("ego", "velocity")].
     - lower_bound (float): Minimum value each decision variable can take.
     - upper_bound (float): Maximum value each decision variable can take.
-    - max_iter (int, optional): Maximum number of iterations for the optimizer.
-    - initial_temp (float, optional): Initial temperature parameter for simulated annealing.
+    - max_iter (int, optional): Maximum number of iterations for the optimizer. Defaults to 500.
+    - initial_temp (float, optional): Initial temperature parameter for simulated annealing. Default is 2000.0.
 
     Returns:
     - best_params (List[float]): Best parameter values found by the optimizer.

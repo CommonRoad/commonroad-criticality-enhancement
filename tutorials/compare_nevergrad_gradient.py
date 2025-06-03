@@ -9,8 +9,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 
 import matplotlib.pyplot as plt
 import reach_flow
+from CMandAS2 import run_sa_multi_variable
 from commonroad.common.file_reader import CommonRoadFileReader
-from nevergrad import run_sa_multi_variable
 from optimization import optimize
 
 

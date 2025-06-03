@@ -6,8 +6,8 @@
     <gpsLongitude>9.20427</gpsLongitude>
   </location>
   <scenarioTags>
-    <intersection/>
     <simulated/>
+    <intersection/>
     <critical/>
   </scenarioTags>
   <lanelet id="1311">
@@ -120500,7 +120500,7 @@
         <exact>1.1614</exact>
       </orientation>
       <velocity>
-        <exact>0.3412</exact>
+        <exact>19.5710</exact>
       </velocity>
       <acceleration>
         <exact>0.0</exact>

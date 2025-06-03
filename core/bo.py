@@ -26,14 +26,12 @@ def objective_multi_var(
 
     Returns:
     - float: The drivable area (we are minimizing it)
+    - area (List[float]): The drivable area
     """
     try:
-        # Apply the changes to the scenario/planning problem
         updated_scenario_path = apply_variables_to_scenario(
             scenario, planning_problem_set, params, decision_variables
         )
-
-        # Compute drivable area with your pipeline
         area = compute_drivable_area(updated_scenario_path)
         return sum(area), area
     except Exception as e:
@@ -41,46 +39,47 @@ def objective_multi_var(
         return float("inf"), []
 
 
-def run_sa_multi_variable(
+def run_bo_multi_variable(
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
     lower_bound: float,
     upper_bound: float,
-    budget: int = 10,
+    budget: int = 50,
 ) -> Tuple[List[float], List[float]]:
     """
-    Runs SA optimization over multiple decision variables to minimize drivable area.
+    Runs Bayesian Optimization over multiple decision variables to minimize drivable area.
 
     Parameters:
     - scenario_path (str): The path to the CommonRoad scenario.
     - decision_variables (List[Tuple[str, str]]): Variables to optimize, e.g. [("ego", "velocity"), (31, "position")]
     - lower_bound (float): Min value each variable can take
     - upper_bound (float): Max value each variable can take
-    - budget (int, optional): Number of evaluations allowed. Defaults to 10.
+    - budget (int, optional): Number of evaluations allowed. Defaults to 50.
 
     Returns:
     - best_params (List[float]): Best parameter values found
-    - best_area (float): The minimized summed up drivable area
+    - best_area (List[float]): The minimized drivable area array
     """
     scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
     dim = len(decision_variables)
     parametrization = ng.p.Array(shape=(dim,)).set_bounds(lower_bound, upper_bound)
-    optimizer = ng.optimization.optimizerlib.CMandAS2(
-        parametrization=parametrization, budget=budget
-    )
+
+    # Use Nevergrad's Bayesian Optimization optimizer
+    optimizer = ng.optimizers.BayesianOptimization(parametrization=parametrization, budget=budget)
 
     for _ in range(budget):
         candidate = optimizer.ask()
-        loss, area = objective_multi_var(
-            scenario, planning_problem_set, candidate.args[0], decision_variables
+        # candidate.value is a numpy array - convert to list
+        loss, _ = objective_multi_var(
+            scenario, planning_problem_set, candidate.value.tolist(), decision_variables
         )
         optimizer.tell(candidate, loss)
 
     best = optimizer.provide_recommendation()
-    best_params = best.value
-    sum, best_area = objective_multi_var(
+    best_params = best.value.tolist()
+    _, best_area = objective_multi_var(
         scenario, planning_problem_set, best_params, decision_variables
     )
 
