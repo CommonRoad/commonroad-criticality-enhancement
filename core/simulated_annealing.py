@@ -56,7 +56,7 @@ def run_sa_multi_variable(
     - decision_variables (List[Tuple[str, str]]): Variables to optimize, e.g. [("ego", "velocity"), (31, "position")]
     - lower_bound (float): Min value each variable can take
     - upper_bound (float): Max value each variable can take
-    - budget (int): Number of evaluations allowed
+    - budget (int, optional): Number of evaluations allowed. Defaults to 10.
 
     Returns:
     - best_params (List[float]): Best parameter values found

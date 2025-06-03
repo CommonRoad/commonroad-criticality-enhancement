@@ -81,5 +81,5 @@ if __name__ == "__main__":
         iterations=10,
         a_ref_input=1.0,
         sa_bounds=(0.0, 20.0),
-        sa_budget=50,
+        sa_budget=10,
     )

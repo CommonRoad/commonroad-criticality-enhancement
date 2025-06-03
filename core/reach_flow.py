@@ -130,13 +130,15 @@ def compute_area(graph: object, step_start: int, step_end: int) -> np.ndarray:
     return areas
 
 
-def create_reach_graph(scenario_path: str) -> Tuple[object, int, int, PlanningProblem, object]:
+def create_reach_graph(
+    scenario_path: str, semantics: str = "true"
+) -> Tuple[object, int, int, PlanningProblem, object]:
     """
     Loads a CommonRoad scenario, configures the reachability executor, and computes the reachability graph.
 
     Parameters:
     - scenario_path (str): Path to the XML file containing the CommonRoad scenario.
-
+    - semantics (str, optional): Semantics of the scenario. Default is "true".
     Returns:
     - Tuple:
         - graph (object): The reachability graph with reachable states.
@@ -188,7 +190,7 @@ def create_reach_graph(scenario_path: str) -> Tuple[object, int, int, PlanningPr
 
     # specs = ["G (InLanelet_13 | InLanelet_522 | InLanelet_946)"]
     lanelet_conditions = " | ".join(f"InLanelet_{lid}" for lid in lanelet_ids)
-    specs = [f"G ({lanelet_conditions})"]
+    specs = [f"G (({lanelet_conditions}) & ({semantics}))"]
     print(specs)
 
     automaton = core.model_checking.FiniteAutomaton(specs)

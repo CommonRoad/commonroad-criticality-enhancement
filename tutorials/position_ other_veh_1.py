@@ -51,4 +51,5 @@ def run_full_optimization_pipeline(
 
 
 run_full_optimization_pipeline("scenarios/BEL_Aarschot-6_1_T-1.xml", [("30", "position")])
-# TODO
+# TODO  & Behind_V8 & OnAccessRamp_V8 & F OnMainCarriageway_V8 ->
+#             !(!OnRightLane & F OnRightLane))
