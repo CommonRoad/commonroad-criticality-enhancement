@@ -21,7 +21,8 @@ conda activate myenv
 - The project uses CommonRoad-reach-flow
 - The dependencies for it are also included in the environment.yaml file
 - CommonRoad-reach-flow has to be installed by cloning its repository in the python environment
-and running the following command in the CommonRoad-reach-flow repository:
+- Switch to the development branch of cr-reach-flow
+- Run the following command in the CommonRoad-reach-flow repository:
 
 ```
 pip install -v .

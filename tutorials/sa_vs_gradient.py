@@ -85,6 +85,6 @@ if __name__ == "__main__":
         iterations=10,
         a_ref_input=1.0,
         sa_bounds=(0.0, 20.0),
-        sa_max_iter=10,
+        sa_max_iter=1000,
         sa_initial_temp=2000.0,
     )

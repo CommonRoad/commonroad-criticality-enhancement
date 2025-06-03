@@ -2,12 +2,12 @@ import time
 from typing import Tuple
 
 import commonroad_dc.pycrccosy as pycrccosy
+import commonroad_route_planner.fast_api.fast_api as route_planner
 import cr_reach_flow.cr_reach_flow_core as core
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
-from commonroad_route_planner.route_planner import RoutePlanner
 from cr_reach_flow.collision_checker.collision_checker_factory import CollisionCheckerFactory
 from cr_reach_flow.scenario.resampling import resample_scenario
 from cr_reach_flow.visualization.scenario import draw_with_reach_set
@@ -176,7 +176,9 @@ def create_reach_graph(
     planning_problem = list(planning_problems.planning_problem_dict.values())[0]
 
     # plan route and create clcs
-    route = RoutePlanner(scenario, planning_problem).plan_routes().retrieve_first_route()
+    route = route_planner.generate_reference_path_from_lanelet_network_and_planning_problem(
+        scenario.lanelet_network, planning_problem
+    )
     splitter_params.route_lanelet_ids = set(route.lanelet_ids)
     lanelet_ids = splitter_params.route_lanelet_ids
     reference_path = pycrccosy.Util.resample_polyline(route.reference_path, 2.0)
@@ -188,7 +190,6 @@ def create_reach_graph(
         step_start, step_end, inflation_radius
     ).create_curvilinear_collision_checker(scenario, clcs)
 
-    # specs = ["G (InLanelet_13 | InLanelet_522 | InLanelet_946)"]
     lanelet_conditions = " | ".join(f"InLanelet_{lid}" for lid in lanelet_ids)
     specs = [f"G (({lanelet_conditions}) & ({semantics}))"]
     print(specs)
@@ -197,21 +198,34 @@ def create_reach_graph(
     init = core.initializers.base_set.CurvilinearUncertaintyInitializer(
         clcs, *([initial_uncertainty] * 4)
     )
-    layers = [
-        core.layers.propagation.PointMassPropagator(dt, point_mass_params),
-        core.layers.semantic.SemanticSplitter(automaton, scenario_path, dt, clcs, splitter_params),
-        core.layers.meta.GroupedByAutomatonStates(core.layers.repartition.PositionRepartitioner()),
-        core.layers.collision.CollisionFilter(cc),
-        core.layers.meta.GroupedByAutomatonStates(core.layers.repartition.PositionRepartitioner()),
-    ]
-    post = [
-        core.post_processors.pruning.SemanticFinalStatePruner(automaton),
-        core.post_processors.pruning.DanglingNodePruner(),
-    ]
-
-    rs = core.executors.DynamicReachExecutor(
-        init, core.layers.meta.Sequential(layers), core.post_processors.meta.Sequential(post)
+    layers = {
+        "propagation": core.layers.propagation.PointMassPropagator(dt, point_mass_params),
+        "splitting": core.layers.semantic.SemanticSplitter(
+            automaton, scenario_path, dt, clcs, splitter_params
+        ),
+        "repartitioning": core.layers.meta.GroupedByAutomatonStates(
+            core.layers.repartition.PositionRepartitioner()
+        ),
+        "collision_checking": core.layers.collision.CollisionFilter(cc),
+    }
+    layers = {key: core.layers.meta.Timed(value) for key, value in layers.items()}
+    layer = core.layers.meta.Sequential(
+        [
+            layers["propagation"],
+            layers["splitting"],
+            layers["repartitioning"],
+            layers["collision_checking"],
+            layers["repartitioning"],
+        ]
     )
+    post = core.post_processors.meta.Sequential(
+        [
+            core.post_processors.pruning.SemanticFinalStatePruner(automaton),
+            core.post_processors.pruning.DanglingNodePruner(),
+        ]
+    )
+
+    rs = core.executors.DynamicReachExecutor(step_start, step_end, init, layer, post)
 
     tic = time.perf_counter()
     rs.initialize(*initialize_from_planning_problem(planning_problem))
@@ -220,7 +234,7 @@ def create_reach_graph(
 
     try:
         tic = time.perf_counter()
-        rs.compute(step_start + 1, step_end)
+        rs.compute()
         toc = time.perf_counter()
         print(f"Reachable set computation took {toc - tic:3f} seconds")
 
