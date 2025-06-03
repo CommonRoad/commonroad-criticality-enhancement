@@ -10,8 +10,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 import matplotlib.pyplot as plt
 import reach_flow
 from commonroad.common.file_reader import CommonRoadFileReader
+from nevergrad import run_sa_multi_variable
 from optimization import optimize
-from simulated_annealing import run_sa_multi_variable  # make sure this is your SA implementation
 
 
 def plot_area_over_time(original_area, gradient_area, sa_area):

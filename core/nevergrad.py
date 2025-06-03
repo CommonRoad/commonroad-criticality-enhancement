@@ -14,7 +14,7 @@ def objective_multi_var(
     planning_problem_set: PlanningProblemSet,
     params: List[float],
     decision_variables: List[Tuple[str, str]],
-) -> float:
+) -> Tuple[float, List[float]]:
     """
     Applies decision variables (velocity or position changes), runs the pipeline, and returns drivable area.
 
@@ -38,7 +38,7 @@ def objective_multi_var(
         return sum(area), area
     except Exception as e:
         print(f"Error during simulation: {e}")
-        return float("inf")
+        return float("inf"), []
 
 
 def run_sa_multi_variable(
@@ -47,7 +47,7 @@ def run_sa_multi_variable(
     lower_bound: float,
     upper_bound: float,
     budget: int = 10,
-) -> Tuple[List[float], float]:
+) -> Tuple[List[float], List[float]]:
     """
     Runs SA optimization over multiple decision variables to minimize drivable area.
 

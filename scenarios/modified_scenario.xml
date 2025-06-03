@@ -7,8 +7,8 @@
   </location>
   <scenarioTags>
     <intersection/>
-    <critical/>
     <simulated/>
+    <critical/>
   </scenarioTags>
   <lanelet id="1311">
     <leftBound>
