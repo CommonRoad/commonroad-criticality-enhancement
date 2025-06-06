@@ -42,7 +42,7 @@ def run_full_optimization_pipeline(
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-        "scenarios/modified_scenario.xml"
+        "scenarios/modified_scenario.xml", "Behind_V30"
     )
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
@@ -50,6 +50,8 @@ def run_full_optimization_pipeline(
     reach_flow.plot(area_original, area_modified)
 
 
-run_full_optimization_pipeline("scenarios/BEL_Aarschot-6_1_T-1.xml", [("30", "position")])
+run_full_optimization_pipeline(
+    "scenarios/BEL_Aarschot-6_1_T-1.xml", [("30", "position"), ("31", "position")]
+)
 # TODO  & Behind_V8 & OnAccessRamp_V8 & F OnMainCarriageway_V8 ->
 #             !(!OnRightLane & F OnRightLane))

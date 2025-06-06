@@ -228,6 +228,7 @@ def optimize(
 
             # Get the index of the variable in d_x corresponding to the current loop variable
             # Assumes order of profile_matrix rows aligns with decision_variables
+            vehicle_id = str(vehicle_id)
             var_index = profile_index_map.get((vehicle_id, variable_type))
 
             if var_index is None:
