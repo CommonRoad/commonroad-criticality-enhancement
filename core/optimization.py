@@ -152,7 +152,7 @@ def optimize(
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
     iterations: int,
-    a_ref_input: float,
+    a_ref_input: float = 1.0,
 ) -> float:
     """
     Optimizes scenario variables (velocity or position of vehicles) to influence the drivable area.
@@ -173,34 +173,32 @@ def optimize(
     - float: The highest feasible velocity found.
     """
 
-    last_change = 0.0
-
     for var in decision_variables:
-        for i in range(iterations):
-            # Try computing reachability with current velocity
-            try:
-                graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-                    scenario_path
-                )
-
-            except Exception as e:
-                raise Exception(f"Reachability failed: {e}")
-
-            # Compute area and profile matrix
-            area_original = reach_flow.compute_drivable_area(scenario_path)
-            profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
-                scenario,
-                planning_problem_set,
-                scenario_path,
-                step_start,
-                step_end,
-                decision_variables,
+        # Try computing reachability with current velocity
+        try:
+            graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
+                scenario_path
             )
-            print(f"Profile: {profile_matrix}")
+
+        except Exception as e:
+            raise Exception(f"Reachability failed: {e}")
+
+        # Compute area and profile matrix
+        area_latest = reach_flow.compute_drivable_area(scenario_path)
+        profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
+            scenario,
+            planning_problem_set,
+            scenario_path,
+            step_start,
+            step_end,
+            decision_variables,
+        )
+        print(f"Profile: {profile_matrix}")
+        for i in range(iterations):
             # Solve QP
             try:
                 d_x = optimize_iteration(
-                    area_original, profile_matrix, step_end, a_ref_input=a_ref_input
+                    area_latest, profile_matrix, step_end, a_ref_input=a_ref_input
                 )
                 if d_x.value is None:
                     raise ValueError("QP was not solved completely")
@@ -246,7 +244,7 @@ def optimize(
             )
 
             try:
-                _ = reach_flow.create_reach_graph(modified_scenario_path)
+                area_latest = reach_flow.compute_drivable_area(scenario_path)
 
             except Exception as e:
                 print(f"Reachability failed: {e}. Performing binary search.")
