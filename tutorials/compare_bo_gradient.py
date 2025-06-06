@@ -11,24 +11,24 @@ import time
 
 import matplotlib.pyplot as plt
 import reach_flow
+from bo import run_bo_multi_variable
 from commonroad.common.file_reader import CommonRoadFileReader
 from optimization import optimize
-from sa import run_sa_with_scipy
 
 
-def plot_area_over_time(original_area, gradient_area, sa_area):
+def plot_area_over_time(original_area, gradient_area, bo_area):
     """
     Plots drivable area over time steps for each method.
 
     Parameters:
-    - original_area, gradient_area, sa_area: Lists or arrays of float values for each time step.
+    - original_area, gradient_area, bo_area: Lists or arrays of float values for each time step.
     """
     time_steps = list(range(len(original_area)))  # assume same length for all
 
     plt.figure(figsize=(10, 6))
     plt.plot(time_steps, original_area, label="Original", color="gray", linestyle="--")
     plt.plot(time_steps, gradient_area, label="Gradient", color="blue")
-    plt.plot(time_steps, sa_area, label="Simulated Annealing", color="green")
+    plt.plot(time_steps, bo_area, label="Bayesian Opt", color="red")
 
     plt.xlabel("Time Step")
     plt.ylabel("Drivable Area")
@@ -44,9 +44,8 @@ def run_comparison_pipeline(
     decision_variables: List[Tuple[str, str]],
     iterations: int = 10,
     a_ref_input: float = 1.0,
-    sa_bounds: Tuple[float, float] = (5.0, 25.0),
-    sa_max_iter: int = 500,
-    sa_initial_temp: float = 2000.0,
+    bo_bounds: Tuple[float, float] = (5.0, 25.0),
+    budget: int = 500,
 ) -> None:
     full_path = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(full_path).open()
@@ -69,26 +68,26 @@ def run_comparison_pipeline(
     area_gradient = reach_flow.compute_drivable_area("scenarios/modified_scenario.xml")
     end = time.time()
 
-    start_sa = time.time()
-    sa_best_params, sa_area = run_sa_with_scipy(
+    print("\nRunning Bayesian Optimization ...")
+    start_bo = time.time()
+    bo_best_params, bo_area = run_bo_multi_variable(
         scenario_path=scenario_path,
         decision_variables=decision_variables,
-        lower_bound=sa_bounds[0],
-        upper_bound=sa_bounds[1],
-        max_iter=sa_max_iter,
-        initial_temp=sa_initial_temp,
+        lower_bound=bo_bounds[0],
+        upper_bound=bo_bounds[1],
+        budget=budget,
     )
-    end_sa = time.time()
+    end_bo = time.time()
 
     print(f"Sum of Original drivable area: {sum(area_original)}")
     print(f"Gradient optimization time: {end - start:.2f} seconds")
     print(f"Gradient optimization velocity: {velocity_gradient} m/s")
     print(f"Sum of Gradient drivable area: {sum(area_gradient)}")
-    print(f"SA optimization time: {end_sa - start_sa:.2f} seconds")
-    print(f"SA optimization velocity: {sa_best_params} m/s")
-    print(f"Sum of SA drivable area: {sum(sa_area)}")
+    print(f"BO optimization time: {end_bo - start_bo:.2f} seconds")
+    print(f"BO optimization velocity: {bo_best_params} m/s")
+    print(f"Sum of BO drivable area: {sum(bo_area)}")
 
-    plot_area_over_time(area_original, area_gradient, sa_area)
+    plot_area_over_time(area_original, area_gradient, bo_area)
 
 
 if __name__ == "__main__":
@@ -98,7 +97,6 @@ if __name__ == "__main__":
         decision_variables=[("ego", "velocity")],
         iterations=10,
         a_ref_input=1.0,
-        sa_bounds=(15.0, 30.0),
-        sa_max_iter=10,
-        sa_initial_temp=2000.0,
+        bo_bounds=(15.0, 30.0),
+        budget=10,
     )

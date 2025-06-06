@@ -19,6 +19,7 @@ dependencies:
 - gtest
 - gcc_linux-64=10.4.0
 - gxx_linux-64=10.4.0
+- nevergrad
 - pip:
   - commonroad-clcs==2025.1.1
   - commonroad-drivability-checker==2024.1

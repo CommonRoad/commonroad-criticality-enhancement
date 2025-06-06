@@ -69,6 +69,7 @@ def run_comparison_pipeline(
     area_gradient = reach_flow.compute_drivable_area("scenarios/modified_scenario.xml")
     end = time.time()
 
+    print("\nRunning SA ...")
     start_sa = time.time()
     sa_best_params, sa_area = run_sa_with_scipy(
         scenario_path=scenario_path,
