@@ -1,12 +1,13 @@
 from pathlib import Path
 from typing import List, Tuple
 
-import nevergrad as ng
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
 from file_modification import apply_variables_to_scenario
 from reach_flow import compute_drivable_area
+from skopt import gp_minimize
+from skopt.space import Real
 
 
 def objective_multi_var(
@@ -14,7 +15,7 @@ def objective_multi_var(
     planning_problem_set: PlanningProblemSet,
     params: List[float],
     decision_variables: List[Tuple[str, str]],
-) -> Tuple[float, List[float]]:
+) -> float:
     """
     Applies decision variables (velocity or position changes), runs the pipeline, and returns drivable area.
 
@@ -26,17 +27,16 @@ def objective_multi_var(
 
     Returns:
     - float: The drivable area (we are minimizing it)
-    - area (List[float]): The drivable area
     """
     try:
         updated_scenario_path = apply_variables_to_scenario(
             scenario, planning_problem_set, params, decision_variables
         )
         area = compute_drivable_area(updated_scenario_path)
-        return sum(area), area
+        return sum(area)
     except Exception as e:
         print(f"Error during simulation: {e}")
-        return float("inf"), []
+        return float("inf")
 
 
 def run_bo_multi_variable(
@@ -64,23 +64,26 @@ def run_bo_multi_variable(
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
     dim = len(decision_variables)
-    parametrization = ng.p.Array(shape=(dim,)).set_bounds(lower_bound, upper_bound)
 
-    # Use Nevergrad's Bayesian Optimization optimizer
-    optimizer = ng.optimizers.BayesianOptimization(parametrization=parametrization, budget=budget)
+    # Define search space with bounds for each decision variable
+    space = [Real(lower_bound, upper_bound) for _ in range(dim)]
 
-    for _ in range(budget):
-        candidate = optimizer.ask()
-        # candidate.value is a numpy array - convert to list
-        loss, _ = objective_multi_var(
-            scenario, planning_problem_set, candidate.value.tolist(), decision_variables
-        )
-        optimizer.tell(candidate, loss)
+    def wrapped_objective(params):
+        return objective_multi_var(scenario, planning_problem_set, params, decision_variables)
 
-    best = optimizer.provide_recommendation()
-    best_params = best.value.tolist()
-    _, best_area = objective_multi_var(
-        scenario, planning_problem_set, best_params, decision_variables
+    # Run Gaussian Process-based Bayesian Optimization
+    result = gp_minimize(
+        wrapped_objective,
+        space,
+        n_calls=budget,
+        random_state=42,
+        verbose=False,
     )
 
+    best_params = result.x
+
+    updated_scenario_path = apply_variables_to_scenario(
+        scenario, planning_problem_set, best_params, decision_variables
+    )
+    best_area = compute_drivable_area(updated_scenario_path)
     return best_params, best_area
