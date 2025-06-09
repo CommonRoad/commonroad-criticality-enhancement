@@ -6,7 +6,7 @@ import reach_flow
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.scenario import Scenario
-
+from file_modification import update_pos_trajectory
 
 def differentiate_reachable_set_wrt_velocity(
     scenario: Scenario,
@@ -101,10 +101,11 @@ def differentiate_reachable_set_wrt_position(
     area_original = reach_flow.compute_drivable_area(scenario_path)
 
     # Slightly increase velocity
-    vehicle.initial_state.position = (
+    vehicle.initial_state.position = np.array([
         vehicle.initial_state.position[0] + delta_x,
-        vehicle.initial_state.position[1],
+        vehicle.initial_state.position[1]]
     )
+    update_pos_trajectory(vehicle, delta_x)
     print("original position: ", original_position)
     print("modified position: ", vehicle.initial_state.position)
 

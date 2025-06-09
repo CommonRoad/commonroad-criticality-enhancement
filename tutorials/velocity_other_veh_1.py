@@ -48,4 +48,4 @@ def run_full_optimization_pipeline(
     reach_flow.plot(area_original, area_modified)
 
 
-run_full_optimization_pipeline("scenarios/BEL_Aarschot-6_1_T-1.xml", [("30", "velocity")])
+run_full_optimization_pipeline("scenarios/BEL_Aarschot-6_1_T-1.xml", [("311", "velocity")])

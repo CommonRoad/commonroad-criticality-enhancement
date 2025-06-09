@@ -8,6 +8,7 @@ import reach_flow
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.scenario import Scenario
+from file_modification import update_pos_trajectory
 
 
 def optimize_iteration(
@@ -50,7 +51,7 @@ def optimize_iteration(
     constraints = [d_x >= -5, d_x <= 5]
     # constraints = []
     opt_prob = cv.Problem(
-        cv.Minimize(cv.quad_form(d_x, W) + c @ d_x + +0.1 * cv.norm(d_x, 2)), constraints
+        cv.Minimize(cv.quad_form(d_x, W) + c @ d_x + 0.1 * cv.norm(d_x, 2)), constraints
     )
     opt_prob.solve(solver=cv.ECOS, verbose=False)
 
@@ -98,7 +99,9 @@ def perform_binary_search(
         if var_type == "velocity":
             vehicle.initial_state.velocity = step_var
         else:
-            vehicle.initial_state.position[0] = step_var
+            x, y = vehicle.initial_state.position
+            vehicle.initial_state.position = np.array([step_var, y])
+            update_pos_trajectory(vehicle, step_var - high)
 
         mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
@@ -141,7 +144,8 @@ def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: flo
             raise ValueError("Velocity cannot be negative")
     elif variable_type == "position":
         x, y = target_vehicle.initial_state.position
-        target_vehicle.initial_state.position = (x + delta, y)
+        target_vehicle.initial_state.position = np.array([x + delta, y])
+        update_pos_trajectory(target_vehicle, delta)
     else:
         raise ValueError(f"Unsupported variable type: {variable_type}")
 
@@ -233,6 +237,7 @@ def optimize(
                 print(f"Warning: No profile found for ({vehicle_id}, {variable_type})")
                 continue
 
+            # Scale update to ensure conservative changes for feasibility
             delta = (float(d_x.value[var_index])) * 0.5
             last_change = delta
             apply_update(target_vehicle, variable_type, delta)
@@ -244,7 +249,7 @@ def optimize(
             )
 
             try:
-                area_latest = reach_flow.compute_drivable_area(scenario_path)
+                area_latest = reach_flow.compute_drivable_area(modified_scenario_path)
 
             except Exception as e:
                 print(f"Reachability failed: {e}. Performing binary search.")
@@ -264,7 +269,7 @@ def optimize(
                     x_after=x_after,
                 )
 
-    if variable_type == "position":
+    if var[1] == "position":
         return target_vehicle.initial_state.position[0]
     else:
         return target_vehicle.initial_state.velocity

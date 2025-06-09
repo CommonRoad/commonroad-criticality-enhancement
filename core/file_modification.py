@@ -1,10 +1,11 @@
 import os
 from typing import List, Tuple
-
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
-
+import numpy as np
+from commonroad.scenario.state import KSTState
+from commonroad.scenario.trajectory import Trajectory
 
 def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningProblemSet) -> str:
     """
@@ -18,10 +19,14 @@ def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningPro
     - str: The relative file path to the saved scenario.
     """
     temp_file = os.path.join("scenarios", "modified_scenario.xml")
+    # convert_positions_to_points(scenario)
+    # target_vehicle = next((veh for veh in scenario.dynamic_obstacles if veh.obstacle_id == 30), None)
+    # print(f"30pos after opt {target_vehicle.initial_state.position}")
+
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
     writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
     print("The new scenario was saved in modified_scenario.xml")
-    return "scenarios/modified_scenario.xml"
+    return temp_file
 
 
 def apply_variables_to_scenario(
@@ -80,3 +85,23 @@ def apply_variables_to_scenario(
     writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
     print("The new scenario was saved in updated_scenario.xml")
     return "scenarios/updated_scenario.xml"
+
+
+def update_pos_trajectory(target_vehicle, delta):
+    if target_vehicle.prediction is not None:
+        traj = target_vehicle.prediction.trajectory
+        updated_states = []
+        for state in traj.state_list:
+            updated_state = KSTState(
+                time_step=state.time_step,
+                position=state.position + np.array([delta, 0.0]),
+                velocity=state.velocity,
+                orientation=state.orientation,
+            )
+            updated_states.append(updated_state)
+
+        # Replace trajectory's state list with updated states
+        new_traj = Trajectory(initial_time_step=traj.initial_time_step, state_list=updated_states)
+
+        # Re-assign updated trajectory to prediction
+        target_vehicle.prediction.trajectory = new_traj
