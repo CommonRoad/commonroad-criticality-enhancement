@@ -10,8 +10,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 import pathlib
 
 from commonroad.common.file_reader import CommonRoadFileReader
-from optimization import optimize
 from file_modification import save_modified_scenario
+from optimization import optimize
 
 
 def run_full_optimization_pipeline(
@@ -47,7 +47,6 @@ def run_full_optimization_pipeline(
     scenario_file_mod = Path(__file__).parent.joinpath(f"./../scenarios/modified_scenario.xml")
     scenario_mod, planning_problem_mod = CommonRoadFileReader(scenario_file_mod).open()
 
-
     graph, step_start, step_end, planning_problem_mod, clcs = reach_flow.create_reach_graph(
         "scenarios/modified_scenario.xml", "Behind_V311"
     )
@@ -60,6 +59,4 @@ def run_full_optimization_pipeline(
     # print(f"30pos after opt {target_vehicle.initial_state.position[0]}")
 
 
-run_full_optimization_pipeline(
-    "scenarios/BEL_Aarschot-6_1_T-1.xml", [("311", "position")]
-)
+run_full_optimization_pipeline("scenarios/BEL_Aarschot-6_1_T-1.xml", [("311", "position")])

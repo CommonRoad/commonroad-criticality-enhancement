@@ -1,11 +1,13 @@
 import os
 from typing import List, Tuple
+
+import numpy as np
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
-import numpy as np
 from commonroad.scenario.state import KSTState
 from commonroad.scenario.trajectory import Trajectory
+
 
 def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningProblemSet) -> str:
     """
