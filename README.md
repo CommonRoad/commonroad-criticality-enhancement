@@ -37,6 +37,15 @@ pip install -v .
 pre-commit run --all-files
 ```
 
+## Running the tutorials
+
+The scripts in the `tutorials/` are designed to be run **from the root of the repository** (i.e. the criticality-enhancement directory), not from within the `tutorials/` folder itself.
+This ensures that the file paths (e.g. scenarios) resolve as expected. If ran through an IDE the working directory needs to be configured respectively.
+Run scripts like this from the root of the repository:
+```
+python tutorials/script.py
+```
+
 ***
 
 ## Support
