@@ -19,9 +19,7 @@ def run_full_optimization_pipeline(
     scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
-    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-        scenario_path
-    )
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
     area_original = reach_flow.compute_drivable_area(scenario_path)

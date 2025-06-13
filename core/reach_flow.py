@@ -131,9 +131,7 @@ def compute_area(graph: object, step_start: int, step_end: int) -> np.ndarray:
     return areas
 
 
-def create_reach_graph(
-    scenario_path: str, semantics: str = "true"
-) -> Tuple[object, int, int, PlanningProblem, object]:
+def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[object, int, int, PlanningProblem, object]:
     """
     Loads a CommonRoad scenario, configures the reachability executor, and computes the reachability graph.
 
@@ -187,26 +185,20 @@ def create_reach_graph(
     print(f"Route lanelet IDs: {lanelet_ids}")
 
     # create reach set executor
-    cc = CollisionCheckerFactory(
-        step_start, step_end, inflation_radius
-    ).create_curvilinear_collision_checker(scenario, clcs)
+    cc = CollisionCheckerFactory(step_start, step_end, inflation_radius).create_curvilinear_collision_checker(
+        scenario, clcs
+    )
 
     lanelet_conditions = " | ".join(f"InLanelet_{lid}" for lid in lanelet_ids)
     specs = [f"G (({lanelet_conditions}) & ({semantics}))"]
     print(specs)
 
     automaton = core.model_checking.FiniteAutomaton(specs)
-    init = core.initializers.base_set.CurvilinearUncertaintyInitializer(
-        clcs, *([initial_uncertainty] * 4)
-    )
+    init = core.initializers.base_set.CurvilinearUncertaintyInitializer(clcs, *([initial_uncertainty] * 4))
     layers = {
         "propagation": core.layers.propagation.PointMassPropagator(dt, point_mass_params),
-        "splitting": core.layers.semantic.SemanticSplitter(
-            automaton, scenario_path, dt, clcs, splitter_params
-        ),
-        "repartitioning": core.layers.meta.GroupedByAutomatonStates(
-            core.layers.repartition.PositionRepartitioner()
-        ),
+        "splitting": core.layers.semantic.SemanticSplitter(automaton, scenario_path, dt, clcs, splitter_params),
+        "repartitioning": core.layers.meta.GroupedByAutomatonStates(core.layers.repartition.PositionRepartitioner()),
         "collision_checking": core.layers.collision.CollisionFilter(cc),
     }
     layers = {key: core.layers.meta.Timed(value) for key, value in layers.items()}
@@ -246,9 +238,7 @@ def create_reach_graph(
         print(f"Graph creation took {toc - tic:3f} seconds")
 
         # Check if the graph contains any reachable nodes
-        has_nodes = any(
-            len(graph.get_nodes_at_step(t)) > 0 for t in range(step_start + 1, step_end + 1)
-        )
+        has_nodes = any(len(graph.get_nodes_at_step(t)) > 0 for t in range(step_start + 1, step_end + 1))
         if not has_nodes:
             raise RuntimeError("Reachability graph is empty – possibly due to invalid parameters.")
 

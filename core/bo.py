@@ -29,9 +29,7 @@ def objective_multi_var(
     - float: The drivable area (we are minimizing it)
     """
     try:
-        updated_scenario_path = apply_variables_to_scenario(
-            scenario, planning_problem_set, params, decision_variables
-        )
+        updated_scenario_path = apply_variables_to_scenario(scenario, planning_problem_set, params, decision_variables)
         area = compute_drivable_area(updated_scenario_path)
         return sum(area)
     except Exception as e:
@@ -82,8 +80,6 @@ def run_bo_multi_variable(
 
     best_params = result.x
 
-    updated_scenario_path = apply_variables_to_scenario(
-        scenario, planning_problem_set, best_params, decision_variables
-    )
+    updated_scenario_path = apply_variables_to_scenario(scenario, planning_problem_set, best_params, decision_variables)
     best_area = compute_drivable_area(updated_scenario_path)
     return best_params, best_area

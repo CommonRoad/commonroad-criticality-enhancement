@@ -50,9 +50,7 @@ def optimize_iteration(
     d_x = cv.Variable(B.shape[1])
     constraints = [d_x >= -5, d_x <= 5]
     # constraints = []
-    opt_prob = cv.Problem(
-        cv.Minimize(cv.quad_form(d_x, W) + c @ d_x + 0.1 * cv.norm(d_x, 2)), constraints
-    )
+    opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x + 0.1 * cv.norm(d_x, 2)), constraints)
     opt_prob.solve(solver=cv.ECOS, verbose=False)
 
     if d_x.value is None:
@@ -180,9 +178,7 @@ def optimize(
     for var in decision_variables:
         # Try computing reachability with current velocity
         try:
-            graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-                scenario_path
-            )
+            graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
 
         except Exception as e:
             raise Exception(f"Reachability failed: {e}")
@@ -201,9 +197,7 @@ def optimize(
         for i in range(iterations):
             # Solve QP
             try:
-                d_x = optimize_iteration(
-                    area_latest, profile_matrix, step_end, a_ref_input=a_ref_input
-                )
+                d_x = optimize_iteration(area_latest, profile_matrix, step_end, a_ref_input=a_ref_input)
                 if d_x.value is None:
                     raise ValueError("QP was not solved completely")
             except Exception as e:
@@ -244,9 +238,7 @@ def optimize(
             print(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
 
             # Update scenario
-            modified_scenario_path = file_modification.save_modified_scenario(
-                scenario, planning_problem_set
-            )
+            modified_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
             try:
                 area_latest = reach_flow.compute_drivable_area(modified_scenario_path)

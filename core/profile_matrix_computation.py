@@ -120,9 +120,7 @@ def differentiate_reachable_set_wrt_position(
 
     # Derivative using h method
     for time_step in range(step_start, step_end + 1):
-        derivative[time_step] = (
-            area_changed_position[time_step] - area_original[time_step]
-        ) / delta_x
+        derivative[time_step] = (area_changed_position[time_step] - area_original[time_step]) / delta_x
 
     vehicle.initial_state.position = original_position
 

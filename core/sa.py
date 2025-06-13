@@ -29,9 +29,7 @@ def objective_wrapper(
 
     def objective(params: List[float]) -> float:
         try:
-            updated_path = apply_variables_to_scenario(
-                scenario, planning_problem_set, list(params), decision_variables
-            )
+            updated_path = apply_variables_to_scenario(scenario, planning_problem_set, list(params), decision_variables)
             area = compute_drivable_area(updated_path)
             return sum(area)
         except Exception as e:
@@ -79,9 +77,7 @@ def run_sa_with_scipy(
     result = dual_annealing(objective, bounds=bounds, maxiter=max_iter, initial_temp=initial_temp)
 
     best_params = list(result.x)
-    updated_path = apply_variables_to_scenario(
-        scenario, planning_problem_set, best_params, decision_variables
-    )
+    updated_path = apply_variables_to_scenario(scenario, planning_problem_set, best_params, decision_variables)
     best_area = compute_drivable_area(updated_path)
 
     return best_params, best_area

@@ -64,9 +64,7 @@ def apply_variables_to_scenario(
                 print(f"Invalid vehicle ID: {vehicle_id}")
                 continue
 
-            vehicle = next(
-                (v for v in scenario.dynamic_obstacles if v.obstacle_id == vehicle_id), None
-            )
+            vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vehicle_id), None)
             if vehicle is None:
                 print(f"Vehicle {vehicle_id} not found in dynamic obstacles.")
                 continue

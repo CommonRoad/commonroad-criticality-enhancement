@@ -25,9 +25,7 @@ def run_full_optimization_pipeline(
         (veh for veh in scenario.dynamic_obstacles if veh.obstacle_id == 30),
         None,
     )
-    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-        scenario_path, "Behind_V311"
-    )
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path, "Behind_V311")
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
     area_original = reach_flow.compute_drivable_area(scenario_path)
