@@ -91,19 +91,20 @@ def apply_variables_to_scenario(
 
 def update_pos_trajectory(target_vehicle, delta):
     if target_vehicle.prediction is not None:
-        traj = target_vehicle.prediction.trajectory
-        updated_states = []
-        for state in traj.state_list:
-            updated_state = KSTState(
-                time_step=state.time_step,
-                position=state.position + np.array([delta, 0.0]),
-                velocity=state.velocity,
-                orientation=state.orientation,
-            )
-            updated_states.append(updated_state)
-
-        # Replace trajectory's state list with updated states
-        new_traj = Trajectory(initial_time_step=traj.initial_time_step, state_list=updated_states)
-
-        # Re-assign updated trajectory to prediction
-        target_vehicle.prediction.trajectory = new_traj
+        target_vehicle.prediction = None
+        # traj = target_vehicle.prediction.trajectory
+        # updated_states = []
+        # for state in traj.state_list:
+        #     updated_state = KSTState(
+        #         time_step=state.time_step,
+        #         position=state.position + np.array([delta, 0.0]),
+        #         velocity=state.velocity,
+        #         orientation=state.orientation,
+        #     )
+        #     updated_states.append(updated_state)
+        #
+        # # Replace trajectory's state list with updated states
+        # new_traj = Trajectory(initial_time_step=traj.initial_time_step, state_list=updated_states)
+        #
+        # # Re-assign updated trajectory to prediction
+        # target_vehicle.prediction.trajectory = new_traj
