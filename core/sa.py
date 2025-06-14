@@ -13,6 +13,7 @@ def objective_wrapper(
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
     decision_variables: List[Tuple[str, str]],
+    a_ref: float = 1.0,
 ):
     """
     Creates an objective function for optimization that applies decision variables,
@@ -22,6 +23,7 @@ def objective_wrapper(
     - scenario (Scenario): The modified CommonRoad scenario.
     - planning_problem_set (PlanningProblemSet): The associated planning problem set.
     - decision_variables (List[Tuple[str, str]]): The (vehicle_id, variable_type) for each parameter.
+    - a_ref (float, optional): The reference area. Defaults to 1.0.
 
     Returns:
     - Callable[[List[float]], float]: Objective function that takes parameter values and returns drivable area.
@@ -31,7 +33,8 @@ def objective_wrapper(
         try:
             updated_path = apply_variables_to_scenario(scenario, planning_problem_set, list(params), decision_variables)
             area = compute_drivable_area(updated_path)
-            return sum(area)
+            total_squared_area = (sum(area) - a_ref) ** 2
+            return total_squared_area
         except Exception as e:
             print(f"[Error] {e}")
             return float("inf")
@@ -46,6 +49,7 @@ def run_sa_with_scipy(
     upper_bound: float,
     max_iter: int = 500,
     initial_temp: float = 2000.0,
+    a_ref: float = 1.0,
 ) -> Tuple[List[float], List[float]]:
     """
     Runs simulated annealing optimization on decision variables to minimize drivable area.
@@ -57,6 +61,7 @@ def run_sa_with_scipy(
     - upper_bound (float): Maximum value each decision variable can take.
     - max_iter (int, optional): Maximum number of iterations for the optimizer. Defaults to 500.
     - initial_temp (float, optional): Initial temperature parameter for simulated annealing. Default is 2000.0.
+    - a_ref (float, optional): The reference area. Defaults to 1.0.
 
     Returns:
     - best_params (List[float]): Best parameter values found by the optimizer.
@@ -67,7 +72,7 @@ def run_sa_with_scipy(
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
     # Prepare the objective function
-    objective = objective_wrapper(scenario, planning_problem_set, decision_variables)
+    objective = objective_wrapper(scenario, planning_problem_set, decision_variables, a_ref)
 
     # Define bounds for each variable
     dim = len(decision_variables)

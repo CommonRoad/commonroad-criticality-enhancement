@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu, Fabian Höltke, Moritz Klischat" affiliation="Technical University of Munich, Germany" source="OpenStreetMaps, SUMO Traffic Simulator" benchmarkID="DEU_Flensburg-94_1_T-1" date="2025-06-11">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu, Fabian Höltke, Moritz Klischat" affiliation="Technical University of Munich, Germany" source="OpenStreetMaps, SUMO Traffic Simulator" benchmarkID="DEU_Flensburg-94_1_T-1" date="2025-06-14">
   <location>
     <geoNameId>2926271</geoNameId>
     <gpsLatitude>54.78431</gpsLatitude>
     <gpsLongitude>9.43961</gpsLongitude>
   </location>
   <scenarioTags>
-    <critical/>
     <intersection/>
     <simulated/>
+    <critical/>
   </scenarioTags>
   <lanelet id="1380">
     <leftBound>
@@ -74222,7 +74222,7 @@
         <exact>-3.0043</exact>
       </orientation>
       <velocity>
-        <exact>20.7851</exact>
+        <exact>29.2881</exact>
       </velocity>
       <acceleration>
         <exact>0.0</exact>
