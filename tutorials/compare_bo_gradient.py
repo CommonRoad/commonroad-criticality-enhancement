@@ -44,7 +44,6 @@ def run_comparison_pipeline(
     decision_variables: List[Tuple[str, str]],
     iterations: int = 10,
     a_ref_input: float = 1.0,
-    bo_bounds: Tuple[float, float] = (5.0, 25.0),
     budget: int = 500,
 ) -> None:
     full_path = Path(__file__).parent.joinpath(f"./../{scenario_path}")
@@ -73,8 +72,6 @@ def run_comparison_pipeline(
     bo_best_params, bo_area = run_bo_multi_variable(
         scenario_path=scenario_path,
         decision_variables=decision_variables,
-        lower_bound=bo_bounds[0],
-        upper_bound=bo_bounds[1],
         budget=budget,
     )
     end_bo = time.time()
@@ -97,6 +94,5 @@ if __name__ == "__main__":
         decision_variables=[("ego", "velocity")],
         iterations=10,
         a_ref_input=1.0,
-        bo_bounds=(15.0, 30.0),
         budget=10,
     )

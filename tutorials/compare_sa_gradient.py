@@ -44,7 +44,6 @@ def run_comparison_pipeline(
     decision_variables: List[Tuple[str, str]],
     iterations: int = 10,
     a_ref_input: float = 1.0,
-    sa_bounds: Tuple[float, float] = (5.0, 25.0),
     sa_max_iter: int = 500,
     sa_initial_temp: float = 2000.0,
 ) -> None:
@@ -74,8 +73,6 @@ def run_comparison_pipeline(
     sa_best_params, sa_area = run_sa_with_scipy(
         scenario_path=scenario_path,
         decision_variables=decision_variables,
-        lower_bound=sa_bounds[0],
-        upper_bound=sa_bounds[1],
         max_iter=sa_max_iter,
         initial_temp=sa_initial_temp,
     )
@@ -99,7 +96,6 @@ if __name__ == "__main__":
         decision_variables=[("ego", "velocity")],
         iterations=10,
         a_ref_input=1.0,
-        sa_bounds=(15.0, 30.0),
         sa_max_iter=10,
         sa_initial_temp=2000.0,
     )

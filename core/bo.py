@@ -43,8 +43,6 @@ def objective_multi_var(
 def run_bo_multi_variable(
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
-    lower_bound: float,
-    upper_bound: float,
     budget: int = 50,
     a_ref: float = 1.0,
 ) -> Tuple[List[float], List[float]]:
@@ -54,8 +52,6 @@ def run_bo_multi_variable(
     Parameters:
     - scenario_path (str): The path to the CommonRoad scenario.
     - decision_variables (List[Tuple[str, str]]): Variables to optimize, e.g. [("ego", "velocity"), (31, "position")]
-    - lower_bound (float): Min value each variable can take
-    - upper_bound (float): Max value each variable can take
     - budget (int, optional): Number of evaluations allowed. Defaults to 50.
     - a_ref (float, optional): The reference area. Defaults to 1.0.
 
@@ -66,10 +62,29 @@ def run_bo_multi_variable(
     scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
-    dim = len(decision_variables)
+    # Compute bounds based on original state
+    space = []
+    for vehicle_id, variable_type in decision_variables:
+        if vehicle_id == "ego":
+            vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
+        else:
+            try:
+                vid = int(vehicle_id)
+            except ValueError:
+                raise ValueError(f"Invalid vehicle ID: {vehicle_id}")
+            vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
+            if vehicle is None:
+                raise ValueError(f"Vehicle with ID '{vehicle_id}' not found.")
 
-    # Define search space with bounds for each decision variable
-    space = [Real(lower_bound, upper_bound) for _ in range(dim)]
+        # Set bounds
+        if variable_type == "velocity":
+            v_original = vehicle.initial_state.velocity
+            space.append(Real(5, v_original + 30.0))
+        elif variable_type == "position":
+            p_original = vehicle.initial_state.position[0]
+            space.append(Real(p_original - 10.0, p_original + 10.0))
+        else:
+            raise ValueError(f"Unknown variable type: {variable_type}")
 
     def wrapped_objective(params):
         return objective_multi_var(scenario, planning_problem_set, params, decision_variables, a_ref)

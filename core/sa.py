@@ -45,8 +45,6 @@ def objective_wrapper(
 def run_sa_with_scipy(
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
-    lower_bound: float,
-    upper_bound: float,
     max_iter: int = 500,
     initial_temp: float = 2000.0,
     a_ref: float = 1.0,
@@ -57,8 +55,6 @@ def run_sa_with_scipy(
     Parameters:
     - scenario_path (str): Path to the CommonRoad scenario XML file.
     - decision_variables (List[Tuple[str, str]]): Variables to optimize, e.g. [("ego", "velocity")].
-    - lower_bound (float): Minimum value each decision variable can take.
-    - upper_bound (float): Maximum value each decision variable can take.
     - max_iter (int, optional): Maximum number of iterations for the optimizer. Defaults to 500.
     - initial_temp (float, optional): Initial temperature parameter for simulated annealing. Default is 2000.0.
     - a_ref (float, optional): The reference area. Defaults to 1.0.
@@ -71,12 +67,32 @@ def run_sa_with_scipy(
     scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
 
+    # Compute bounds based on original state
+    bounds = []
+    for vehicle_id, variable_type in decision_variables:
+        if vehicle_id == "ego":
+            vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
+        else:
+            try:
+                vid = int(vehicle_id)
+            except ValueError:
+                raise ValueError(f"Vehicle ID '{vehicle_id}' is not a valid integer.")
+            vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
+            if vehicle is None:
+                raise ValueError(f"Vehicle with ID '{vehicle_id}' not found in scenario.")
+
+        # Get bounds based on variable type
+        if variable_type == "velocity":
+            v_original = vehicle.initial_state.velocity
+            bounds.append((5, v_original + 30.0))
+        elif variable_type == "position":
+            p_original = vehicle.initial_state.position[0]
+            bounds.append((p_original - 10.0, p_original + 10.0))
+        else:
+            raise ValueError(f"Unknown decision variable type: {variable_type}")
+
     # Prepare the objective function
     objective = objective_wrapper(scenario, planning_problem_set, decision_variables, a_ref)
-
-    # Define bounds for each variable
-    dim = len(decision_variables)
-    bounds = [(lower_bound, upper_bound)] * dim
 
     # Run SciPy's Simulated Annealing
     result = dual_annealing(objective, bounds=bounds, maxiter=max_iter, initial_temp=initial_temp)
