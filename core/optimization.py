@@ -167,7 +167,7 @@ def optimize(
     - planning_problem_set (PlanningProblemSet): The set of planning problems in the scenario.
     - scenario_path (str): Path to the scenario.
     - decision_variables (List[Tuple[str, str]]): List of decision variables to optimize.
-        Each tuple is (vehicle_id, variable_type), where variable_type is "velocity" or "position".
+        Each tuple is (vehicle_id, variable_type), where variable_type is "velocity", "position" etc.
     - iterations (int, optional): Number of optimization iterations to run per variable. Default is 10.
     - a_ref_input (float, optional): Scalar to modify the area reference target. Default is 1.0.
 
