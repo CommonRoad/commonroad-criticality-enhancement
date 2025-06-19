@@ -93,13 +93,21 @@ def perform_binary_search(
         step_var = (low + high) / 2
         print(f"Binary search iteration {iteration+1}: Trying {var_type} = {step_var:.6f}")
 
+        # Backup current state
+        velocity_backup = vehicle.initial_state.velocity
+        x_backup, y_backup = vehicle.initial_state.position
+
         # Update ego's velocity/position
         if var_type == "velocity":
             vehicle.initial_state.velocity = step_var
+        elif var_type == "x-position":
+            vehicle.initial_state.position = np.array([step_var, y_backup])
+            # update_pos_trajectory(vehicle, step_var - x_backup)
+        elif var_type == "y-position":
+            vehicle.initial_state.position = np.array([x_backup, step_var])
+            # Optionally call `update_pos_trajectory`
         else:
-            x, y = vehicle.initial_state.position
-            vehicle.initial_state.position = np.array([step_var, y])
-            update_pos_trajectory(vehicle, step_var - high)
+            raise ValueError(f"Unsupported variable type: {var_type}")
 
         mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
@@ -124,7 +132,7 @@ def perform_binary_search(
     return feasible_var
 
 
-def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: float) -> None:
+def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: float, direction: str = "x") -> None:
     """
     Applies a delta update to a specified decision variable of a vehicle.
 
@@ -132,6 +140,7 @@ def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: flo
     - target_vehicle (DynamicObstacle): The vehicle to be modified.
     - variable_type (str): The variable to update ("velocity" or "position").
     - delta (float): The amount to adjust the variable by.
+    - direction (str, optional): The direction of the variable. Default is "x".
 
     Raises:
     - ValueError: If the resulting velocity is non-positive or an unsupported variable type is provided.
@@ -142,8 +151,12 @@ def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: flo
             raise ValueError("Velocity cannot be negative")
     elif variable_type == "position":
         x, y = target_vehicle.initial_state.position
-        target_vehicle.initial_state.position = np.array([x + delta, y])
-        update_pos_trajectory(target_vehicle, delta)
+        if direction == "x":
+            new_pos = np.array([x + delta, y])
+        else:
+            new_pos = np.array([x, y + delta])
+        target_vehicle.initial_state.position = new_pos
+        # update_pos_trajectory(target_vehicle, delta)
     else:
         raise ValueError(f"Unsupported variable type: {variable_type}")
 
@@ -174,8 +187,15 @@ def optimize(
     Returns:
     - float: The highest feasible velocity found.
     """
+    expanded_variables = []
+    for vehicle_id, var_type in decision_variables:
+        if var_type == "position":
+            expanded_variables.append((vehicle_id, "x-position"))
+            expanded_variables.append((vehicle_id, "y-position"))
+        else:
+            expanded_variables.append((vehicle_id, var_type))
 
-    for var in decision_variables:
+    for i in range(iterations):
         # Try computing reachability with current velocity
         try:
             graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
@@ -191,20 +211,19 @@ def optimize(
             scenario_path,
             step_start,
             step_end,
-            decision_variables,
+            expanded_variables,
         )
         print(f"Profile: {profile_matrix}")
-        for i in range(iterations):
-            # Solve QP
-            try:
-                d_x = optimize_iteration(area_latest, profile_matrix, step_end, a_ref_input=a_ref_input)
-                if d_x.value is None:
-                    raise ValueError("QP was not solved completely")
-            except Exception as e:
-                print(f"Warning: QP optimization failed: {e}")
+        # Solve QP
+        try:
+            d_x = optimize_iteration(area_latest, profile_matrix, step_end, a_ref_input=a_ref_input)
+            if d_x.value is None:
+                raise ValueError("QP was not solved completely")
+        except Exception as e:
+            print(f"Warning: QP optimization failed: {e}")
 
-            # Update variable
-            vehicle_id, variable_type = var
+        # Update variable
+        for idx, (vehicle_id, variable_type) in enumerate(expanded_variables):
             if vehicle_id == "ego":
                 target_vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
             else:
@@ -218,13 +237,11 @@ def optimize(
                     None,
                 )
 
-            if target_vehicle is None:
+            if not target_vehicle:
                 print(f"Warning: Vehicle with ID {vehicle_id} not found.")
                 continue
 
             # Get the index of the variable in d_x corresponding to the current loop variable
-            # Assumes order of profile_matrix rows aligns with decision_variables
-            vehicle_id = str(vehicle_id)
             var_index = profile_index_map.get((vehicle_id, variable_type))
 
             if var_index is None:
@@ -234,7 +251,11 @@ def optimize(
             # Scale update to ensure conservative changes for feasibility
             delta = (float(d_x.value[var_index])) * 0.5
             last_change = delta
-            apply_update(target_vehicle, variable_type, delta)
+            if "position" in variable_type:
+                direction = "x" if variable_type.startswith("x") else "y"
+                apply_update(target_vehicle, "position", delta, direction=direction)
+            else:
+                apply_update(target_vehicle, variable_type, delta)
             print(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
 
             # Update scenario
@@ -250,8 +271,9 @@ def optimize(
                     x_before = target_vehicle.initial_state.velocity - last_change
                     x_after = target_vehicle.initial_state.velocity
                 else:
-                    x_before = target_vehicle.initial_state.position[0] - last_change
-                    x_after = target_vehicle.initial_state.position[0]
+                    index = 0 if direction == "x" else 1
+                    x_before = target_vehicle.initial_state.position[index] - last_change
+                    x_after = target_vehicle.initial_state.position[index]
                 # Run binary search between previous valid and current velocity
                 return perform_binary_search(
                     scenario,
@@ -261,7 +283,9 @@ def optimize(
                     x_after=x_after,
                 )
 
-    if var[1] == "position":
+    if expanded_variables[-1][1] == "velocity":
+        return target_vehicle.initial_state.velocity
+    elif expanded_variables[-1][1].startswith("x"):
         return target_vehicle.initial_state.position[0]
     else:
-        return target_vehicle.initial_state.velocity
+        return target_vehicle.initial_state.position[1]

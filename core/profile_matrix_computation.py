@@ -183,76 +183,76 @@ def get_profile_matrix(
             print(f"Warning: Vehicle {vehicle_id} not found.")
             continue
 
-            # Velocity derivative
-            if variable_type == "velocity":
-                deriv = differentiate_reachable_set_wrt_velocity(
-                    scenario, planning_problem_set, scenario_path, step_start, step_end, vehicle
-                )
-                result.append(deriv)
-                profile_index_map[(vehicle_id, "velocity")] = row_idx
-                row_idx += 1
+        # Velocity derivative
+        if variable_type == "velocity":
+            deriv = differentiate_reachable_set_wrt_velocity(
+                scenario, planning_problem_set, scenario_path, step_start, step_end, vehicle
+            )
+            result.append(deriv)
+            profile_index_map[(vehicle_id, "velocity")] = row_idx
+            row_idx += 1
 
-            # X position derivative
-            elif variable_type == "x-position":
-                deriv = differentiate_reachable_set_wrt_position(
-                    x=True,
-                    scenario=scenario,
-                    planning_problem_set=planning_problem_set,
-                    scenario_path=scenario_path,
-                    step_start=step_start,
-                    step_end=step_end,
-                    vehicle=vehicle,
-                    scenario_max_time=scenario_max_time,
-                )
-                result.append(deriv)
-                profile_index_map[(vehicle_id, "x-position")] = row_idx
-                row_idx += 1
+        # X position derivative
+        elif variable_type == "x-position":
+            deriv = differentiate_reachable_set_wrt_position(
+                x=True,
+                scenario=scenario,
+                planning_problem_set=planning_problem_set,
+                scenario_path=scenario_path,
+                step_start=step_start,
+                step_end=step_end,
+                vehicle=vehicle,
+                scenario_max_time=scenario_max_time,
+            )
+            result.append(deriv)
+            profile_index_map[(vehicle_id, "x-position")] = row_idx
+            row_idx += 1
 
-            # Y position derivative
-            elif variable_type == "y-position":
-                deriv = differentiate_reachable_set_wrt_position(
-                    x=False,
-                    scenario=scenario,
-                    planning_problem_set=planning_problem_set,
-                    scenario_path=scenario_path,
-                    step_start=step_start,
-                    step_end=step_end,
-                    vehicle=vehicle,
-                    scenario_max_time=scenario_max_time,
-                )
-                result.append(deriv)
-                profile_index_map[(vehicle_id, "y-position")] = row_idx
-                row_idx += 1
+        # Y position derivative
+        elif variable_type == "y-position":
+            deriv = differentiate_reachable_set_wrt_position(
+                x=False,
+                scenario=scenario,
+                planning_problem_set=planning_problem_set,
+                scenario_path=scenario_path,
+                step_start=step_start,
+                step_end=step_end,
+                vehicle=vehicle,
+                scenario_max_time=scenario_max_time,
+            )
+            result.append(deriv)
+            profile_index_map[(vehicle_id, "y-position")] = row_idx
+            row_idx += 1
 
-            # Both x and y
-            elif variable_type == "position":
-                deriv_x = differentiate_reachable_set_wrt_position(
-                    x=True,
-                    scenario=scenario,
-                    planning_problem_set=planning_problem_set,
-                    scenario_path=scenario_path,
-                    step_start=step_start,
-                    step_end=step_end,
-                    vehicle=vehicle,
-                    scenario_max_time=scenario_max_time,
-                )
-                deriv_y = differentiate_reachable_set_wrt_position(
-                    x=False,
-                    scenario=scenario,
-                    planning_problem_set=planning_problem_set,
-                    scenario_path=scenario_path,
-                    step_start=step_start,
-                    step_end=step_end,
-                    vehicle=vehicle,
-                    scenario_max_time=scenario_max_time,
-                )
-                result.append(deriv_x)
-                profile_index_map[(vehicle_id, "x-position")] = row_idx
-                row_idx += 1
+        # Both x and y
+        elif variable_type == "position":
+            deriv_x = differentiate_reachable_set_wrt_position(
+                x=True,
+                scenario=scenario,
+                planning_problem_set=planning_problem_set,
+                scenario_path=scenario_path,
+                step_start=step_start,
+                step_end=step_end,
+                vehicle=vehicle,
+                scenario_max_time=scenario_max_time,
+            )
+            deriv_y = differentiate_reachable_set_wrt_position(
+                x=False,
+                scenario=scenario,
+                planning_problem_set=planning_problem_set,
+                scenario_path=scenario_path,
+                step_start=step_start,
+                step_end=step_end,
+                vehicle=vehicle,
+                scenario_max_time=scenario_max_time,
+            )
+            result.append(deriv_x)
+            profile_index_map[(vehicle_id, "x-position")] = row_idx
+            row_idx += 1
 
-                result.append(deriv_y)
-                profile_index_map[(vehicle_id, "y-position")] = row_idx
-                row_idx += 1
+            result.append(deriv_y)
+            profile_index_map[(vehicle_id, "y-position")] = row_idx
+            row_idx += 1
         else:
             print(f"Warning: Unknown variable type: {variable_type}")
             continue
