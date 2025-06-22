@@ -7,14 +7,13 @@ import reach_flow
 # Add the parent directory (my_project) to the system path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "core")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
-import pathlib
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from optimization import optimize
 
 
 def run_full_optimization_pipeline(
-    scenario_path: str, decision_variables: list, iterations: int = 9, a_ref_input: float = 1.0
+    scenario_path: str, decision_variables: list, iterations: int = 1, a_ref_input: float = 1.0
 ) -> None:
     scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
@@ -46,4 +45,4 @@ def run_full_optimization_pipeline(
     reach_flow.plot(area_original, area_modified)
 
 
-run_full_optimization_pipeline("scenarios/BEL_Aarschot-6_1_T-1.xml", [("ego", "velocity"), ("ego", "position")])
+run_full_optimization_pipeline("scenarios/USA_US101-8_1_T-1.xml", [("ego", "position")])

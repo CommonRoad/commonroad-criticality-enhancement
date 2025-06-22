@@ -195,25 +195,26 @@ def optimize(
         else:
             expanded_variables.append((vehicle_id, var_type))
 
+    # Try computing reachability with current velocity
+    try:
+        graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
+
+    except Exception as e:
+        raise Exception(f"Reachability failed: {e}")
+
+    # Compute area and profile matrix
+    area_latest = reach_flow.compute_drivable_area(scenario_path)
+    profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
+        scenario,
+        planning_problem_set,
+        # TODO
+        scenario_path,
+        step_start,
+        step_end,
+        expanded_variables,
+    )
+    print(f"Profile: {profile_matrix}")
     for i in range(iterations):
-        # Try computing reachability with current velocity
-        try:
-            graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
-
-        except Exception as e:
-            raise Exception(f"Reachability failed: {e}")
-
-        # Compute area and profile matrix
-        area_latest = reach_flow.compute_drivable_area(scenario_path)
-        profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
-            scenario,
-            planning_problem_set,
-            scenario_path,
-            step_start,
-            step_end,
-            expanded_variables,
-        )
-        print(f"Profile: {profile_matrix}")
         # Solve QP
         try:
             d_x = optimize_iteration(area_latest, profile_matrix, step_end, a_ref_input=a_ref_input)
@@ -259,10 +260,10 @@ def optimize(
             print(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
 
             # Update scenario
-            modified_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+            current_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
             try:
-                area_latest = reach_flow.compute_drivable_area(modified_scenario_path)
+                area_latest = reach_flow.compute_drivable_area(current_scenario_path)
 
             except Exception as e:
                 print(f"Reachability failed: {e}. Performing binary search.")
