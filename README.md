@@ -15,7 +15,7 @@ The software is written in Python 3.10.
 - All dependencies can be installed with the following command:
 
 ```
-conda env create -n myenv -f environment.yaml
+conda env create -f environment.yaml
 conda activate myenv
 ```
 - The project uses CommonRoad-reach-flow

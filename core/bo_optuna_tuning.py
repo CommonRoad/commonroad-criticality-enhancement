@@ -4,7 +4,7 @@ from bo import run_bo_multi_variable
 
 def optuna_objective(trial):
     # Let Optuna suggest BO parameters
-    budget = trial.suggest_int("budget", 5, 12)
+    budget = trial.suggest_int("budget", 10, 100)
 
     # Use your actual scenario & variables
     best_params, best_area = run_bo_multi_variable(
@@ -20,6 +20,5 @@ def optuna_objective(trial):
 if __name__ == "__main__":
     study = optuna.create_study(direction="minimize")
     study.optimize(optuna_objective, n_trials=30)
-    print("\nBest SA parameters found:")
-    print(f"Initial Temperature: {study.best_params['initial_temp']}")
-    print(f"Max Iterations: {study.best_params['max_iter']}")
+    print("\nBest BO parameters found:")
+    print(f"Max Iterations: {study.best_params['budget']}")
