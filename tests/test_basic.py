@@ -2,13 +2,14 @@ import os
 import sys
 from pathlib import Path
 
-
 # Add the parent directory (my_project) to the system path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "core")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from optimization import optimize
+
+# Currently commented out: pipeline fails because of no recognition cr-reach-flow
 
 
 def run_full_optimization_pipeline(
