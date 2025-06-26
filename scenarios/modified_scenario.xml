@@ -6,12 +6,12 @@
     <gpsLongitude>-118.36365</gpsLongitude>
   </location>
   <scenarioTags>
-    <parallel_lanes/>
-    <lane_change/>
+    <multi_lane/>
     <comfort/>
     <highway/>
-    <multi_lane/>
+    <lane_change/>
     <no_oncoming_traffic/>
+    <parallel_lanes/>
   </scenarioTags>
   <lanelet id="61">
     <leftBound>
@@ -30496,15 +30496,15 @@
       </time>
       <position>
         <point>
-          <x>-3.1406</x>
-          <y>4.5428</y>
+          <x>0.0</x>
+          <y>0.0</y>
         </point>
       </position>
       <orientation>
         <exact>-0.8336</exact>
       </orientation>
       <velocity>
-        <exact>12.192</exact>
+        <exact>24.2809</exact>
       </velocity>
       <acceleration>
         <exact>0.0</exact>
