@@ -14,17 +14,18 @@ from cr_reach_flow.visualization.scenario import draw_with_reach_set
 from matplotlib import pyplot as plt
 
 
-def compute_drivable_area(scenario_path: str) -> float:
+def compute_drivable_area(scenario_path: str, semantics: str = "true") -> float:
     """
     Computes the drivable area for a given scenario.
 
     Parameters:
     - scenario_path (str): Path to the scenario file.
+    - semantics (str, optional): The semantics. Defaults to "true".
 
     Returns:
     - float: The computed drivable area.
     """
-    graph, step_start, step_end, planning_problem, clcs = create_reach_graph(scenario_path)
+    graph, step_start, step_end, planning_problem, clcs = create_reach_graph(scenario_path, semantics=semantics)
     area = compute_area(graph, step_start, step_end)
     return area
 
@@ -97,6 +98,9 @@ def compute_area(graph: object, step_start: int, step_end: int) -> np.ndarray:
             nodes = graph.get_nodes_at_step(t)
             if not nodes:
                 print(f"Warning: No reachable nodes at step {t}")
+                print(f"Area is 0 at step {t}")
+                raise ValueError()
+            areas
         except AttributeError:
             raise RuntimeError(f"Graph does not support time step access at t={t}")
 
@@ -124,8 +128,8 @@ def compute_area(graph: object, step_start: int, step_end: int) -> np.ndarray:
                 print(f"Warning: Node at step {t} has no 'set' attribute.")
                 continue
         if area < 1e-5:
-            print(f"Warning: Area  at step {t} is too small.")
-            raise ValueError(f"Area is too small at step {t}: {area}")
+            print(f"Area is too small at step {t}: {area}")
+            raise ValueError()
         areas[t] = area if area > 0 else 0.0
 
     return areas
@@ -137,7 +141,7 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
 
     Parameters:
     - scenario_path (str): Path to the XML file containing the CommonRoad scenario.
-    - semantics (str, optional): Semantics of the scenario. Default is "true".
+    - semantics (str, optional): Semantics of the scenario. Defaults to "true".
     Returns:
     - Tuple:
         - graph (object): The reachability graph with reachable states.
@@ -151,21 +155,24 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     step_end = 20
     initial_uncertainty = 0.01
 
+    # Define physical constraints for a point-mass vehicle model, including acceleration and velocity bounds, comment out to set manually
     point_mass_params = core.layers.propagation.PointMassParameters()
-    point_mass_params.a_lon_min = -9.5
-    point_mass_params.a_lon_max = 11.5
-    point_mass_params.a_lat_min = -2.0
-    point_mass_params.a_lat_max = 2.0
-    point_mass_params.v_lon_min = 0.0
-    point_mass_params.v_lon_max = 50.8
-    point_mass_params.v_lat_min = -4.0
-    point_mass_params.v_lat_max = 4.0
+    # point_mass_params.a_lon_min = -9.5
+    # point_mass_params.a_lon_max = 11.5
+    # point_mass_params.a_lat_min = -2.0
+    # point_mass_params.a_lat_max = 2.0
+    # point_mass_params.v_lon_min = 0.0
+    # point_mass_params.v_lon_max = 50.8
+    # point_mass_params.v_lat_min = -4.0
+    # point_mass_params.v_lat_max = 4.0
     predicate_config = core.model_checking.PredicateConfiguration()
+    # Used to inflate the vehicle shape when checking collisions.
     inflation_radius = (
         predicate_config.ego_width / 2
         if predicate_config.ego_width < predicate_config.ego_length
         else predicate_config.ego_length / 2
     )
+    # Defines how to segment the road into lanelets
     splitter_params = core.layers.semantic.SemanticSplitterParameters()
     splitter_params.minimum_region_area = 0.01
     splitter_params.lanelet_inflation_radius = inflation_radius
@@ -174,17 +181,18 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     scenario, planning_problems = resample_scenario(scenario, planning_problems, dt)
     planning_problem = list(planning_problems.planning_problem_dict.values())[0]
 
-    # plan route and create clcs
+    # plan route through lanelets and create clcs
     route = route_planner.generate_reference_path_from_lanelet_network_and_planning_problem(
         scenario.lanelet_network, planning_problem
     )
     splitter_params.route_lanelet_ids = set(route.lanelet_ids)
     lanelet_ids = splitter_params.route_lanelet_ids
+    # TODO write comment
     reference_path = pycrccosy.Util.resample_polyline(route.reference_path, 2.0)
     clcs = pycrccosy.CurvilinearCoordinateSystem(reference_path)
     print(f"Route lanelet IDs: {lanelet_ids}")
 
-    # create reach set executor
+    # create collision checker
     cc = CollisionCheckerFactory(step_start, step_end, inflation_radius).create_curvilinear_collision_checker(
         scenario, clcs
     )
@@ -211,13 +219,14 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
             layers["repartitioning"],
         ]
     )
+    # TODO write comment
     post = core.post_processors.meta.Sequential(
         [
             core.post_processors.pruning.SemanticFinalStatePruner(automaton),
             core.post_processors.pruning.DanglingNodePruner(),
         ]
     )
-
+    # Manages the full pipeline of reachable set computation.
     rs = core.executors.DynamicReachExecutor(step_start, step_end, init, layer, post)
 
     tic = time.perf_counter()
@@ -225,25 +234,21 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     toc = time.perf_counter()
     print(f"Initialization took {toc - tic:3f} seconds")
 
-    try:
-        tic = time.perf_counter()
-        rs.compute()
-        toc = time.perf_counter()
-        print(f"Reachable set computation took {toc - tic:3f} seconds")
+    tic = time.perf_counter()
+    rs.compute()
+    toc = time.perf_counter()
+    print(f"Reachable set computation took {toc - tic:3f} seconds")
 
-        # create reachability graph
-        tic = time.perf_counter()
-        graph = rs.get_post_processed_reach_graph()
-        toc = time.perf_counter()
-        print(f"Graph creation took {toc - tic:3f} seconds")
+    # create reachability graph
+    tic = time.perf_counter()
+    graph = rs.get_post_processed_reach_graph()
+    toc = time.perf_counter()
+    print(f"Graph creation took {toc - tic:3f} seconds")
 
-        # Check if the graph contains any reachable nodes
-        has_nodes = any(len(graph.get_nodes_at_step(t)) > 0 for t in range(step_start + 1, step_end + 1))
-        if not has_nodes:
-            raise RuntimeError("Reachability graph is empty – possibly due to invalid parameters.")
-
-    except RuntimeError as e:
-        print(f"Warning: Error computing reachable sets: {e}")
+    # Check if the graph contains any reachable nodes
+    has_nodes = any(len(graph.get_nodes_at_step(t)) > 0 for t in range(step_start + 1, step_end + 1))
+    if not has_nodes:
+        raise RuntimeError("Reachability graph is empty – possibly due to invalid parameters.")
 
     return graph, step_start, step_end, planning_problem, clcs
 

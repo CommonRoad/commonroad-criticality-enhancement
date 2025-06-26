@@ -8,7 +8,6 @@ import reach_flow
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.scenario import Scenario
-from file_modification import update_pos_trajectory
 
 
 def optimize_iteration(
@@ -41,7 +40,6 @@ def optimize_iteration(
     delta_a_0 = np.maximum(delta_a_0, 1e-2)
 
     B = profile_sub.T
-    # B = np.minimum(B, 0)
     Q = np.identity(num_steps)
 
     W = B.T @ Q @ B
@@ -49,7 +47,6 @@ def optimize_iteration(
 
     d_x = cv.Variable(B.shape[1])
     constraints = [d_x >= -5, d_x <= 5]
-    # constraints = []
     opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x + 0.1 * cv.norm(d_x, 2)), constraints)
     opt_prob.solve(solver=cv.ECOS, verbose=False)
 
@@ -63,11 +60,12 @@ def perform_binary_search(
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
     vehicle: DynamicObstacle,
-    x_before: float,
-    x_after: float,
+    var_before: float,
+    var_after: float,
     var_type: str,
-    iteration_limit: int = 3,
-) -> float:
+    semantics: str,
+    iteration_limit: int = 10,
+) -> None:
     """
     Performs binary search to find the highest feasible velocity (or position) between `x_before` and `x_after`
     that still yields a valid reachability graph.
@@ -76,36 +74,30 @@ def perform_binary_search(
     - scenario (Scenario): The CommonRoad scenario being modified.
     - planning_problem_set (PlanningProblemSet): Planning problems associated with the scenario.
     - vehicle (DynamicObstacle): The vehicle whose velocity is being adjusted.
-    - x_before (float): Velocity before last change.
-    - x_after (float): Velocity after last change.
+    - var_before (float): Velocity before last change.
+    - var_after (float): Velocity after last change.
     - var_type (str): Type of the variable - "velocity" or "position".
+    - semantics (str): The semantics.
     - iteration_limit (int, optional): Maximum number of binary search steps. Default is 10.
-
-    Returns:
-    - float: The highest feasible velocity/position found.
     """
 
-    low = x_before
-    high = x_after
-    feasible_var = x_before
+    low = var_before
+    high = var_after
+    feasible_var = var_before
+    # Backup current state
+    x_backup, y_backup = vehicle.initial_state.position
 
     for iteration in range(iteration_limit):
         step_var = (low + high) / 2
         print(f"Binary search iteration {iteration+1}: Trying {var_type} = {step_var:.6f}")
-
-        # Backup current state
-        velocity_backup = vehicle.initial_state.velocity
-        x_backup, y_backup = vehicle.initial_state.position
 
         # Update ego's velocity/position
         if var_type == "velocity":
             vehicle.initial_state.velocity = step_var
         elif var_type == "x-position":
             vehicle.initial_state.position = np.array([step_var, y_backup])
-            # update_pos_trajectory(vehicle, step_var - x_backup)
         elif var_type == "y-position":
             vehicle.initial_state.position = np.array([x_backup, step_var])
-            # Optionally call `update_pos_trajectory`
         else:
             raise ValueError(f"Unsupported variable type: {var_type}")
 
@@ -114,22 +106,25 @@ def perform_binary_search(
         # Reload and compute reachability
         try:
             # Check if area can be computed
-            _ = reach_flow.create_reach_graph(mod_scenario_path)
+            _ = reach_flow.create_reach_graph(mod_scenario_path, semantics=semantics)
 
             # On success search upper half
             feasible_var = step_var
             low = step_var
-
-        # Else search lower half
         except Exception:
+            # Else search lower half
             high = step_var
 
-        # Stop early if step size is small
-        if abs(high - low) < 1e-4:
-            break
-
     print(f"Binary search complete with best feasible {var_type}: {feasible_var:.6f}")
-    return feasible_var
+    # Update final feasible ego's velocity/position
+    if var_type == "velocity":
+        vehicle.initial_state.velocity = feasible_var
+    elif var_type == "x-position":
+        vehicle.initial_state.position = np.array([feasible_var, y_backup])
+    elif var_type == "y-position":
+        vehicle.initial_state.position = np.array([x_backup, feasible_var])
+    mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+    _ = reach_flow.create_reach_graph(mod_scenario_path, semantics=semantics)
 
 
 def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: float, direction: str = "x") -> None:
@@ -168,6 +163,7 @@ def optimize(
     decision_variables: List[Tuple[str, str]],
     iterations: int,
     a_ref_input: float = 1.0,
+    semantics: str = "true",
 ) -> float:
     """
     Optimizes scenario variables (velocity or position of vehicles) to influence the drivable area.
@@ -183,6 +179,7 @@ def optimize(
         Each tuple is (vehicle_id, variable_type), where variable_type is "velocity", "position" etc.
     - iterations (int, optional): Number of optimization iterations to run per variable. Default is 10.
     - a_ref_input (float, optional): Scalar to modify the area reference target. Default is 1.0.
+    - semantics (str, optional): The semantics. Default is "true".
 
     Returns:
     - float: The highest feasible velocity found.
@@ -197,24 +194,21 @@ def optimize(
 
     # Try computing reachability with current velocity
     try:
-        graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
+        graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
+            scenario_path, semantics=semantics
+        )
 
     except Exception as e:
         raise Exception(f"Reachability failed: {e}")
 
     # Compute area and profile matrix
-    area_latest = reach_flow.compute_drivable_area(scenario_path)
+    area_latest = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
     profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
-        scenario,
-        planning_problem_set,
-        # TODO
-        scenario_path,
-        step_start,
-        step_end,
-        expanded_variables,
+        scenario, planning_problem_set, scenario_path, step_start, step_end, expanded_variables, semantics
     )
     print(f"Profile: {profile_matrix}")
     for i in range(iterations):
+        print("Starting iteration", i)
         # Solve QP
         try:
             d_x = optimize_iteration(area_latest, profile_matrix, step_end, a_ref_input=a_ref_input)
@@ -238,7 +232,7 @@ def optimize(
                     None,
                 )
 
-            if not target_vehicle:
+            if target_vehicle is None:
                 print(f"Warning: Vehicle with ID {vehicle_id} not found.")
                 continue
 
@@ -263,25 +257,27 @@ def optimize(
             current_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
             try:
-                area_latest = reach_flow.compute_drivable_area(current_scenario_path)
+                area_latest = reach_flow.compute_drivable_area(current_scenario_path, semantics=semantics)
 
             except Exception as e:
                 print(f"Reachability failed: {e}. Performing binary search.")
 
                 if variable_type == "velocity":
-                    x_before = target_vehicle.initial_state.velocity - last_change
-                    x_after = target_vehicle.initial_state.velocity
+                    var_before = target_vehicle.initial_state.velocity - last_change
+                    var_after = target_vehicle.initial_state.velocity
                 else:
                     index = 0 if direction == "x" else 1
-                    x_before = target_vehicle.initial_state.position[index] - last_change
-                    x_after = target_vehicle.initial_state.position[index]
+                    var_before = target_vehicle.initial_state.position[index] - last_change
+                    var_after = target_vehicle.initial_state.position[index]
                 # Run binary search between previous valid and current velocity
-                return perform_binary_search(
+                perform_binary_search(
                     scenario,
                     planning_problem_set,
                     target_vehicle,
-                    x_before=x_before,
-                    x_after=x_after,
+                    var_before,
+                    var_after,
+                    var_type=variable_type,
+                    semantics=semantics,
                 )
 
     if expanded_variables[-1][1] == "velocity":

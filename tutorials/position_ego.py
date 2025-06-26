@@ -13,7 +13,7 @@ from optimization import optimize
 
 
 def run_full_optimization_pipeline(
-    scenario_path: str, decision_variables: list, iterations: int = 1, a_ref_input: float = 1.0
+    scenario_path: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0
 ) -> None:
     scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
@@ -23,7 +23,7 @@ def run_full_optimization_pipeline(
 
     area_original = reach_flow.compute_drivable_area(scenario_path)
 
-    final_velocity = optimize(
+    final_position = optimize(
         scenario,
         planning_problem_set,
         scenario_path,
@@ -31,7 +31,7 @@ def run_full_optimization_pipeline(
         iterations=iterations,
         a_ref_input=a_ref_input,
     )
-    print("final_velocity:", final_velocity)
+    print("final_position:", final_position)
 
     scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
     scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()

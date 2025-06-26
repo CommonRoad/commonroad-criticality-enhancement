@@ -6,7 +6,6 @@ import reach_flow
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.scenario import Scenario
-from file_modification import update_pos_trajectory
 
 
 def differentiate_reachable_set_wrt_velocity(
@@ -16,6 +15,7 @@ def differentiate_reachable_set_wrt_velocity(
     step_start: int,
     step_end: int,
     vehicle: DynamicObstacle,
+    semantics: str,
 ) -> np.ndarray:
     """
     Computes the sensitivity of the drivable area with respect to a vehicle's initial velocity.
@@ -29,6 +29,7 @@ def differentiate_reachable_set_wrt_velocity(
     - step_start (int): The starting time step used for computation.
     - step_end (int): The ending time step used for computation.
     - vehicle (DynamicObstacle): The vehicle whose velocity will be perturbed.
+    - semantics (str): The semantics.
 
     Returns:
     - np.ndarray: An array representing the derivative of drivable area w.r.t. the vehicle's velocity.
@@ -44,7 +45,7 @@ def differentiate_reachable_set_wrt_velocity(
     derivative = np.array([-1.0 for i in range(step_start, step_end + 1)])
 
     # Compute reachable area for original velocity
-    area_original = reach_flow.compute_drivable_area(scenario_path)
+    area_original = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
 
     # Slightly increase velocity
     vehicle.initial_state.velocity += h
@@ -53,7 +54,7 @@ def differentiate_reachable_set_wrt_velocity(
     mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
     # Recompute for the modified scenario
-    area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path)
+    area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
 
     # Derivative using h method
     for time_step in range(step_start, step_end + 1):
@@ -72,7 +73,7 @@ def differentiate_reachable_set_wrt_position(
     step_start: int,
     step_end: int,
     vehicle: DynamicObstacle,
-    scenario_max_time: int,
+    semantics: str,
 ) -> np.ndarray:
     """
     Computes the sensitivity of the drivable area with respect to a vehicle's initial x-position.
@@ -88,27 +89,25 @@ def differentiate_reachable_set_wrt_position(
     - step_end (int): End time step of reachability analysis.
     - vehicle (DynamicObstacle): The vehicle whose x-position will be perturbed.
     - scenario_max_time (int): Maximum time span for the scenario.
+    - semantics (str): The semantics.
 
     Returns:
     - np.ndarray: An array of numerical derivatives representing sensitivity of drivable area to position.
     """
 
     original_position = vehicle.initial_state.position
-
-    delta_pos = int(np.ceil(scenario_max_time / 10))
-    delta_pos = max(delta_pos, 1)
+    delta_pos = 1
 
     derivative = np.array([-1.0 for i in range(step_start, step_end + 1)])
 
     # Compute reachable area for original position
-    area_original = reach_flow.compute_drivable_area(scenario_path)
+    area_original = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
 
     if x:
         vehicle.initial_state.position = np.array([original_position[0] + delta_pos, original_position[1]])
     else:
         vehicle.initial_state.position = np.array([original_position[0], original_position[1] + delta_pos])
 
-    # update_pos_trajectory(vehicle, delta_pos)
     print("original position: ", original_position)
     print("modified position: ", vehicle.initial_state.position)
 
@@ -116,7 +115,7 @@ def differentiate_reachable_set_wrt_position(
     mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
     # Recompute for the modified scenario
-    area_changed_position = reach_flow.compute_drivable_area(mod_scenario_path)
+    area_changed_position = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
 
     print("original area: ", area_original)
     print("modified area: ", area_changed_position)
@@ -137,6 +136,7 @@ def get_profile_matrix(
     step_start: int,
     step_end: int,
     decision_variables: List[Tuple[str, str]],
+    semantics: str,
 ) -> Tuple[np.ndarray, Dict[Tuple[str, str], int]]:
     """
     Constructs a profile matrix showing the sensitivity of drivable area to specified decision variables.
@@ -155,7 +155,7 @@ def get_profile_matrix(
     - decision_variables (List[Tuple[str, str]]): List of tuples of the form (vehicle_id, variable_type), where:
         - vehicle_id: a string, e.g., "ego" or "1"
         - variable_type: "velocity", "position" etc.
-
+    - semantics (str): The semantics.
     Returns:
     - profile_matrix: An array where each row is a derivative profile over time.
     - profile_index_map: A dictionary mapping (vehicle_id, variable_type) to its row index in the matrix.
@@ -186,7 +186,7 @@ def get_profile_matrix(
         # Velocity derivative
         if variable_type == "velocity":
             deriv = differentiate_reachable_set_wrt_velocity(
-                scenario, planning_problem_set, scenario_path, step_start, step_end, vehicle
+                scenario, planning_problem_set, scenario_path, step_start, step_end, vehicle, semantics
             )
             result.append(deriv)
             profile_index_map[(vehicle_id, "velocity")] = row_idx
@@ -202,7 +202,7 @@ def get_profile_matrix(
                 step_start=step_start,
                 step_end=step_end,
                 vehicle=vehicle,
-                scenario_max_time=scenario_max_time,
+                semantics=semantics,
             )
             result.append(deriv)
             profile_index_map[(vehicle_id, "x-position")] = row_idx
@@ -218,39 +218,9 @@ def get_profile_matrix(
                 step_start=step_start,
                 step_end=step_end,
                 vehicle=vehicle,
-                scenario_max_time=scenario_max_time,
+                semantics=semantics,
             )
             result.append(deriv)
-            profile_index_map[(vehicle_id, "y-position")] = row_idx
-            row_idx += 1
-
-        # Both x and y
-        elif variable_type == "position":
-            deriv_x = differentiate_reachable_set_wrt_position(
-                x=True,
-                scenario=scenario,
-                planning_problem_set=planning_problem_set,
-                scenario_path=scenario_path,
-                step_start=step_start,
-                step_end=step_end,
-                vehicle=vehicle,
-                scenario_max_time=scenario_max_time,
-            )
-            deriv_y = differentiate_reachable_set_wrt_position(
-                x=False,
-                scenario=scenario,
-                planning_problem_set=planning_problem_set,
-                scenario_path=scenario_path,
-                step_start=step_start,
-                step_end=step_end,
-                vehicle=vehicle,
-                scenario_max_time=scenario_max_time,
-            )
-            result.append(deriv_x)
-            profile_index_map[(vehicle_id, "x-position")] = row_idx
-            row_idx += 1
-
-            result.append(deriv_y)
             profile_index_map[(vehicle_id, "y-position")] = row_idx
             row_idx += 1
         else:
