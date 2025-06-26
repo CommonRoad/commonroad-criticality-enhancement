@@ -7,7 +7,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "c
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
 
 from commonroad.common.file_reader import CommonRoadFileReader
-from optimization import optimize
+
+# from optimization import optimize
 
 # Currently commented out: pipeline fails because of no recognition cr-reach-flow
 
