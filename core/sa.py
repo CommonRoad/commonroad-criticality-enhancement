@@ -64,41 +64,58 @@ def run_sa_with_scipy(
     - best_area (List[float]): Drivable area array computed with the best parameters.
     """
     # Load scenario
-    scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     # Compute bounds based on original state
     bounds = []
+    expanded_decision_variables = []
     for vehicle_id, variable_type in decision_variables:
         if vehicle_id == "ego":
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
         else:
-            try:
-                vid = int(vehicle_id)
-            except ValueError:
-                raise ValueError(f"Vehicle ID '{vehicle_id}' is not a valid integer.")
-            vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
-            if vehicle is None:
-                raise ValueError(f"Vehicle with ID '{vehicle_id}' not found in scenario.")
+            raise ValueError(f"Program supports only ego vehicle currently")
+            # try:
+            #     vid = int(vehicle_id)
+            # except ValueError:
+            #     raise ValueError(f"Vehicle ID '{vehicle_id}' is not a valid integer.")
+            # vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
+            # if vehicle is None:
+            #     raise ValueError(f"Vehicle with ID '{vehicle_id}' not found in scenario.")
 
         # Get bounds based on variable type
         if variable_type == "velocity":
             v_original = vehicle.initial_state.velocity
             bounds.append((5, v_original + 30.0))
+            expanded_decision_variables.append((vehicle_id, "velocity"))
+
         elif variable_type == "position":
-            p_original = vehicle.initial_state.position[0]
-            bounds.append((p_original - 10.0, p_original + 10.0))
+            x_original, y_original = vehicle.initial_state.position
+            expanded_decision_variables.append((vehicle_id, "x-position"))
+            expanded_decision_variables.append((vehicle_id, "y-position"))
+            bounds.append((x_original - 2.0, x_original + 2.0))
+            bounds.append((y_original - 2.0, y_original + 2.0))
+
+        elif variable_type == "x-position":
+            x_original = vehicle.initial_state.position[0]
+            expanded_decision_variables.append((vehicle_id, "x-position"))
+            bounds.append((x_original - 2.0, x_original + 2.0))
+
+        elif variable_type == "y-position":
+            y_original = vehicle.initial_state.position[1]
+            expanded_decision_variables.append((vehicle_id, "y-position"))
+            bounds.append((y_original - 2.0, y_original + 2.0))
+
         else:
             raise ValueError(f"Unknown decision variable type: {variable_type}")
 
     # Prepare the objective function
-    objective = objective_wrapper(scenario, planning_problem_set, decision_variables, a_ref)
+    objective = objective_wrapper(scenario, planning_problem_set, expanded_decision_variables, a_ref)
 
     # Run SciPy's Simulated Annealing
     result = dual_annealing(objective, bounds=bounds, maxiter=max_iter, initial_temp=initial_temp)
 
     best_params = list(result.x)
-    updated_path = apply_variables_to_scenario(scenario, planning_problem_set, best_params, decision_variables)
+    updated_path = apply_variables_to_scenario(scenario, planning_problem_set, best_params, expanded_decision_variables)
     best_area = compute_drivable_area(updated_path)
 
     return best_params, best_area

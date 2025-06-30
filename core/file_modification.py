@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
@@ -20,15 +20,13 @@ def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningPro
     Returns:
     - str: The relative file path to the saved scenario.
     """
-    temp_file = os.path.join("scenarios", "modified_scenario.xml")
-    # convert_positions_to_points(scenario)
-    # target_vehicle = next((veh for veh in scenario.dynamic_obstacles if veh.obstacle_id == 30), None)
-    # print(f"30pos after opt {target_vehicle.initial_state.position}")
-
+    output_dir = Path(__file__).resolve().parent.parent / "scenarios"
+    output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
+    temp_file = output_dir / "modified_scenario.xml"
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
-    writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
+    writer.write_to_file(str(temp_file), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
     print("The new scenario was saved in modified_scenario.xml")
-    return temp_file
+    return str(temp_file)
 
 
 def apply_variables_to_scenario(
@@ -58,30 +56,36 @@ def apply_variables_to_scenario(
         if vehicle_id == "ego":
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
         else:
-            try:
-                vehicle_id = int(vehicle_id)
-            except ValueError:
-                print(f"Invalid vehicle ID: {vehicle_id}")
-                continue
-
-            vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vehicle_id), None)
-            if vehicle is None:
-                print(f"Vehicle {vehicle_id} not found in dynamic obstacles.")
-                continue
+            raise ValueError(f"Program supports only ego vehicle currently")
+            # try:
+            #     vehicle_id = int(vehicle_id)
+            # except ValueError:
+            #     print(f"Invalid vehicle ID: {vehicle_id}")
+            #     continue
+            #
+            # vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vehicle_id), None)
+            # if vehicle is None:
+            #     print(f"Vehicle {vehicle_id} not found in dynamic obstacles.")
+            #     continue
 
         init_state = vehicle.initial_state
 
         # Update the value
         if variable_type == "velocity":
             init_state.velocity = new_value
-        elif variable_type == "position":
+        elif variable_type == "x-position":
             x, y = init_state.position
             init_state.position = (new_value, y)
+        elif variable_type == "y-position":
+            x, y = init_state.position
+            init_state.position = (x, new_value)
         else:
             print(f"Unknown variable type: {variable_type}")
 
-    temp_file = os.path.join("scenarios", "updated_scenario.xml")
+    output_dir = Path(__file__).resolve().parent.parent / "scenarios"
+    output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
+    temp_file = output_dir / "updated_scenario.xml"
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
     writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
     print("The new scenario was saved in updated_scenario.xml")
-    return "scenarios/updated_scenario.xml"
+    return str(temp_file)

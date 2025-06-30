@@ -10,7 +10,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 
 # from optimization import optimize
 
-# Currently commented out: pipeline fails because of no recognition cr-reach-flow
+# Currently commented out: pipeline fails because of no recognition cr-reach-flow (see README)
 
 
 def run_full_optimization_pipeline(

@@ -54,7 +54,13 @@ def differentiate_reachable_set_wrt_velocity(
     mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
     # Recompute for the modified scenario
-    area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+    try:
+        area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+    except Exception as e:
+        print(
+            f"Failed to compute area at changed velocity: {e}. A small change in this variable leads to area 0. Adjusting rest of the variables only"
+        )
+        return np.array([0.0 for i in range(step_start, step_end + 1)])
 
     # Derivative using h method
     for time_step in range(step_start, step_end + 1):
@@ -115,7 +121,14 @@ def differentiate_reachable_set_wrt_position(
     mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
     # Recompute for the modified scenario
-    area_changed_position = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+    try:
+        area_changed_position = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+    except Exception as e:
+        print(
+            f"Failed to compute area at changed position: {e}. A small change in this variable leads to area 0. Adjusting rest of the variables only"
+        )
+        vehicle.initial_state.position = original_position
+        return np.array([0.0 for i in range(step_start, step_end + 1)])
 
     print("original area: ", area_original)
     print("modified area: ", area_changed_position)
@@ -163,7 +176,6 @@ def get_profile_matrix(
 
     result = []
     profile_index_map = {}
-    scenario_max_time = step_end - step_start + 1
 
     row_idx = 0  # Keeps track of the profile_matrix row index
 
@@ -172,12 +184,13 @@ def get_profile_matrix(
         if vehicle_id == "ego":
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
         else:
-            try:
-                vid = int(vehicle_id)
-            except ValueError:
-                print(f"Warning: Vehicle ID '{vehicle_id}' is not a valid integer.")
-                continue
-            vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
+            raise ValueError(f"Program supports only ego vehicle currently")
+            # try:
+            #     vid = int(vehicle_id)
+            # except ValueError:
+            #     print(f"Warning: Vehicle ID '{vehicle_id}' is not a valid integer.")
+            #     continue
+            # vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
 
         if vehicle is None:
             print(f"Warning: Vehicle {vehicle_id} not found.")

@@ -14,7 +14,7 @@ from cr_reach_flow.visualization.scenario import draw_with_reach_set
 from matplotlib import pyplot as plt
 
 
-def compute_drivable_area(scenario_path: str, semantics: str = "true") -> float:
+def compute_drivable_area(scenario_path: str, semantics: str = "true") -> np.ndarray:
     """
     Computes the drivable area for a given scenario.
 
@@ -23,7 +23,7 @@ def compute_drivable_area(scenario_path: str, semantics: str = "true") -> float:
     - semantics (str, optional): The semantics. Defaults to "true".
 
     Returns:
-    - float: The computed drivable area.
+    - np.ndarray: The computed drivable area.
     """
     graph, step_start, step_end, planning_problem, clcs = create_reach_graph(scenario_path, semantics=semantics)
     area = compute_area(graph, step_start, step_end)

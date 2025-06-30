@@ -12,6 +12,7 @@ The software is written in Python 3.10.
 ## Building the code
 
 - The code can be built using Anaconda to manage a virtual python environment.
+- Note that currently the poetry package manager is not used
 - All dependencies can be installed with the following command:
 
 ```
@@ -38,14 +39,11 @@ pre-commit run --all-files
 ```
 
 ## Running the tutorials
-
-The scripts in the `tutorials/` are designed to be run **from the root of the repository** (i.e. the criticality-enhancement directory), not from within the `tutorials/` folder itself.
-This ensures that the file paths (e.g. scenarios) resolve as expected. If ran through an IDE the working directory needs to be configured respectively.
-Run scripts like this from the root of the repository:
+- Run scripts like this:
 ```
 python tutorials/script.py
 ```
-
+As poetry is currently not used (cr-reach-flow repository not recognized), gitlab-ci is not able to recognize imports and run tests. Therefore the tutorials can be run manually and used for testing.
 ***
 
 ## Support

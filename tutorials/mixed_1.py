@@ -1,14 +1,9 @@
 import os
+import pathlib
 import sys
 from pathlib import Path
 
 import reach_flow
-
-# Add the parent directory (my_project) to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "core")))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
-import pathlib
-
 from commonroad.common.file_reader import CommonRoadFileReader
 from optimization import optimize
 
@@ -16,8 +11,7 @@ from optimization import optimize
 def run_full_optimization_pipeline(
     scenario_path: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0, semantics: str = "true"
 ) -> None:
-    scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
     vehicle_ids = [obstacle.obstacle_id for obstacle in scenario.dynamic_obstacles]
     print("Vehicle IDs:", vehicle_ids)
 
@@ -26,7 +20,7 @@ def run_full_optimization_pipeline(
 
     area_original = reach_flow.compute_drivable_area(scenario_path, semantics)
 
-    final_velocity = optimize(
+    final_velocity, area_modified = optimize(
         scenario,
         planning_problem_set,
         scenario_path,
@@ -37,18 +31,19 @@ def run_full_optimization_pipeline(
     )
     print("final_velocity:", final_velocity)
 
-    scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
-
-    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-        "scenarios/modified_scenario.xml", semantics
-    )
-    reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
-
-    area_modified = reach_flow.compute_drivable_area("scenarios/modified_scenario.xml", semantics)
+    # scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+    #
+    # graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
+    #     "scenarios/modified_scenario.xml", semantics
+    # )
+    # reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
     reach_flow.plot(area_original, area_modified)
 
 
-run_full_optimization_pipeline(
-    "scenarios/BEL_Aarschot-6_1_T-1.xml", [("ego", "velocity"), ("ego", "position")], semantics="Behind_V311"
-)
+# Get the root directory (two levels up from this file)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Add core and scenario directories to sys.path
+sys.path.append(str(PROJECT_ROOT / "core"))
+sys.path.append(str(PROJECT_ROOT / "scenarios"))
+scenario_path = PROJECT_ROOT / "scenarios" / "BEL_Aarschot-6_1_T-1.xml"
+run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity"), ("ego", "position")], semantics="Behind_V311")

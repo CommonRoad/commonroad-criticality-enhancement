@@ -1,13 +1,7 @@
-import os
 import sys
+import time
 from pathlib import Path
 from typing import List, Tuple
-
-# Add your project structure to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "core")))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
-
-import time
 
 import matplotlib.pyplot as plt
 import reach_flow
@@ -50,8 +44,7 @@ def run_comparison_pipeline(
     sa_initial_temp: float = 2000.0,
     budget: int = 10,
 ) -> None:
-    full_path = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    scenario, planning_problem_set = CommonRoadFileReader(full_path).open()
+    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     print("Computing original drivable area...")
     area_original = reach_flow.compute_drivable_area(scenario_path)
@@ -104,14 +97,20 @@ def run_comparison_pipeline(
     plot_area_over_time(area_original, area_gradient, sa_area, bo_area)
 
 
-if __name__ == "__main__":
-    run_comparison_pipeline(
-        # "scenarios/DEU_Reutlingen-5_1_T-1.xml",
-        "scenarios/DEU_Flensburg-94_1_T-1.xml",
-        decision_variables=[("ego", "velocity"), ("ego", "position")],
-        iterations=10,
-        a_ref_input=1.0,
-        sa_max_iter=10,
-        sa_initial_temp=2000.0,
-        budget=10,
-    )
+# Get the root directory (two levels up from this file)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Add core and scenario directories to sys.path
+sys.path.append(str(PROJECT_ROOT / "core"))
+sys.path.append(str(PROJECT_ROOT / "scenarios"))
+scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+run_comparison_pipeline(
+    # "scenarios/DEU_Reutlingen-5_1_T-1.xml",
+    str(scenario_path),
+    decision_variables=[("ego", "velocity"), ("ego", "position")],
+    iterations=10,
+    a_ref_input=1.0,
+    sa_max_iter=10,
+    sa_initial_temp=2000.0,
+    budget=10,
+)

@@ -59,35 +59,51 @@ def run_bo_multi_variable(
     - best_params (List[float]): Best parameter values found
     - best_area (List[float]): The minimized drivable area array
     """
-    scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     # Compute bounds based on original state
     space = []
+    expanded_decision_variables = []
     for vehicle_id, variable_type in decision_variables:
         if vehicle_id == "ego":
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
         else:
-            try:
-                vid = int(vehicle_id)
-            except ValueError:
-                raise ValueError(f"Invalid vehicle ID: {vehicle_id}")
-            vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
-            if vehicle is None:
-                raise ValueError(f"Vehicle with ID '{vehicle_id}' not found.")
+            raise ValueError(f"Program supports only ego vehicle currently")
+            # try:
+            #     vid = int(vehicle_id)
+            # except ValueError:
+            #     raise ValueError(f"Invalid vehicle ID: {vehicle_id}")
+            # vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
+            # if vehicle is None:
+            #     raise ValueError(f"Vehicle with ID '{vehicle_id}' not found.")
 
         # Set bounds
         if variable_type == "velocity":
             v_original = vehicle.initial_state.velocity
             space.append(Real(5, v_original + 30.0))
+            expanded_decision_variables.append((vehicle_id, "velocity"))
+
         elif variable_type == "position":
-            p_original = vehicle.initial_state.position[0]
-            space.append(Real(p_original - 10.0, p_original + 10.0))
+            pos = vehicle.initial_state.position
+            space.append(Real(pos[0] - 2, pos[0] + 2))  # x
+            space.append(Real(pos[1] - 2, pos[1] + 2))  # y
+            expanded_decision_variables.extend([(vehicle_id, "x-position"), (vehicle_id, "y-position")])
+
+        elif variable_type == "x-position":
+            x = vehicle.initial_state.position[0]
+            space.append(Real(x - 2, x + 2))
+            expanded_decision_variables.append((vehicle_id, "x-position"))
+
+        elif variable_type == "y-position":
+            y = vehicle.initial_state.position[1]
+            space.append(Real(y - 2, y + 2))
+            expanded_decision_variables.append((vehicle_id, "y-position"))
+
         else:
             raise ValueError(f"Unknown variable type: {variable_type}")
 
     def wrapped_objective(params):
-        return objective_multi_var(scenario, planning_problem_set, params, decision_variables, a_ref)
+        return objective_multi_var(scenario, planning_problem_set, params, expanded_decision_variables, a_ref)
 
     # Run Gaussian Process-based Bayesian Optimization
     result = gp_minimize(
@@ -100,6 +116,8 @@ def run_bo_multi_variable(
 
     best_params = result.x
 
-    updated_scenario_path = apply_variables_to_scenario(scenario, planning_problem_set, best_params, decision_variables)
+    updated_scenario_path = apply_variables_to_scenario(
+        scenario, planning_problem_set, best_params, expanded_decision_variables
+    )
     best_area = compute_drivable_area(updated_scenario_path)
     return best_params, best_area
