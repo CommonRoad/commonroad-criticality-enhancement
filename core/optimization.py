@@ -108,7 +108,7 @@ def perform_binary_search(
         # Reload and compute reachability
         try:
             # Check if area can be computed
-            _ = reach_flow.create_reach_graph(mod_scenario_path, semantics=semantics)
+            _ = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
 
             # On success search upper half
             feasible_var = step_var
@@ -126,7 +126,7 @@ def perform_binary_search(
     elif var_type == "y-position":
         vehicle.initial_state.position = np.array([x_backup, feasible_var])
     mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
-    _ = reach_flow.create_reach_graph(mod_scenario_path, semantics=semantics)
+    _ = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
 
 
 def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: float, direction: str = "x") -> None:
@@ -212,7 +212,6 @@ def optimize(
 
     for i in range(iterations):
         print("Starting iteration", i)
-
         profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
             scenario, planning_problem_set, current_scenario_path, step_start, step_end, expanded_variables, semantics
         )
@@ -280,8 +279,8 @@ def optimize(
                     var_type=variable_type,
                     semantics=semantics,
                 )
-    last_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
+    last_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
     area_end = reach_flow.compute_drivable_area(last_scenario_path, semantics=semantics)
 
     if expanded_variables[-1][1] == "velocity":

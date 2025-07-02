@@ -92,8 +92,7 @@ def rotate_scenario_90_ccw(scenario: Scenario, planning_problem_set: PlanningPro
 def run_full_optimization_pipeline(
     scenario_path: str, decision_variables: list, iterations: int = 1, a_ref_input: float = 1.0
 ) -> None:
-    scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)

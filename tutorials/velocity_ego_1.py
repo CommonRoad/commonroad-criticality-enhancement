@@ -15,6 +15,10 @@ def run_full_optimization_pipeline(
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
+    # To make further adjustments to the way the reachable area is computed,
+    # change the point mass parameters in the create_reach_graph() method.
+    #   e.g. by constraining the lateral velocity with > 0, the vehicle will only move forward
+    #       and there will be no area behind the vehicle
     area_original = reach_flow.compute_drivable_area(scenario_path)
 
     final_velocity, area_modified = optimize(
@@ -27,13 +31,11 @@ def run_full_optimization_pipeline(
     )
     print("final_velocity:", final_velocity)
 
-    # scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    # scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
-    #
-    # graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-    #     "scenarios/modified_scenario.xml"
-    # )
-    # reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
+    mod_scenario_path = PROJECT_ROOT / "scenarios" / "modified_scenario.xml"
+    scenario, planning_problem_set = CommonRoadFileReader(mod_scenario_path).open()
+
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(str(mod_scenario_path))
+    reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
     reach_flow.plot(area_original, area_modified)
 
@@ -44,5 +46,5 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT / "core"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
-# run_full_optimization_pipeline(str(scenario_path), [("ego", "position")])
-run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")])
+run_full_optimization_pipeline(str(scenario_path), [("ego", "position")])
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")])

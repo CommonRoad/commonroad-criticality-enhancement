@@ -7,14 +7,16 @@ from optimization import optimize
 
 
 def run_full_optimization_pipeline(
-    scenario_path: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0
+    scenario_path: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0, semantics: str = "true"
 ) -> None:
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
+    vehicle_ids = [obstacle.obstacle_id for obstacle in scenario.dynamic_obstacles]
+    print("Vehicle IDs:", vehicle_ids)
 
-    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path, semantics)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
-    area_original = reach_flow.compute_drivable_area(scenario_path)
+    area_original = reach_flow.compute_drivable_area(scenario_path, semantics)
 
     final_position, area_modified = optimize(
         scenario,
@@ -23,15 +25,17 @@ def run_full_optimization_pipeline(
         decision_variables=decision_variables,
         iterations=iterations,
         a_ref_input=a_ref_input,
+        semantics=semantics,
     )
     print("final_position:", final_position)
 
-    # scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+    mod_scenario_path = PROJECT_ROOT / "scenarios" / "modified_scenario.xml"
+    scenario, planning_problem_set = CommonRoadFileReader(mod_scenario_path).open()
 
-    # graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-    #     "scenarios/modified_scenario.xml"
-    # )
-    # reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
+        str(mod_scenario_path), semantics
+    )
+    reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
     reach_flow.plot(area_original, area_modified)
 
 
@@ -42,4 +46,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT / "core"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")], semantics="Behind_V36")
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")], semantics="Behind_V310")
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "position")], semantics="Behind_V310")
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "position")], semantics="Behind_V36")
 run_full_optimization_pipeline(str(scenario_path), [("ego", "position")])

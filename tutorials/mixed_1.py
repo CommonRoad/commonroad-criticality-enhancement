@@ -31,12 +31,13 @@ def run_full_optimization_pipeline(
     )
     print("final_velocity:", final_velocity)
 
-    # scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
-    #
-    # graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-    #     "scenarios/modified_scenario.xml", semantics
-    # )
-    # reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
+    mod_scenario_path = PROJECT_ROOT / "scenarios" / "modified_scenario.xml"
+    scenario, planning_problem_set = CommonRoadFileReader(mod_scenario_path).open()
+
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
+        str(mod_scenario_path), semantics
+    )
+    reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
     reach_flow.plot(area_original, area_modified)
 
 

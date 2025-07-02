@@ -155,15 +155,18 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     step_end = 20
     initial_uncertainty = 0.01
 
+    # Adjusting those parameters can help compute area more realistically
+    #   e.g. by excluding negative velocity, the area will not be behind the vehicle
     # Define physical constraints for a point-mass vehicle model, including acceleration and velocity bounds, comment out to set manually
     point_mass_params = core.layers.propagation.PointMassParameters()
     # point_mass_params.a_lon_min = -9.5
     # point_mass_params.a_lon_max = 11.5
     # point_mass_params.a_lat_min = -2.0
     # point_mass_params.a_lat_max = 2.0
-    # point_mass_params.v_lon_min = 0.0
+
+    point_mass_params.v_lon_min = 0.0
     # point_mass_params.v_lon_max = 50.8
-    # point_mass_params.v_lat_min = -4.0
+    point_mass_params.v_lat_min = -4.0
     # point_mass_params.v_lat_max = 4.0
     predicate_config = core.model_checking.PredicateConfiguration()
     # Used to inflate the vehicle shape when checking collisions.
@@ -187,7 +190,7 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     )
     splitter_params.route_lanelet_ids = set(route.lanelet_ids)
     lanelet_ids = splitter_params.route_lanelet_ids
-    # TODO write comment
+    # Resample the reference path at 2.0-meter intervals to ensure uniform spacing
     reference_path = pycrccosy.Util.resample_polyline(route.reference_path, 2.0)
     clcs = pycrccosy.CurvilinearCoordinateSystem(reference_path)
     print(f"Route lanelet IDs: {lanelet_ids}")
@@ -205,7 +208,7 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     init = core.initializers.base_set.CurvilinearUncertaintyInitializer(clcs, *([initial_uncertainty] * 4))
     layers = {
         "propagation": core.layers.propagation.PointMassPropagator(dt, point_mass_params),
-        "splitting": core.layers.semantic.SemanticSplitter(automaton, scenario_path, dt, clcs, splitter_params),
+        "splitting": core.layers.semantic.SemanticSplitter(automaton, str(scenario_path), dt, clcs, splitter_params),
         "repartitioning": core.layers.meta.GroupedByAutomatonStates(core.layers.repartition.PositionRepartitioner()),
         "collision_checking": core.layers.collision.CollisionFilter(cc),
     }
@@ -219,7 +222,9 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
             layers["repartitioning"],
         ]
     )
-    # TODO write comment
+    # Define a sequence of post-processing steps to clean up the automaton:
+    # 1. Remove states that do not satisfy the semantic final conditions.
+    # 2. Prune unreachable (dangling) nodes from the reachability graph.
     post = core.post_processors.meta.Sequential(
         [
             core.post_processors.pruning.SemanticFinalStatePruner(automaton),
