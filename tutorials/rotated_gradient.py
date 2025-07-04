@@ -1,27 +1,21 @@
-import os
 import sys
-
-import reach_flow
-
-# Add the parent directory (my_project) to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "core")))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
-
 from pathlib import Path
 
 import numpy as np
+import reach_flow
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.prediction.prediction import Trajectory
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.state import KSState
+from matplotlib import pyplot as plt
 from optimization import optimize
 
 
 def rotate_point_90_ccw(point):
     x, y = point
-    return (-y, x)
+    return np.array([-y, x])
 
 
 def rotate_goal_region(goal_region, origin=(0, 0)):
@@ -80,7 +74,7 @@ def rotate_scenario_90_ccw(scenario: Scenario, planning_problem_set: PlanningPro
 
     # Rotate initial state of ego vehicle (PlanningProblem)
     for pp in planning_problem_set.planning_problem_dict.values():
-        rotate_goal_region(pp.goal)
+        # rotate_goal_region(pp.goal)
         pos = np.asarray(pp.initial_state.position)
         rotated_pos = rotate_point_90_ccw(pos)
         pp.initial_state.position = rotated_pos
@@ -89,46 +83,88 @@ def rotate_scenario_90_ccw(scenario: Scenario, planning_problem_set: PlanningPro
     return scenario, planning_problem_set
 
 
-def run_full_optimization_pipeline(
-    scenario_path: str, decision_variables: list, iterations: int = 1, a_ref_input: float = 1.0
+def compare_plot(
+    area_original_rotated: np.ndarray, area_original: np.ndarray, area_rotated: np.ndarray, area_modified: np.ndarray
 ) -> None:
+    """
+    Plots a comparison of drivable area over time for original, rotated and modified scenarios.
+
+    Parameters:
+    - area_original (np.ndarray): 1D array of drivable area values for the original scenario.
+    - area_modified (np.ndarray): 1D array of drivable area values for the modified scenario.
+
+    Returns:
+    - None
+    """
+    time_steps = np.arange(len(area_original))
+    plt.figure(figsize=(10, 5))
+    plt.plot(time_steps, area_original, label="Original", color="gray", linestyle="--")
+    plt.plot(time_steps, area_original_rotated, label="Original Rotated", color="blue")
+    plt.plot(time_steps, area_rotated, label="Modified Rotated", color="red")
+    plt.plot(time_steps, area_modified, label="Modified", color="green")
+    plt.xlabel("Time Step")
+    plt.ylabel("Drivable Area")
+    plt.title("Comparison of Drivable Areas Over Time")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+def run_full_optimization_pipeline(
+    rotated_scenario_path, scenario_path: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0
+) -> None:
+    scenario, planning_problem_set = CommonRoadFileReader(rotated_scenario_path).open()
+
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(rotated_scenario_path)
+    reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
+
+    area_original_rotated = reach_flow.compute_drivable_area(rotated_scenario_path)
+
+    final_velocity_rot, area_rotated = optimize(
+        scenario,
+        planning_problem_set,
+        rotated_scenario_path,
+        decision_variables=decision_variables,
+        iterations=iterations,
+        a_ref_input=a_ref_input,
+    )
+
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
     area_original = reach_flow.compute_drivable_area(scenario_path)
-    #
-    # final_velocity = optimize(
-    #     scenario,
-    #     planning_problem_set,
-    #     scenario_path,
-    #     decision_variables=decision_variables,
-    #     iterations=iterations,
-    #     a_ref_input=a_ref_input,
-    # )
-    # print("final_velocity:", final_velocity)
-    #
-    # scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    # scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
-    #
-    # graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-    #     "scenarios/modified_scenario.xml"
-    # )
-    # reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
-    #
-    # area_modified = reach_flow.compute_drivable_area("scenarios/modified_scenario.xml")
-    # reach_flow.plot(area_original, area_modified)
+
+    final_velocity, area_modified = optimize(
+        scenario,
+        planning_problem_set,
+        scenario_path,
+        decision_variables=decision_variables,
+        iterations=iterations,
+        a_ref_input=a_ref_input,
+    )
+    print("final_velocity_rotated:", final_velocity_rot)
+    print("final_velocity:", final_velocity)
+
+    compare_plot(area_original_rotated, area_original, area_rotated, area_modified)
 
 
-scenario_path = "scenarios/USA_US101-8_1_T-1.xml"
-reader = CommonRoadFileReader(scenario_path)
+# Get the root directory (two levels up from this file)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Add core and scenario directories to sys.path
+sys.path.append(str(PROJECT_ROOT / "core"))
+sys.path.append(str(PROJECT_ROOT / "scenarios"))
+scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Guetersloh-65_2_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
+reader = CommonRoadFileReader(str(scenario_path))
 scenario, pps = reader.open()
 
 rotated_scenario, rotated_pps = rotate_scenario_90_ccw(scenario, pps)
 
 # Save rotated scenario
-output_path = Path("scenarios/rotated_scenario.xml")
+rotated_path = PROJECT_ROOT / "scenarios" / "rotated_scenario.xml"
 writer = CommonRoadFileWriter(rotated_scenario, rotated_pps, scenario.author, scenario.affiliation)
-writer.write_to_file(output_path, OverwriteExistingFile.ALWAYS)
-run_full_optimization_pipeline("scenarios/rotated_scenario.xml", [("ego", "velocity")])
+writer.write_to_file(rotated_path, OverwriteExistingFile.ALWAYS)
+run_full_optimization_pipeline(rotated_path, scenario_path, [("ego", "velocity")])

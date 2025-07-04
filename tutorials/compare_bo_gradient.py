@@ -90,7 +90,7 @@ scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
 run_comparison_pipeline(
     # "scenarios/DEU_Reutlingen-5_1_T-1.xml",
     str(scenario_path),
-    decision_variables=[("ego", "velocity"), ("ego", "position")],
+    decision_variables=[("ego", "velocity")],
     iterations=10,
     a_ref_input=1.0,
     budget=10,

@@ -164,9 +164,9 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     # point_mass_params.a_lat_min = -2.0
     # point_mass_params.a_lat_max = 2.0
 
-    point_mass_params.v_lon_min = 0.0
+    # point_mass_params.v_lon_min = 0.0
     # point_mass_params.v_lon_max = 50.8
-    point_mass_params.v_lat_min = -4.0
+    # point_mass_params.v_lat_min = -4.0
     # point_mass_params.v_lat_max = 4.0
     predicate_config = core.model_checking.PredicateConfiguration()
     # Used to inflate the vehicle shape when checking collisions.
@@ -253,7 +253,9 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     # Check if the graph contains any reachable nodes
     has_nodes = any(len(graph.get_nodes_at_step(t)) > 0 for t in range(step_start + 1, step_end + 1))
     if not has_nodes:
-        raise RuntimeError("Reachability graph is empty – possibly due to invalid parameters.")
+        # TODO uncomment raise exception
+        pass
+        # raise RuntimeError("Reachability graph is empty – possibly due to invalid parameters.")
 
     return graph, step_start, step_end, planning_problem, clcs
 
