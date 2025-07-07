@@ -37,7 +37,7 @@ def objective_multi_var(
         return total_squared_area
     except Exception as e:
         print(f"Error during simulation: {e}")
-        return float("inf")
+        return 1e6
 
 
 def run_bo_multi_variable(
@@ -69,13 +69,6 @@ def run_bo_multi_variable(
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
         else:
             raise ValueError(f"Program supports only ego vehicle currently")
-            # try:
-            #     vid = int(vehicle_id)
-            # except ValueError:
-            #     raise ValueError(f"Invalid vehicle ID: {vehicle_id}")
-            # vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
-            # if vehicle is None:
-            #     raise ValueError(f"Vehicle with ID '{vehicle_id}' not found.")
 
         # Set bounds
         if variable_type == "velocity":

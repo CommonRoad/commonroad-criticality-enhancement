@@ -86,9 +86,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # Add core and scenario directories to sys.path
 sys.path.append(str(PROJECT_ROOT / "core"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
-scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
 run_comparison_pipeline(
-    # "scenarios/DEU_Reutlingen-5_1_T-1.xml",
     str(scenario_path),
     decision_variables=[("ego", "velocity")],
     iterations=10,

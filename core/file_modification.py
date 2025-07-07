@@ -57,16 +57,6 @@ def apply_variables_to_scenario(
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
         else:
             raise ValueError(f"Program supports only ego vehicle currently")
-            # try:
-            #     vehicle_id = int(vehicle_id)
-            # except ValueError:
-            #     print(f"Invalid vehicle ID: {vehicle_id}")
-            #     continue
-            #
-            # vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vehicle_id), None)
-            # if vehicle is None:
-            #     print(f"Vehicle {vehicle_id} not found in dynamic obstacles.")
-            #     continue
 
         init_state = vehicle.initial_state
 
@@ -75,10 +65,10 @@ def apply_variables_to_scenario(
             init_state.velocity = new_value
         elif variable_type == "x-position":
             x, y = init_state.position
-            init_state.position = (new_value, y)
+            init_state.position = np.array([new_value, y])
         elif variable_type == "y-position":
             x, y = init_state.position
-            init_state.position = (x, new_value)
+            init_state.position = np.array([x, new_value])
         else:
             print(f"Unknown variable type: {variable_type}")
 

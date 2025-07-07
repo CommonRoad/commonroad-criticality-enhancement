@@ -100,7 +100,7 @@ def compute_area(graph: object, step_start: int, step_end: int) -> np.ndarray:
                 print(f"Warning: No reachable nodes at step {t}")
                 print(f"Area is 0 at step {t}")
                 raise ValueError()
-            areas
+
         except AttributeError:
             raise RuntimeError(f"Graph does not support time step access at t={t}")
 

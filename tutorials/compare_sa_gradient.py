@@ -49,19 +49,19 @@ def run_comparison_pipeline(
     print("Computing original drivable area...")
     area_original = reach_flow.compute_drivable_area(scenario_path)
 
-    # print("\nRunning Gradient-Based Optimization (ECOS)...")
-    #
-    # start = time.time()
-    #
-    # velocity_gradient, area_gradient = optimize(
-    #     scenario,
-    #     planning_problem_set,
-    #     scenario_path,
-    #     decision_variables=decision_variables,
-    #     iterations=iterations,
-    #     a_ref_input=a_ref_input,
-    # )
-    # end = time.time()
+    print("\nRunning Gradient-Based Optimization (ECOS)...")
+
+    start = time.time()
+
+    velocity_gradient, area_gradient = optimize(
+        scenario,
+        planning_problem_set,
+        scenario_path,
+        decision_variables=decision_variables,
+        iterations=iterations,
+        a_ref_input=a_ref_input,
+    )
+    end = time.time()
 
     print("\nRunning SA ...")
     start_sa = time.time()
@@ -74,14 +74,14 @@ def run_comparison_pipeline(
     end_sa = time.time()
 
     print(f"Sum of Original drivable area: {sum(area_original)}")
-    # print(f"Gradient optimization time: {end - start:.2f} seconds")
-    # print(f"Gradient optimization velocity: {velocity_gradient} m/s")
-    # print(f"Sum of Gradient drivable area: {sum(area_gradient)}")
+    print(f"Gradient optimization time: {end - start:.2f} seconds")
+    print(f"Gradient optimization velocity: {velocity_gradient} m/s")
+    print(f"Sum of Gradient drivable area: {sum(area_gradient)}")
     print(f"SA optimization time: {end_sa - start_sa:.2f} seconds")
     print(f"SA optimization velocity: {sa_best_params} m/s")
     print(f"Sum of SA drivable area: {sum(sa_area)}")
 
-    # plot_area_over_time(area_original, area_gradient, sa_area)
+    plot_area_over_time(area_original, area_gradient, sa_area)
 
 
 # Get the root directory (two levels up from this file)
@@ -91,10 +91,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT / "core"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
-scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Reutlingen-5_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Reutlingen-5_1_T-1.xml"
+scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
 run_comparison_pipeline(
     scenario_path=str(scenario_path),
-    decision_variables=[("ego", "position")],
+    decision_variables=[("ego", "velocity")],
     iterations=10,
     a_ref_input=1.0,
     sa_max_iter=10,

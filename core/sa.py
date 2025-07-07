@@ -36,8 +36,8 @@ def objective_wrapper(
             total_squared_area = (sum(area) - a_ref) ** 2
             return total_squared_area
         except Exception as e:
-            print(f"[Error] {e}")
-            return float("inf")
+            print(f"[Warning] Area for this value could not be computed. {e}")
+            return 1e6
 
     return objective
 
@@ -74,13 +74,6 @@ def run_sa_with_scipy(
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
         else:
             raise ValueError(f"Program supports only ego vehicle currently")
-            # try:
-            #     vid = int(vehicle_id)
-            # except ValueError:
-            #     raise ValueError(f"Vehicle ID '{vehicle_id}' is not a valid integer.")
-            # vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
-            # if vehicle is None:
-            #     raise ValueError(f"Vehicle with ID '{vehicle_id}' not found in scenario.")
 
         # Get bounds based on variable type
         if variable_type == "velocity":
