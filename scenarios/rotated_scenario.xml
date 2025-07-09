@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Moritz Klischat, Edmond Irani Liu, Fabian Höltke" affiliation="Technical University of Munich, Germany" source="Scenario Factory (OpenStreetMaps, SUMO Traffic Simulator)" benchmarkID="DEU_Guetersloh-65_2_T-1" date="2025-07-04">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Moritz Klischat, Edmond Irani Liu, Fabian Höltke" affiliation="Technical University of Munich, Germany" source="Scenario Factory (OpenStreetMaps, SUMO Traffic Simulator)" benchmarkID="DEU_Guetersloh-65_2_T-1" date="2025-07-08">
   <location>
     <geoNameId>2913366</geoNameId>
     <gpsLatitude>51.90693</gpsLatitude>
@@ -7,8 +7,8 @@
   </location>
   <scenarioTags>
     <simulated/>
-    <intersection/>
     <critical/>
+    <intersection/>
   </scenarioTags>
   <lanelet id="83076">
     <leftBound>
@@ -3072,7 +3072,7 @@
         </point>
       </position>
       <orientation>
-        <exact>2.5732</exact>
+        <exact>-3.7099</exact>
       </orientation>
       <velocity>
         <exact>0.0435</exact>
@@ -4268,7 +4268,7 @@
         </point>
       </position>
       <orientation>
-        <exact>2.4706</exact>
+        <exact>-3.8125</exact>
       </orientation>
       <velocity>
         <exact>1.7133</exact>
@@ -5464,7 +5464,7 @@
         </point>
       </position>
       <orientation>
-        <exact>3.7352</exact>
+        <exact>-2.5479</exact>
       </orientation>
       <velocity>
         <exact>0.6370</exact>
@@ -6062,7 +6062,7 @@
         </point>
       </position>
       <orientation>
-        <exact>3.1392</exact>
+        <exact>-3.1439</exact>
       </orientation>
       <velocity>
         <exact>1.5792</exact>

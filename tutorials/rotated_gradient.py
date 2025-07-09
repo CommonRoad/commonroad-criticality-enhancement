@@ -68,12 +68,13 @@ def rotate_scenario_90_ccw(scenario: Scenario, planning_problem_set: PlanningPro
     # Rotate initial states of dynamic obstacles
     for obs in scenario.dynamic_obstacles:
         obs.initial_state.position = rotate_point_90_ccw(obs.initial_state.position)
-        obs.initial_state.orientation = (obs.initial_state.orientation + np.pi / 2) % (2 * np.pi)
+        obs.initial_state.orientation += np.pi / 2
 
         rotate_dynamic_obstacle_trajectory(obs)
 
     # Rotate initial state of ego vehicle (PlanningProblem)
     for pp in planning_problem_set.planning_problem_dict.values():
+        # Not every scenario has a goal region, so uncomment accordingly
         # rotate_goal_region(pp.goal)
         pos = np.asarray(pp.initial_state.position)
         rotated_pos = rotate_point_90_ccw(pos)

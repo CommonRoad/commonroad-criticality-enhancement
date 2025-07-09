@@ -37,6 +37,7 @@ def objective_wrapper(
             return total_squared_area
         except Exception as e:
             print(f"[Warning] Area for this value could not be computed. {e}")
+            # Return a value for the area bigger than the other values, so this infeasible parameter will not be used for further sampling
             return 1e6
 
     return objective

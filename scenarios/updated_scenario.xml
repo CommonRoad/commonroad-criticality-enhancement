@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu, Fabian Höltke, Moritz Klischat" affiliation="Technical University of Munich, Germany" source="OpenStreetMaps, SUMO Traffic Simulator" benchmarkID="DEU_Lohmar-32_1_T-1" date="2025-07-07">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Edmond Irani Liu, Fabian Höltke, Moritz Klischat" affiliation="Technical University of Munich, Germany" source="OpenStreetMaps, SUMO Traffic Simulator" benchmarkID="DEU_Lohmar-32_1_T-1" date="2025-07-08">
   <location>
     <geoNameId>2876218</geoNameId>
     <gpsLatitude>50.83868</gpsLatitude>
     <gpsLongitude>7.21399</gpsLongitude>
   </location>
   <scenarioTags>
-    <intersection/>
-    <simulated/>
     <critical/>
+    <simulated/>
+    <intersection/>
   </scenarioTags>
   <lanelet id="570">
     <leftBound>
@@ -34710,7 +34710,7 @@
         <exact>-2.6833</exact>
       </orientation>
       <velocity>
-        <exact>33.8540</exact>
+        <exact>32.3068</exact>
       </velocity>
       <acceleration>
         <exact>0.0</exact>
