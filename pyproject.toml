@@ -1,5 +1,5 @@
 [project]
-name = "core"
+name = "src"
 version = "0.1.4"
 description = "CommonRoad Python template repository."
 authors = [{name = "Cyber-Physical Systems Group, Technical University of Munich", email = "<commonroad@lists.lrz.de>"}]
@@ -42,7 +42,7 @@ build-backend = "poetry.core.masonry.api"
 
 # Testing
 [tool.coverage.run]
-source = ["core"]
+source = ["src"]
 
 # Formatting
 [tool.ruff]
