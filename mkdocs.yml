@@ -1,4 +1,4 @@
-site_name: CommonRoad Template
+site_name: Criticality-Enhancement
 theme:
   name: material
   logo: assets/commonroad_white150.png
@@ -6,12 +6,17 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          paths: [src]  # This tells mkdocstrings where the code lives
           options:
             docstring_style: sphinx
   - search
 
 nav:
   - Introduction: index.md
-  - Example Usage: example.md
   - API Reference:
-      - "Basic": basic.md
+      - Module BO: bo.md
+      - Module SA: sa.md
+      - Module Optimization: optimization.md
+      - Module File_Modification: file_modification.md
+      - Module Profile_Matrix_Computation: profile_matrix_computation.md
+      - Module Reach_Flow: reach_flow.md

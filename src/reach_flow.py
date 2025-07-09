@@ -83,14 +83,23 @@ def compute_area(graph: object, step_start: int, step_end: int) -> np.ndarray:
     """
     Computes the drivable area between two time steps using the reachability graph.
 
-    Parameters:
-    - graph: The reachability graph structure (type unspecified).
-    - step_start (int): The starting time step.
-    - step_end (int): The ending time step.
+    Parameters
+    ----------
+    graph
+        The reachability graph structure (type unspecified).
 
-    Returns:
-    -  np.ndarray: 1D array of drivable area values for each time step in the range.
+    step_start : int
+        The starting time step.
+
+    step_end : int
+        The ending time step.
+
+    Returns
+    -------
+    np.ndarray
+        1D array of drivable area values for each time step in the range.
     """
+
     areas = np.full((step_end + 1), -1.0)
 
     for t in range(step_start, step_end + 1):
@@ -139,17 +148,25 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     """
     Loads a CommonRoad scenario, configures the reachability executor, and computes the reachability graph.
 
-    Parameters:
-    - scenario_path (str): Path to the XML file containing the CommonRoad scenario.
-    - semantics (str, optional): Semantics of the scenario. Defaults to "true".
-    Returns:
-    - Tuple:
+    Parameters
+    ----------
+    scenario_path : str
+        Path to the XML file containing the CommonRoad scenario.
+
+    semantics : str, optional
+        Semantics of the scenario. Defaults to "true".
+
+    Returns
+    -------
+    tuple
+        A tuple containing:
         - graph (object): The reachability graph with reachable states.
         - step_start (int): The starting time step used for computation.
         - step_end (int): The ending time step used for computation.
         - planning_problem (PlanningProblem): The planning problem extracted from the scenario.
         - clcs (object): Curvilinear coordinate system generated from the route.
     """
+
     dt = 0.2
     step_start = 0
     step_end = 20
@@ -267,13 +284,23 @@ def initialize_from_planning_problem(
     Extracts the initial state from a PlanningProblem and formats it as a tuple
     of initialization parameters for an executor or simulator.
 
-    Parameters:
-    - planning_problem (PlanningProblem): The planning problem containing the initial state.
+    Parameters
+    ----------
+    planning_problem : PlanningProblem
+        The planning problem containing the initial state.
 
-    Returns:
-    - Tuple[int, float, float, float, float, float]: A tuple containing:
-        (time_step, position_x, position_y, velocity, acceleration (0), orientation)
+    Returns
+    -------
+    tuple[int, float, float, float, float, float]
+        A tuple containing:
+        - time_step (int)
+        - position_x (float)
+        - position_y (float)
+        - velocity (float)
+        - acceleration (float), always 0
+        - orientation (float)
     """
+
     state = planning_problem.initial_state
     # the planning problem does not contain an acceleration, so we return 0
     return (

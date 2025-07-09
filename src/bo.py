@@ -4,10 +4,11 @@ from typing import List, Tuple
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
-from file_modification import apply_variables_to_scenario
-from reach_flow import compute_drivable_area
 from skopt import gp_minimize
 from skopt.space import Real
+
+from file_modification import apply_variables_to_scenario
+from reach_flow import compute_drivable_area
 
 
 def objective_multi_var(
@@ -20,15 +21,27 @@ def objective_multi_var(
     """
     Applies decision variables (velocity or position changes), runs the pipeline, and returns drivable area.
 
-    Parameters:
-    - scenario (Scenario): The modified CommonRoad scenario.
-    - planning_problem_set (PlanningProblemSet): The associated planning problem set.
-    - params (List[float]): Values corresponding to the decision_variables
-    - decision_variables (List[Tuple[str, str]]): The (vehicle_id, variable_type) for each param
-    - a_ref (float, optional): The reference area. Defaults to 1.0.
+    Parameters
+    ----------
+    scenario : Scenario
+        The modified CommonRoad scenario.
 
-    Returns:
-    - float: The drivable area (we are minimizing it)
+    planning_problem_set : PlanningProblemSet
+        The associated planning problem set.
+
+    params : List[float]
+        Values corresponding to the decision variables.
+
+    decision_variables : List[Tuple[str, str]]
+        The (vehicle_id, variable_type) for each param.
+
+    a_ref : float, optional
+        The reference area. Defaults to 1.0.
+
+    Returns
+    -------
+    float
+        The drivable area (we are minimizing it).
     """
     try:
         updated_scenario_path = apply_variables_to_scenario(scenario, planning_problem_set, params, decision_variables)
@@ -50,16 +63,29 @@ def run_bo_multi_variable(
     """
     Runs Bayesian Optimization over multiple decision variables to minimize drivable area.
 
-    Parameters:
-    - scenario_path (str): The path to the CommonRoad scenario.
-    - decision_variables (List[Tuple[str, str]]): Variables to optimize, e.g. [("ego", "velocity"), (31, "position")]
-    - budget (int, optional): Number of evaluations allowed. Defaults to 50.
-    - a_ref (float, optional): The reference area. Defaults to 1.0.
+    Parameters
+    ----------
+    scenario_path : str
+        The path to the CommonRoad scenario.
 
-    Returns:
-    - best_params (List[float]): Best parameter values found
-    - best_area (List[float]): The minimized drivable area array
+    decision_variables : List[Tuple[str, str]]
+        Variables to optimize, e.g. [("ego", "velocity"), (31, "position")]
+
+    budget : int, optional
+        Number of evaluations allowed. Defaults to 50.
+
+    a_ref : float, optional
+        The reference area. Defaults to 1.0.
+
+    Returns
+    -------
+    best_params : List[float]
+        Best parameter values found.
+
+    best_area : List[float]
+        The minimized drivable area array.
     """
+
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     # Compute bounds based on original state

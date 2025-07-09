@@ -1,13 +1,14 @@
 from typing import List, Tuple
 
 import cvxpy as cv
-import file_modification
 import numpy as np
-import profile_matrix_computation
-import reach_flow
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.scenario import Scenario
+
+import file_modification
+import profile_matrix_computation
+import reach_flow
 
 
 def optimize_iteration(
@@ -21,18 +22,31 @@ def optimize_iteration(
     """
     Solves a quadratic program (QP) to compute optimal adjustments to decision variables.
 
-    Parameters:
-    - area_original (np.ndarray): The original drivable area over time.
-    - profile_matrix (np.ndarray): Sensitivity matrix showing how each decision variable affects the area.
-    - step_end (int): Last time step.
-    - constraints_const (int): Integer to regulate the step in an optimization iteration.
-    - step_start (int): Time step to start the optimization (default: 4).
-    - a_ref_input (float, optional): Scalar to modify the area reference target. Default is 1.0.
+    Parameters
+    ----------
+    area_original : np.ndarray
+        The original drivable area over time.
 
-    Returns:
-    - cv.Variable: The solution variable from the QP optimization.
+    profile_matrix : np.ndarray
+        Sensitivity matrix showing how each decision variable affects the area.
+
+    step_end : int
+        Last time step.
+
+    constraints_const : int
+        Integer to regulate the step in an optimization iteration.
+
+    step_start : int, optional
+        Time step to start the optimization (default is 4).
+
+    a_ref_input : float, optional
+        Scalar to modify the area reference target (default is 1.0).
+
+    Returns
+    -------
+    cv.Variable
+        The solution variable from the QP optimization.
     """
-
     num_steps = step_end - step_start_opt + 1
     area_sub = area_original[step_start_opt : step_end + 1]
     profile_sub = profile_matrix[:, step_start_opt : step_end + 1]
@@ -72,15 +86,31 @@ def perform_binary_search(
     Performs binary search to find the highest feasible velocity (or position) between `x_before` and `x_after`
     that still yields a valid reachability graph.
 
-    Parameters:
-    - scenario (Scenario): The CommonRoad scenario being modified.
-    - planning_problem_set (PlanningProblemSet): Planning problems associated with the scenario.
-    - vehicle (DynamicObstacle): The vehicle whose velocity is being adjusted.
-    - var_before (float): Velocity before last change.
-    - var_after (float): Velocity after last change.
-    - var_type (str): Type of the variable - "velocity" or "position".
-    - semantics (str): The semantics.
-    - iteration_limit (int, optional): Maximum number of binary search steps. Default is 10.
+    Parameters
+    ----------
+    scenario : Scenario
+        The CommonRoad scenario being modified.
+
+    planning_problem_set : PlanningProblemSet
+        Planning problems associated with the scenario.
+
+    vehicle : DynamicObstacle
+        The vehicle whose velocity is being adjusted.
+
+    var_before : float
+        Velocity before last change.
+
+    var_after : float
+        Velocity after last change.
+
+    var_type : str
+        Type of the variable - "velocity" or "position".
+
+    semantics : str
+        The semantics.
+
+    iteration_limit : int, optional
+        Maximum number of binary search steps. Default is 10.
     """
 
     low = var_before
@@ -133,14 +163,24 @@ def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: flo
     """
     Applies a delta update to a specified decision variable of a vehicle.
 
-    Parameters:
-    - target_vehicle (DynamicObstacle): The vehicle to be modified.
-    - variable_type (str): The variable to update ("velocity" or "position").
-    - delta (float): The amount to adjust the variable by.
-    - direction (str, optional): The direction of the variable. Default is "x".
+    Parameters
+    ----------
+    target_vehicle : DynamicObstacle
+        The vehicle to be modified.
 
-    Raises:
-    - ValueError: If the resulting velocity is non-positive or an unsupported variable type is provided.
+    variable_type : str
+        The variable to update ("velocity" or "position").
+
+    delta : float
+        The amount to adjust the variable by.
+
+    direction : str, optional
+        The direction of the variable. Default is "x".
+
+    Raises
+    ------
+    ValueError
+        If the resulting velocity is non-positive or an unsupported variable type is provided.
     """
     if variable_type == "velocity":
         target_vehicle.initial_state.velocity += delta
@@ -173,20 +213,39 @@ def optimize(
     For each variable in `decision_variables`, it runs a loop of QP-based updates to maximize
     reachability, reverting with binary search if updates lead to invalid configurations.
 
-    Parameters:
-    - scenario (Scenario): The CommonRoad scenario being modified.
-    - planning_problem_set (PlanningProblemSet): The set of planning problems in the scenario.
-    - scenario_path (str): Path to the scenario.
-    - decision_variables (List[Tuple[str, str]]): List of decision variables to optimize.
-        Each tuple is (vehicle_id, variable_type), where variable_type is "velocity", "position" etc.
-    - iterations (int, optional): Number of optimization iterations to run per variable. Default is 10.
-    - a_ref_input (float, optional): Scalar to modify the area reference target. Default is 1.0.
-    - semantics (str, optional): The semantics. Default is "true".
+    Parameters
+    ----------
+    scenario : Scenario
+        The CommonRoad scenario being modified.
 
-    Returns:
-    - float: The highest feasible velocity found.
-    - np.ndarray: The final drivable area
+    planning_problem_set : PlanningProblemSet
+        The set of planning problems in the scenario.
+
+    scenario_path : str
+        Path to the scenario.
+
+    decision_variables : List[Tuple[str, str]]
+        List of decision variables to optimize.
+        Each tuple is (vehicle_id, variable_type), where variable_type is "velocity", "position", etc.
+
+    iterations : int, optional
+        Number of optimization iterations to run per variable. Default is 10.
+
+    a_ref_input : float, optional
+        Scalar to modify the area reference target. Default is 1.0.
+
+    semantics : str, optional
+        The semantics. Default is "true".
+
+    Returns
+    -------
+    float
+        The highest feasible velocity found.
+
+    np.ndarray
+        The final drivable area.
     """
+
     constraints_const = 5
     expanded_variables = []
     for vehicle_id, var_type in decision_variables:

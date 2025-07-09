@@ -4,9 +4,10 @@ from typing import List, Tuple
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
+from scipy.optimize import dual_annealing
+
 from file_modification import apply_variables_to_scenario
 from reach_flow import compute_drivable_area
-from scipy.optimize import dual_annealing
 
 
 def objective_wrapper(
@@ -19,14 +20,24 @@ def objective_wrapper(
     Creates an objective function for optimization that applies decision variables,
     runs the pipeline, and returns the total drivable area as a scalar.
 
-    Parameters:
-    - scenario (Scenario): The modified CommonRoad scenario.
-    - planning_problem_set (PlanningProblemSet): The associated planning problem set.
-    - decision_variables (List[Tuple[str, str]]): The (vehicle_id, variable_type) for each parameter.
-    - a_ref (float, optional): The reference area. Defaults to 1.0.
+    Parameters
+    ----------
+    scenario : Scenario
+        The modified CommonRoad scenario.
 
-    Returns:
-    - Callable[[List[float]], float]: Objective function that takes parameter values and returns drivable area.
+    planning_problem_set : PlanningProblemSet
+        The associated planning problem set.
+
+    decision_variables : List[Tuple[str, str]]
+        The (vehicle_id, variable_type) for each parameter.
+
+    a_ref : float, optional
+        The reference area. Defaults to 1.0.
+
+    Returns
+    -------
+    Callable[[List[float]], float]
+        Objective function that takes parameter values and returns drivable area.
     """
 
     def objective(params: List[float]) -> float:
@@ -53,17 +64,32 @@ def run_sa_with_scipy(
     """
     Runs simulated annealing optimization on decision variables to minimize drivable area.
 
-    Parameters:
-    - scenario_path (str): Path to the CommonRoad scenario XML file.
-    - decision_variables (List[Tuple[str, str]]): Variables to optimize, e.g. [("ego", "velocity")].
-    - max_iter (int, optional): Maximum number of iterations for the optimizer. Defaults to 500.
-    - initial_temp (float, optional): Initial temperature parameter for simulated annealing. Default is 2000.0.
-    - a_ref (float, optional): The reference area. Defaults to 1.0.
+    Parameters
+    ----------
+    scenario_path : str
+        Path to the CommonRoad scenario XML file.
 
-    Returns:
-    - best_params (List[float]): Best parameter values found by the optimizer.
-    - best_area (List[float]): Drivable area array computed with the best parameters.
+    decision_variables : List[Tuple[str, str]]
+        Variables to optimize, e.g. [("ego", "velocity")].
+
+    max_iter : int, optional
+        Maximum number of iterations for the optimizer. Defaults to 500.
+
+    initial_temp : float, optional
+        Initial temperature parameter for simulated annealing. Default is 2000.0.
+
+    a_ref : float, optional
+        The reference area. Defaults to 1.0.
+
+    Returns
+    -------
+    best_params : List[float]
+        Best parameter values found by the optimizer.
+
+    best_area : List[float]
+        Drivable area array computed with the best parameters.
     """
+
     # Load scenario
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 

@@ -13,13 +13,20 @@ def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningPro
     """
     Saves a modified CommonRoad scenario and planning problem set to a fixed XML file path.
 
-    Parameters:
-    - scenario (Scenario): The modified CommonRoad scenario.
-    - planning_problem_set (PlanningProblemSet): The associated planning problem set.
+    Parameters
+    ----------
+    scenario : Scenario
+        The modified CommonRoad scenario.
 
-    Returns:
-    - str: The relative file path to the saved scenario.
+    planning_problem_set : PlanningProblemSet
+        The associated planning problem set.
+
+    Returns
+    -------
+    str
+        The relative file path to the saved scenario.
     """
+
     output_dir = Path(__file__).resolve().parent.parent / "scenarios"
     output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
     temp_file = output_dir / "modified_scenario.xml"
@@ -41,17 +48,28 @@ def apply_variables_to_scenario(
     Each variable in `decision_variables` is updated with the corresponding value in `params`.
     Modifications are applied directly to the scenario's initial states (in-place), and the updated scenario is saved.
 
-    Parameters:
-    - scenario (Scenario): The CommonRoad scenario object to be modified.
-    - planning_problem_set (PlanningProblemSet): Set of planning problems (used to locate the 'ego' vehicle).
-    - params (List[float]): List of new values to assign, one for each decision variable.
-    - decision_variables (List[Tuple[str, str]]): List of (vehicle_id, variable_type) tuples, where:
+    Parameters
+    ----------
+    scenario : Scenario
+        The CommonRoad scenario object to be modified.
+
+    planning_problem_set : PlanningProblemSet
+        Set of planning problems (used to locate the 'ego' vehicle).
+
+    params : List[float]
+        List of new values to assign, one for each decision variable.
+
+    decision_variables : List[Tuple[str, str]]
+        List of (vehicle_id, variable_type) tuples, where:
         - vehicle_id (str): "ego" for the ego vehicle, or the stringified integer ID of a dynamic obstacle.
         - variable_type (str): Either "velocity" or "position".
 
-    Returns:
-    - str: The path to the updated scenario file (e.g. "scenarios/updated_scenario.xml").
+    Returns
+    -------
+    str
+        The path to the updated scenario file (e.g. "scenarios/updated_scenario.xml").
     """
+
     for (vehicle_id, variable_type), new_value in zip(decision_variables, params):
         if vehicle_id == "ego":
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]

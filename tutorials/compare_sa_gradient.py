@@ -5,8 +5,9 @@ from pathlib import Path
 from typing import List, Tuple
 
 import matplotlib.pyplot as plt
-import reach_flow
 from commonroad.common.file_reader import CommonRoadFileReader
+
+import reach_flow
 from optimization import optimize
 from sa import run_sa_with_scipy
 
@@ -87,8 +88,8 @@ def run_comparison_pipeline(
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Add core and scenario directories to sys.path
-sys.path.append(str(PROJECT_ROOT / "core"))
+# Add src and scenario directories to sys.path
+sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Reutlingen-5_1_T-1.xml"

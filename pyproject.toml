@@ -13,6 +13,7 @@ python = ">=3.9, <3.12"
 commonroad-io = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-io.git", branch = "develop" }
 commonroad-reach = "^2025.1.0"
 cvxpy = "^1.6.5"
+mkdocstrings = {extras = ["python"], version = "^0.29.1"}
 
 [tool.poetry.group.tests]
 optional = true
@@ -33,6 +34,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 pip-licenses = "^4.3.4"
 ruff = "^0.6.0"
+mkdocs-material = "^9.6.15"
 
 [build-system]
 requires = ["poetry-core"]

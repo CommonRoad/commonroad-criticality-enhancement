@@ -1,11 +1,12 @@
 from typing import Dict, List, Tuple
 
-import file_modification
 import numpy as np
-import reach_flow
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.scenario import Scenario
+
+import file_modification
+import reach_flow
 
 
 def get_valid_perturbation_step(
@@ -20,18 +21,35 @@ def get_valid_perturbation_step(
     """
     Finds the largest valid perturbation step that does not cause area computation to fail.
 
-    Parameters:
-    - scenario (Scenario): The CommonRoad scenario object.
-    - planning_problem_set (PlanningProblemSet): The planning problem set.
-    - vehicle (DynamicObstacle): The vehicle whose velocity or position will be perturbed.
-    - semantics (str): Semantics to be passed to compute area.
-    - decision_variable (str): The name of the decision variable.
-    - initial_step (float, optional): Starting perturbation amount. Defaults to 1.0.
-    - min_step (float, optional): Smallest allowed perturbation. If below this, return 0. Defaults to 0.05.
+    Parameters
+    ----------
+    scenario : Scenario
+        The CommonRoad scenario object.
 
-    Returns:
-    - float: A valid perturbation step that does not crash area computation, or 0.0 if none works.
+    planning_problem_set : PlanningProblemSet
+        The planning problem set.
+
+    vehicle : DynamicObstacle
+        The vehicle whose velocity or position will be perturbed.
+
+    semantics : str
+        Semantics to be passed to compute area.
+
+    decision_variable : str
+        The name of the decision variable.
+
+    initial_step : float, optional
+        Starting perturbation amount. Defaults to 1.0.
+
+    min_step : float, optional
+        Smallest allowed perturbation. If below this, return 0. Defaults to 0.05.
+
+    Returns
+    -------
+    float
+        A valid perturbation step that does not crash area computation, or 0.0 if none works.
     """
+
     original_velocity = vehicle.initial_state.velocity
     original_position = vehicle.initial_state.position
     step = initial_step / 2
@@ -71,17 +89,33 @@ def differentiate_reachable_set_wrt_velocity(
     The function perturbs the vehicle's initial velocity slightly and measures how the drivable
     area changes at each time step.
 
-    Parameters:
-    - scenario (Scenario):The CommonRoad scenario containing map and obstacle data.
-    - planning_problem_set (PlanningProblemSet): The planning problem set.
-    - scenario_path (str): The path to the scenario.
-    - step_start (int): The starting time step used for computation.
-    - step_end (int): The ending time step used for computation.
-    - vehicle (DynamicObstacle): The vehicle whose velocity will be perturbed.
-    - semantics (str): The semantics.
+    Parameters
+    ----------
+    scenario : Scenario
+        The CommonRoad scenario containing map and obstacle data.
 
-    Returns:
-    - np.ndarray: An array representing the derivative of drivable area w.r.t. the vehicle's velocity.
+    planning_problem_set : PlanningProblemSet
+        The planning problem set.
+
+    scenario_path : str
+        The path to the scenario.
+
+    step_start : int
+        The starting time step used for computation.
+
+    step_end : int
+        The ending time step used for computation.
+
+    vehicle : DynamicObstacle
+        The vehicle whose velocity will be perturbed.
+
+    semantics : str
+        The semantics.
+
+    Returns
+    -------
+    np.ndarray
+        An array representing the derivative of drivable area w.r.t. the vehicle's velocity.
     """
 
     original_velocity = vehicle.initial_state.velocity
@@ -141,19 +175,39 @@ def differentiate_reachable_set_wrt_position(
     This function perturbs the x-coordinate of the vehicle's initial position and computes
     the change in reachable area at each time step.
 
-    Parameters:
-    - x (bool): If true, update in x-direction, else in y-direction.
-    - scenario (Scenario): The CommonRoad scenario.
-    - planning_problem_set (PlanningProblemSet): The planning problem set.
-    - scenario_path (str): The path to the scenario.
-    - step_start (int): Start time step of reachability analysis.
-    - step_end (int): End time step of reachability analysis.
-    - vehicle (DynamicObstacle): The vehicle whose x-position will be perturbed.
-    - scenario_max_time (int): Maximum time span for the scenario.
-    - semantics (str): The semantics.
+    Parameters
+    ----------
+    x : bool
+        If true, update in x-direction; otherwise, in y-direction.
 
-    Returns:
-    - np.ndarray: An array of numerical derivatives representing sensitivity of drivable area to position.
+    scenario : Scenario
+        The CommonRoad scenario.
+
+    planning_problem_set : PlanningProblemSet
+        The planning problem set.
+
+    scenario_path : str
+        The path to the scenario.
+
+    step_start : int
+        Start time step of reachability analysis.
+
+    step_end : int
+        End time step of reachability analysis.
+
+    vehicle : DynamicObstacle
+        The vehicle whose x-position will be perturbed.
+
+    scenario_max_time : int
+        Maximum time span for the scenario.
+
+    semantics : str
+        The semantics.
+
+    Returns
+    -------
+    np.ndarray
+        An array of numerical derivatives representing sensitivity of drivable area to position.
     """
 
     original_position = vehicle.initial_state.position
@@ -224,19 +278,31 @@ def get_profile_matrix(
     computes the effect on the reachable drivable area over time, and stores it as a row in the matrix.
     Accepts "velocity", "x-position", "y-position", or "position" (for both x and y).
 
-    Parameters:
-    - scenario (Scenario): The CommonRoad scenario.
-    - planning_problem_set (PlanningProblemSet): The planning problem set.
-    - scenario_path (str): The path to the scenario.
-    - step_start (int): Start time step of reachability analysis.
-    - step_end (int): End time step of reachability analysis.
-    - decision_variables (List[Tuple[str, str]]): List of tuples of the form (vehicle_id, variable_type), where:
-        - vehicle_id: a string, e.g., "ego" or "1"
-        - variable_type: "velocity", "position" etc.
-    - semantics (str): The semantics.
-    Returns:
-    - profile_matrix: An array where each row is a derivative profile over time.
-    - profile_index_map: A dictionary mapping (vehicle_id, variable_type) to its row index in the matrix.
+    Parameters
+    ----------
+    scenario : Scenario
+        The CommonRoad scenario.
+    planning_problem_set : PlanningProblemSet
+        The planning problem set.
+    scenario_path : str
+        The path to the scenario.
+    step_start : int
+        Start time step of reachability analysis.
+    step_end : int
+        End time step of reachability analysis.
+    decision_variables : List[Tuple[str, str]]
+        List of tuples (vehicle_id, variable_type), where:
+        - vehicle_id (str): e.g., "ego" or "1".
+        - variable_type (str): "velocity", "position", etc.
+    semantics : str
+        The semantics.
+
+    Returns
+    -------
+    profile_matrix : np.ndarray
+        Array where each row is a derivative profile over time.
+    profile_index_map : dict
+        Maps (vehicle_id, variable_type) to its row index in the matrix.
     """
 
     result = []
@@ -250,12 +316,6 @@ def get_profile_matrix(
             vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
         else:
             raise ValueError(f"Program supports only ego vehicle currently")
-            # try:
-            #     vid = int(vehicle_id)
-            # except ValueError:
-            #     print(f"Warning: Vehicle ID '{vehicle_id}' is not a valid integer.")
-            #     continue
-            # vehicle = next((v for v in scenario.dynamic_obstacles if v.obstacle_id == vid), None)
 
         if vehicle is None:
             print(f"Warning: Vehicle {vehicle_id} not found.")
