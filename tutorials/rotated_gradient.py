@@ -15,11 +15,13 @@ from optimization import optimize
 
 
 def rotate_point_90_ccw(point):
+    # Rotate the point by 90 degrees
     x, y = point
     return np.array([-y, x])
 
 
 def rotate_goal_region(goal_region, origin=(0, 0)):
+    # Rotate the goal region by 90 degrees
     for goal_state in goal_region.state_list:
         if goal_state.position is not None:
             pos = goal_state.position
@@ -28,7 +30,7 @@ def rotate_goal_region(goal_region, origin=(0, 0)):
 
 
 def rotate_polyline_90_ccw(polyline: np.ndarray) -> np.ndarray:
-    # Ensure polyline is a (N, 2) NumPy array
+    # Rotates a polyline by 90 degrees
     rotation_matrix = np.array([[0, -1], [1, 0]])
     return np.dot(polyline, rotation_matrix.T)
 
@@ -70,7 +72,6 @@ def rotate_scenario_90_ccw(scenario: Scenario, planning_problem_set: PlanningPro
     for obs in scenario.dynamic_obstacles:
         obs.initial_state.position = rotate_point_90_ccw(obs.initial_state.position)
         obs.initial_state.orientation += np.pi / 2
-
         rotate_dynamic_obstacle_trajectory(obs)
 
     # Rotate initial state of ego vehicle (PlanningProblem)
@@ -116,13 +117,14 @@ def compare_plot(
 def run_full_optimization_pipeline(
     rotated_scenario_path, scenario_path: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0
 ) -> None:
+    # Create reach graph for rotated original scenario and compute rotated original area
     scenario, planning_problem_set = CommonRoadFileReader(rotated_scenario_path).open()
-
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(rotated_scenario_path)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
     area_original_rotated = reach_flow.compute_drivable_area(rotated_scenario_path)
 
+    # Optimize rotated scenario
     final_velocity_rot, area_rotated = optimize(
         scenario,
         planning_problem_set,
@@ -132,13 +134,14 @@ def run_full_optimization_pipeline(
         a_ref_input=a_ref_input,
     )
 
+    # Create reach graph for original scenario and compute original area
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
-
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
     area_original = reach_flow.compute_drivable_area(scenario_path)
 
+    # Optimize original scenario
     final_velocity, area_modified = optimize(
         scenario,
         planning_problem_set,
@@ -158,15 +161,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # Add src and scenario directories to sys.path
 sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
+
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Guetersloh-65_2_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
 reader = CommonRoadFileReader(str(scenario_path))
 scenario, pps = reader.open()
 
+# Rotate scenario by 90 degrees
 rotated_scenario, rotated_pps = rotate_scenario_90_ccw(scenario, pps)
 
 # Save rotated scenario
 rotated_path = PROJECT_ROOT / "scenarios" / "rotated_scenario.xml"
 writer = CommonRoadFileWriter(rotated_scenario, rotated_pps, scenario.author, scenario.affiliation)
 writer.write_to_file(rotated_path, OverwriteExistingFile.ALWAYS)
+
 run_full_optimization_pipeline(rotated_path, scenario_path, [("ego", "velocity")])

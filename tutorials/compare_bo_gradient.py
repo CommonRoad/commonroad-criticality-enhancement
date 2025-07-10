@@ -1,4 +1,3 @@
-import os
 import sys
 import time
 from pathlib import Path
@@ -42,6 +41,7 @@ def run_comparison_pipeline(
     a_ref_input: float = 1.0,
     budget: int = 500,
 ) -> None:
+    # Load scenario and compute the reachability graph and drivable area
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     print("Computing original drivable area...")

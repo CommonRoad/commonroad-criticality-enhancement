@@ -270,9 +270,7 @@ def create_reach_graph(scenario_path: str, semantics: str = "true") -> Tuple[obj
     # Check if the graph contains any reachable nodes
     has_nodes = any(len(graph.get_nodes_at_step(t)) > 0 for t in range(step_start + 1, step_end + 1))
     if not has_nodes:
-        # TODO uncomment raise exception
-        pass
-        # raise RuntimeError("Reachability graph is empty – possibly due to invalid parameters.")
+        raise RuntimeError("Reachability graph is empty – possibly due to invalid parameters.")
 
     return graph, step_start, step_end, planning_problem, clcs
 

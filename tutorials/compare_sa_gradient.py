@@ -1,4 +1,3 @@
-import os
 import sys
 import time
 from pathlib import Path
@@ -43,6 +42,7 @@ def run_comparison_pipeline(
     sa_max_iter: int = 500,
     sa_initial_temp: float = 2000.0,
 ) -> None:
+    # Load scenario and compute the reachability graph and drivable area
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
@@ -64,7 +64,7 @@ def run_comparison_pipeline(
     )
     end = time.time()
 
-    print("\nRunning SA ...")
+    print("\nRunning SA Optimization...")
     start_sa = time.time()
     sa_best_params, sa_area = run_sa_with_scipy(
         scenario_path=scenario_path,
@@ -91,9 +91,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # Add src and scenario directories to sys.path
 sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
+
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Reutlingen-5_1_T-1.xml"
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+
 run_comparison_pipeline(
     scenario_path=str(scenario_path),
     decision_variables=[("ego", "velocity")],

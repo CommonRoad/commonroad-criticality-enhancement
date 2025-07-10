@@ -1,49 +1,17 @@
-import os
-import sys
-from pathlib import Path
-
-# Add the parent directory (my_project) to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
-
-from commonroad.common.file_reader import CommonRoadFileReader
-
-# from optimization import optimize
-
-# Currently commented out: pipeline fails because of no recognition cr-reach-flow (see README)
+import numpy as np
+import pytest
+from commonroad.scenario.lanelet import Lanelet
+from commonroad.scenario.scenario import Scenario, ScenarioID
 
 
-def run_full_optimization_pipeline(
-    scenario_path: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0
-) -> None:
-    scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
-    #
-    # graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
-    # reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
-    #
-    # area_original = reach_flow.compute_drivable_area(scenario_path)
-    #
-    # final_velocity = optimize(
-    #     scenario,
-    #     planning_problem_set,
-    #     scenario_path,
-    #     decision_variables=decision_variables,
-    #     iterations=iterations,
-    #     a_ref_input=a_ref_input,
-    # )
-    # print("final_velocity:", final_velocity)
-    #
-    # scenario_file = Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    # scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
-    #
-    # graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-    #     "scenarios/modified_scenario.xml"
-    # )
-    # reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
-    #
-    # area_modified = reach_flow.compute_drivable_area("scenarios/modified_scenario.xml")
-    # reach_flow.plot(area_original, area_modified)
+@pytest.fixture
+def scenario() -> Scenario:
+    lanelet = Lanelet(np.array([[0, 2], [1, 2]]), np.array([[0, 1], [1, 1]]), np.array([[0, 0], [1, 0]]), 51)
+    scenario = Scenario(0.2, ScenarioID())
+    scenario.add_objects([lanelet])
+    return scenario
 
 
-run_full_optimization_pipeline("scenarios/USA_US101-8_1_T-1.xml", [("ego", "velocity")])
+def test_scenario_has_lanelet(scenario):
+    assert len(scenario.lanelet_network.lanelets) == 1
+    assert scenario.lanelet_network.find_lanelet_by_id(51) is not None

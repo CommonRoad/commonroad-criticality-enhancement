@@ -39,11 +39,11 @@ def plot_area_over_time(original_area, gradient_area, sa_area, bo_area):
 def run_comparison_pipeline(
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
-    iterations: int = 10,
+    iterations: int = 30,
     a_ref_input: float = 1.0,
     sa_max_iter: int = 500,
     sa_initial_temp: float = 2000.0,
-    budget: int = 10,
+    budget: int = 50,
 ) -> None:
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
@@ -54,7 +54,7 @@ def run_comparison_pipeline(
 
     start = time.time()
 
-    velocity_gradient = optimize(
+    velocity_gradient, area_gradient = optimize(
         scenario,
         planning_problem_set,
         scenario_path,
@@ -62,7 +62,6 @@ def run_comparison_pipeline(
         iterations=iterations,
         a_ref_input=a_ref_input,
     )
-    area_gradient = reach_flow.compute_drivable_area("scenarios/modified_scenario.xml")
     end = time.time()
 
     print("\nRunning SA ...")
@@ -104,14 +103,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # Add src and scenario directories to sys.path
 sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
-scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+
+# For this scenario for velocity the gradient-based approach gets stuck at local optimum
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+
+scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+
 run_comparison_pipeline(
-    # "scenarios/DEU_Reutlingen-5_1_T-1.xml",
     str(scenario_path),
-    decision_variables=[("ego", "velocity"), ("ego", "position")],
+    decision_variables=[("ego", "velocity"), ("ego", "velocity")],
     iterations=10,
     a_ref_input=1.0,
     sa_max_iter=10,
     sa_initial_temp=2000.0,
-    budget=10,
+    budget=50,
 )

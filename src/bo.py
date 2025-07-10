@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import List, Tuple
 
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -51,7 +50,7 @@ def objective_multi_var(
     except Exception as e:
         print(f"Error during simulation: {e}")
         # Return a value for the area bigger than the other values, so this infeasible parameter will not be used for further sampling
-        return 1e6
+        return 1e20
 
 
 def run_bo_multi_variable(

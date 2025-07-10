@@ -1,3 +1,4 @@
+import warnings
 from typing import List, Tuple
 
 import cvxpy as cv
@@ -15,7 +16,8 @@ def optimize_iteration(
     area_original: np.ndarray,
     profile_matrix: np.ndarray,
     step_end: int,
-    constraints_const: int,
+    lower_bounds: np.ndarray,
+    upper_bounds: np.ndarray,
     step_start_opt: int = 6,
     a_ref_input: float = 1.0,
 ) -> cv.Variable:
@@ -33,8 +35,11 @@ def optimize_iteration(
     step_end : int
         Last time step.
 
-    constraints_const : int
-        Integer to regulate the step in an optimization iteration.
+    lower_bounds : np.ndarray
+        Constraints to regulate the step in an optimization iteration.
+
+    upper_bounds : np.ndarray
+        Constraints to regulate the step in an optimization iteration.
 
     step_start : int, optional
         Time step to start the optimization (default is 4).
@@ -62,9 +67,14 @@ def optimize_iteration(
     c = 2 * (delta_a_0.T @ Q @ B)
 
     d_x = cv.Variable(B.shape[1])
-    constraints = [d_x >= -constraints_const, d_x <= constraints_const]
+    constraints = [d_x >= lower_bounds, d_x <= upper_bounds]
     opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x + 0.1 * cv.norm(d_x, 2)), constraints)
-    opt_prob.solve(solver=cv.ECOS, verbose=False)
+
+    # We suppress ECOS solver warnings about potential inaccuracies in single iterations
+    # after validating that the optimization output remains consistent and feasible.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Solution may be inaccurate.*")
+        opt_prob.solve(solver=cv.ECOS, verbose=False)
 
     if d_x.value is None:
         raise ValueError("QP did not return a solution")
@@ -246,15 +256,24 @@ def optimize(
         The final drivable area.
     """
 
-    constraints_const = 5
+    lower_bounds = []
+    upper_bounds = []
     expanded_variables = []
     for vehicle_id, var_type in decision_variables:
         if var_type == "position":
             expanded_variables.append((vehicle_id, "x-position"))
+            lower_bounds.append(-0.5)
+            upper_bounds.append(0.5)
             expanded_variables.append((vehicle_id, "y-position"))
-            constraints_const = 2
+            lower_bounds.append(-0.5)
+            upper_bounds.append(0.5)
         else:
             expanded_variables.append((vehicle_id, var_type))
+            lower_bounds.append(-5.0)
+            upper_bounds.append(5.0)
+
+    lower_bounds = np.array(lower_bounds)
+    upper_bounds = np.array(upper_bounds)
 
     # Try computing reachability with current velocity
     try:
@@ -278,7 +297,14 @@ def optimize(
 
         # Solve QP
         try:
-            d_x = optimize_iteration(area_latest, profile_matrix, step_end, constraints_const, a_ref_input=a_ref_input)
+            d_x = optimize_iteration(
+                area_latest,
+                profile_matrix,
+                step_end,
+                lower_bounds=lower_bounds,
+                upper_bounds=upper_bounds,
+                a_ref_input=a_ref_input,
+            )
             if d_x.value is None:
                 raise ValueError("QP was not solved completely")
         except Exception as e:

@@ -7,7 +7,7 @@ dependencies:
 - cvxpy
 - pip
 - ecos
-# only needed to run the pre-commits
+# for running the pre-commits
 - pre-commit
 # dependencies for commonroad-reach-flow
 - spot
@@ -21,7 +21,12 @@ dependencies:
 - gxx_linux-64=10.4.0
 - scikit-optimize
 - scipy
-- optuna
+- pytest
+# for documentation
+- mkdocs
+- mkdocs-material
+- mkdocstrings
+- mkdocstrings-python
 - pip:
   - commonroad-clcs==2025.1.1
   - commonroad-drivability-checker==2024.1
@@ -31,7 +36,5 @@ dependencies:
   - commonroad-vehicle-models==3.0.2
 
 # **IMPORTANT**
-# NOTE: This script converts a pyproject.toml file to an environment.yml file for conda.
-# It assumes that the pyproject.toml file is in the same directory as this script.
-
+# NOTE: This script lists all project dependencies file for creating a conda environment.
 # conda command to create the environment: conda env create -f environment.yml
