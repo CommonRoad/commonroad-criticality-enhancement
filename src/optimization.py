@@ -3,8 +3,7 @@ from typing import List, Tuple
 
 import cvxpy as cv
 import numpy as np
-from commonroad.planning.planning_problem import PlanningProblemSet
-from commonroad.scenario.obstacle import DynamicObstacle
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
 
 import file_modification
@@ -41,11 +40,11 @@ def optimize_iteration(
     upper_bounds : np.ndarray
         Constraints to regulate the step in an optimization iteration.
 
-    step_start : int, optional
-        Time step to start the optimization (default is 4).
+    step_start_opt : int, optional
+        Time step to start the optimization, as initial time steps have very small areas. Default is 6.
 
     a_ref_input : float, optional
-        Scalar to modify the area reference target (default is 1.0).
+        Scalar to modify the area reference target. Default is 1.0.
 
     Returns
     -------
@@ -58,14 +57,14 @@ def optimize_iteration(
 
     delta_a_0 = area_sub - a_ref_input
 
-    delta_a_0 = np.maximum(delta_a_0, 1e-2)
-
+    # Transpose profile matrix
     B = profile_sub.T
     Q = np.identity(num_steps)
 
     W = B.T @ Q @ B
     c = 2 * (delta_a_0.T @ Q @ B)
 
+    # Formulate the problem to be optimized
     d_x = cv.Variable(B.shape[1])
     constraints = [d_x >= lower_bounds, d_x <= upper_bounds]
     opt_prob = cv.Problem(cv.Minimize(cv.quad_form(d_x, W) + c @ d_x + 0.1 * cv.norm(d_x, 2)), constraints)
@@ -85,12 +84,12 @@ def optimize_iteration(
 def perform_binary_search(
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
-    vehicle: DynamicObstacle,
+    vehicle: PlanningProblem,
     var_before: float,
     var_after: float,
     var_type: str,
     semantics: str,
-    iteration_limit: int = 10,
+    iteration_limit: int = 5,
 ) -> None:
     """
     Performs binary search to find the highest feasible velocity (or position) between `x_before` and `x_after`
@@ -104,14 +103,14 @@ def perform_binary_search(
     planning_problem_set : PlanningProblemSet
         Planning problems associated with the scenario.
 
-    vehicle : DynamicObstacle
-        The vehicle whose velocity is being adjusted.
+    vehicle : PlanningProblem
+        The vehicle whose velocity or position is being adjusted. Can be used as DynamicObstacle for other vehicles in the future.
 
     var_before : float
-        Velocity before last change.
+        Velocity before last change. This velocity has shown to be feasible.
 
     var_after : float
-        Velocity after last change.
+        Velocity after last change. This velocity has shown to be infeasible.
 
     var_type : str
         Type of the variable - "velocity" or "position".
@@ -120,13 +119,14 @@ def perform_binary_search(
         The semantics.
 
     iteration_limit : int, optional
-        Maximum number of binary search steps. Default is 10.
+        Maximum number of binary search steps. Default is 5.
     """
 
     low = var_before
     high = var_after
     feasible_var = var_before
-    # Backup current state
+
+    # Backup current position
     x_backup, y_backup = vehicle.initial_state.position
 
     for iteration in range(iteration_limit):
@@ -169,14 +169,14 @@ def perform_binary_search(
     _ = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
 
 
-def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: float, direction: str = "x") -> None:
+def apply_update(target_vehicle: PlanningProblem, variable_type: str, delta: float, direction: str = "x") -> None:
     """
     Applies a delta update to a specified decision variable of a vehicle.
 
     Parameters
     ----------
-    target_vehicle : DynamicObstacle
-        The vehicle to be modified.
+    target_vehicle : PlanningProblem
+        The vehicle whose velocity or position is being adjusted. Can be used as DynamicObstacle for other vehicles in the future.
 
     variable_type : str
         The variable to update ("velocity" or "position").
@@ -203,7 +203,6 @@ def apply_update(target_vehicle: DynamicObstacle, variable_type: str, delta: flo
         else:
             new_pos = np.array([x, y + delta])
         target_vehicle.initial_state.position = new_pos
-        # update_pos_trajectory(target_vehicle, delta)
     else:
         raise ValueError(f"Unsupported variable type: {variable_type}")
 
@@ -220,13 +219,13 @@ def optimize(
     """
     Optimizes scenario variables (velocity or position of vehicles) to influence the drivable area.
 
-    For each variable in `decision_variables`, it runs a loop of QP-based updates to maximize
-    reachability, reverting with binary search if updates lead to invalid configurations.
+    For each variable in `decision_variables`, it runs a loop of QP-based updates to minimize
+    drivable area, reverting with binary search if updates lead to invalid configurations.
 
     Parameters
     ----------
     scenario : Scenario
-        The CommonRoad scenario being modified.
+        The CommonRoad scenario to be modified.
 
     planning_problem_set : PlanningProblemSet
         The set of planning problems in the scenario.
@@ -242,7 +241,7 @@ def optimize(
         Number of optimization iterations to run per variable. Default is 10.
 
     a_ref_input : float, optional
-        Scalar to modify the area reference target. Default is 1.0.
+        The area reference target. Default is 1.0.
 
     semantics : str, optional
         The semantics. Default is "true".
@@ -250,7 +249,7 @@ def optimize(
     Returns
     -------
     float
-        The highest feasible velocity found.
+        The highest feasible velocity/position found.
 
     np.ndarray
         The final drivable area.
@@ -259,6 +258,9 @@ def optimize(
     lower_bounds = []
     upper_bounds = []
     expanded_variables = []
+
+    # Create bounds for the QP constraints for each iteration
+    # Position has smaller constraints, as it is less stable than velocity
     for vehicle_id, var_type in decision_variables:
         if var_type == "position":
             expanded_variables.append((vehicle_id, "x-position"))
@@ -284,42 +286,37 @@ def optimize(
     except Exception as e:
         raise Exception(f"Reachability failed: {e}")
 
-    # Compute area and profile matrix
+    # Compute area
     area_latest = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
     current_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
     for i in range(iterations):
         print("Starting iteration", i)
+
+        # Compute profile matrix
         profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
             scenario, planning_problem_set, current_scenario_path, step_start, step_end, expanded_variables, semantics
         )
         print(f"Profile: {profile_matrix}")
 
         # Solve QP
-        try:
-            d_x = optimize_iteration(
-                area_latest,
-                profile_matrix,
-                step_end,
-                lower_bounds=lower_bounds,
-                upper_bounds=upper_bounds,
-                a_ref_input=a_ref_input,
-            )
-            if d_x.value is None:
-                raise ValueError("QP was not solved completely")
-        except Exception as e:
-            print(f"Warning: QP optimization failed: {e}")
+        d_x = optimize_iteration(
+            area_latest,
+            profile_matrix,
+            step_end,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
+            a_ref_input=a_ref_input,
+        )
+        if d_x.value is None:
+            raise ValueError("QP was not solved completely")
 
-        # Update variable
+        # Update variables
         for idx, (vehicle_id, variable_type) in enumerate(expanded_variables):
             if vehicle_id == "ego":
                 target_vehicle = list(planning_problem_set.planning_problem_dict.values())[0]
             else:
                 raise ValueError(f"Program supports only ego vehicle currently")
-
-            if target_vehicle is None:
-                print(f"Warning: Vehicle with ID {vehicle_id} not found.")
-                continue
 
             # Get the index of the variable in d_x corresponding to the current loop variable
             var_index = profile_index_map.get((vehicle_id, variable_type))
@@ -331,6 +328,8 @@ def optimize(
             # Scale update to ensure conservative changes for feasibility
             delta = (float(d_x.value[var_index])) * 0.5
             last_change = delta
+
+            # Apply the update
             if "position" in variable_type:
                 direction = "x" if variable_type.startswith("x") else "y"
                 apply_update(target_vehicle, "position", delta, direction=direction)
@@ -338,9 +337,10 @@ def optimize(
                 apply_update(target_vehicle, variable_type, delta)
             print(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
 
-            # Update scenario
+            # Save scenario
             current_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
+            # Check if the variable is feasible
             try:
                 area_latest = reach_flow.compute_drivable_area(current_scenario_path, semantics=semantics)
 
@@ -354,7 +354,8 @@ def optimize(
                     index = 0 if direction == "x" else 1
                     var_before = target_vehicle.initial_state.position[index] - last_change
                     var_after = target_vehicle.initial_state.position[index]
-                # Run binary search between previous valid and current velocity
+
+                # Run binary search between previous valid and current, invalid variable
                 perform_binary_search(
                     scenario,
                     planning_problem_set,
@@ -365,6 +366,7 @@ def optimize(
                     semantics=semantics,
                 )
 
+    # Save the final modified scenario and return the best solution
     last_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
     area_end = reach_flow.compute_drivable_area(last_scenario_path, semantics=semantics)
 

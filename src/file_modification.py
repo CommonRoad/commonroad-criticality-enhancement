@@ -5,8 +5,6 @@ import numpy as np
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
-from commonroad.scenario.state import KSTState
-from commonroad.scenario.trajectory import Trajectory
 
 
 def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningProblemSet) -> str:
@@ -46,12 +44,12 @@ def apply_variables_to_scenario(
     Applies a set of variable updates (e.g. velocity or position) to a CommonRoad scenario and saves the result.
 
     Each variable in `decision_variables` is updated with the corresponding value in `params`.
-    Modifications are applied directly to the scenario's initial states (in-place), and the updated scenario is saved.
+    Modifications are applied directly to the scenario's initial states, and the updated scenario is saved.
 
     Parameters
     ----------
     scenario : Scenario
-        The CommonRoad scenario object to be modified.
+        The CommonRoad scenario to be modified.
 
     planning_problem_set : PlanningProblemSet
         Set of planning problems (used to locate the 'ego' vehicle).
@@ -61,13 +59,13 @@ def apply_variables_to_scenario(
 
     decision_variables : List[Tuple[str, str]]
         List of (vehicle_id, variable_type) tuples, where:
-        - vehicle_id (str): "ego" for the ego vehicle, or the stringified integer ID of a dynamic obstacle.
+        - vehicle_id (str): "ego" for the ego vehicle.
         - variable_type (str): Either "velocity" or "position".
 
     Returns
     -------
     str
-        The path to the updated scenario file (e.g. "scenarios/updated_scenario.xml").
+        The path to the updated scenario file ("scenarios/updated_scenario.xml").
     """
 
     for (vehicle_id, variable_type), new_value in zip(decision_variables, params):
@@ -90,10 +88,11 @@ def apply_variables_to_scenario(
         else:
             print(f"Unknown variable type: {variable_type}")
 
+    # Save the updated scenario
     output_dir = Path(__file__).resolve().parent.parent / "scenarios"
     output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
     temp_file = output_dir / "updated_scenario.xml"
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
-    writer.write_to_file(temp_file, overwrite_existing_file=OverwriteExistingFile.ALWAYS)
+    writer.write_to_file(str(temp_file), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
     print("The new scenario was saved in updated_scenario.xml")
     return str(temp_file)

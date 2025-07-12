@@ -3,6 +3,7 @@ from typing import List, Tuple
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
+from numpy import ndarray
 from skopt import gp_minimize
 from skopt.space import Real
 
@@ -23,7 +24,7 @@ def objective_multi_var(
     Parameters
     ----------
     scenario : Scenario
-        The modified CommonRoad scenario.
+        The CommonRoad scenario.
 
     planning_problem_set : PlanningProblemSet
         The associated planning problem set.
@@ -58,7 +59,7 @@ def run_bo_multi_variable(
     decision_variables: List[Tuple[str, str]],
     budget: int = 50,
     a_ref: float = 1.0,
-) -> Tuple[List[float], List[float]]:
+) -> Tuple[List[float], ndarray]:
     """
     Runs Bayesian Optimization over multiple decision variables to minimize drivable area.
 
@@ -68,7 +69,7 @@ def run_bo_multi_variable(
         The path to the CommonRoad scenario.
 
     decision_variables : List[Tuple[str, str]]
-        Variables to optimize, e.g. [("ego", "velocity"), (31, "position")]
+        Variables to optimize, e.g. [("ego", "velocity")]
 
     budget : int, optional
         Number of evaluations allowed. Defaults to 50.
@@ -81,13 +82,13 @@ def run_bo_multi_variable(
     best_params : List[float]
         Best parameter values found.
 
-    best_area : List[float]
+    best_area : ndarray
         The minimized drivable area array.
     """
 
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
-    # Compute bounds based on original state
+    # Compute bounds based on decision variables
     space = []
     expanded_decision_variables = []
     for vehicle_id, variable_type in decision_variables:
@@ -104,23 +105,26 @@ def run_bo_multi_variable(
 
         elif variable_type == "position":
             pos = vehicle.initial_state.position
-            space.append(Real(pos[0] - 2, pos[0] + 2))  # x
-            space.append(Real(pos[1] - 2, pos[1] + 2))  # y
+            x = float(pos[0])
+            y = float(pos[1])
+            space.append(Real(x - 2, x + 2))  # x
+            space.append(Real(y - 2, y + 2))  # y
             expanded_decision_variables.extend([(vehicle_id, "x-position"), (vehicle_id, "y-position")])
 
         elif variable_type == "x-position":
-            x = vehicle.initial_state.position[0]
+            x = float(vehicle.initial_state.position[0])
             space.append(Real(x - 2, x + 2))
             expanded_decision_variables.append((vehicle_id, "x-position"))
 
         elif variable_type == "y-position":
-            y = vehicle.initial_state.position[1]
+            y = float(vehicle.initial_state.position[1])
             space.append(Real(y - 2, y + 2))
             expanded_decision_variables.append((vehicle_id, "y-position"))
 
         else:
             raise ValueError(f"Unknown variable type: {variable_type}")
 
+    # Prepare the objective function
     def wrapped_objective(params):
         return objective_multi_var(scenario, planning_problem_set, params, expanded_decision_variables, a_ref)
 
@@ -133,8 +137,8 @@ def run_bo_multi_variable(
         verbose=False,
     )
 
+    # Apply the best parameters
     best_params = result.x
-
     updated_scenario_path = apply_variables_to_scenario(
         scenario, planning_problem_set, best_params, expanded_decision_variables
     )

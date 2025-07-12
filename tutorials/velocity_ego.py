@@ -12,10 +12,6 @@ def run_full_optimization_pipeline(
 ) -> None:
     # Load scenario and compute the reachability graph and drivable area
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
-
-    # To make further adjustments to the way the reachable area is computed,
-    # change the point mass parameters in the create_reach_graph() method.
-    #   e.g. by constraining the lateral velocity with > 0
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path, semantics)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
     area_original = reach_flow.compute_drivable_area(scenario_path, semantics)

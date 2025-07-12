@@ -1,8 +1,7 @@
 from typing import Dict, List, Tuple
 
 import numpy as np
-from commonroad.planning.planning_problem import PlanningProblemSet
-from commonroad.scenario.obstacle import DynamicObstacle
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
 
 import file_modification
@@ -12,7 +11,7 @@ import reach_flow
 def get_valid_perturbation_step(
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
-    vehicle: DynamicObstacle,
+    vehicle: PlanningProblem,
     semantics: str,
     decision_variable: str,
     initial_step: float = 1.0,
@@ -24,13 +23,13 @@ def get_valid_perturbation_step(
     Parameters
     ----------
     scenario : Scenario
-        The CommonRoad scenario object.
+        The CommonRoad scenario.
 
     planning_problem_set : PlanningProblemSet
         The planning problem set.
 
-    vehicle : DynamicObstacle
-        The vehicle whose velocity or position will be perturbed.
+    vehicle : PlanningProblem
+        The vehicle whose velocity or position is being adjusted. Can be used as DynamicObstacle for other vehicles in the future.
 
     semantics : str
         Semantics to be passed to compute area.
@@ -53,6 +52,8 @@ def get_valid_perturbation_step(
     original_velocity = vehicle.initial_state.velocity
     original_position = vehicle.initial_state.position
     step = initial_step / 2
+
+    # Search for a valid step
     while step >= min_step:
         if decision_variable == "velocity":
             vehicle.initial_state.velocity = original_velocity + step
@@ -61,6 +62,8 @@ def get_valid_perturbation_step(
         elif decision_variable == "y-position":
             vehicle.initial_state.position = np.array([original_position[0], original_position[1] + step])
         mod_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+
+        # If step is valid, return it, else try with a smaller step
         try:
             _ = reach_flow.compute_drivable_area(mod_path, semantics=semantics)
             return step
@@ -68,6 +71,7 @@ def get_valid_perturbation_step(
             print(f"Perturbation step {step:.5f} failed: {e}")
             step /= 2.0
 
+    # If the step is too small, return 0
     print("All perturbation steps failed. Returning 0.")
     vehicle.initial_state.velocity = original_velocity
     vehicle.initial_state.position = original_position
@@ -81,7 +85,7 @@ def differentiate_reachable_set_wrt_velocity(
     scenario_path: str,
     step_start: int,
     step_end: int,
-    vehicle: DynamicObstacle,
+    vehicle: PlanningProblem,
     semantics: str,
 ) -> np.ndarray:
     """
@@ -92,7 +96,7 @@ def differentiate_reachable_set_wrt_velocity(
     Parameters
     ----------
     scenario : Scenario
-        The CommonRoad scenario containing map and obstacle data.
+        The CommonRoad scenario.
 
     planning_problem_set : PlanningProblemSet
         The planning problem set.
@@ -106,11 +110,11 @@ def differentiate_reachable_set_wrt_velocity(
     step_end : int
         The ending time step used for computation.
 
-    vehicle : DynamicObstacle
-        The vehicle whose velocity will be perturbed.
+    vehicle : PlanningProblem
+        The vehicle whose velocity or position is being adjusted. Can be used as DynamicObstacle for other vehicles in the future.
 
     semantics : str
-        The semantics.
+        Semantics to be passed to compute area.
 
     Returns
     -------
@@ -120,12 +124,14 @@ def differentiate_reachable_set_wrt_velocity(
 
     original_velocity = vehicle.initial_state.velocity
     if original_velocity <= 0:
-        raise ValueError(f"Vehicle velocity must be positive, not {original_velocity}.")
+        raise ValueError(f"The original vehicle velocity must be positive, not {original_velocity}.")
     if original_velocity < 1:
         original_velocity = 1
+
+    # Perturbation step
     h = original_velocity / 10
 
-    derivative = np.array([-1.0 for i in range(step_start, step_end + 1)])
+    derivative = np.array([-1.0 for _ in range(step_start, step_end + 1)])
 
     # Compute reachable area for original velocity
     area_original = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
@@ -141,19 +147,22 @@ def differentiate_reachable_set_wrt_velocity(
         area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
     except Exception as e:
         print(f"Failed to compute area at changed velocity: {e} Trying smaller perturbations.")
+
+        # If the perturbation leads to area 0, find a valid perturbation step
         vehicle.initial_state.velocity = original_velocity
         valid_perturbation = get_valid_perturbation_step(
             scenario, planning_problem_set, vehicle, semantics, "velocity", h
         )
         h = valid_perturbation
         if h == 0:
-            return np.array([0.0 for i in range(step_start, step_end + 1)])
+            return np.array([0.0 for _ in range(step_start, step_end + 1)])
         area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
 
     # Derivative using h method
     for time_step in range(step_start, step_end + 1):
         derivative[time_step] = (area_changed_velocity[time_step] - area_original[time_step]) / h
 
+    # Reset back to original velocity and save
     vehicle.initial_state.velocity = original_velocity
     _ = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
@@ -167,12 +176,12 @@ def differentiate_reachable_set_wrt_position(
     scenario_path: str,
     step_start: int,
     step_end: int,
-    vehicle: DynamicObstacle,
+    vehicle: PlanningProblem,
     semantics: str,
 ) -> np.ndarray:
     """
-    Computes the sensitivity of the drivable area with respect to a vehicle's initial x-position.
-    This function perturbs the x-coordinate of the vehicle's initial position and computes
+    Computes the sensitivity of the drivable area with respect to a vehicle's initial position.
+    This function perturbs the coordinate of the vehicle's initial position and computes
     the change in reachable area at each time step.
 
     Parameters
@@ -195,14 +204,11 @@ def differentiate_reachable_set_wrt_position(
     step_end : int
         End time step of reachability analysis.
 
-    vehicle : DynamicObstacle
-        The vehicle whose x-position will be perturbed.
-
-    scenario_max_time : int
-        Maximum time span for the scenario.
+    vehicle : PlanningProblem
+        The vehicle whose velocity or position is being adjusted. Can be used as DynamicObstacle for other vehicles in the future.
 
     semantics : str
-        The semantics.
+        Semantics to be passed to compute area.
 
     Returns
     -------
@@ -211,13 +217,16 @@ def differentiate_reachable_set_wrt_position(
     """
 
     original_position = vehicle.initial_state.position
+
+    # Define a perturbation step
     delta_pos = 1
 
-    derivative = np.array([-1.0 for i in range(step_start, step_end + 1)])
+    derivative = np.array([-1.0 for _ in range(step_start, step_end + 1)])
 
     # Compute reachable area for original position
     area_original = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
 
+    # Apply the perturbation
     if x:
         vehicle.initial_state.position = np.array([original_position[0] + delta_pos, original_position[1]])
     else:
@@ -234,6 +243,8 @@ def differentiate_reachable_set_wrt_position(
         area_changed_position = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
     except Exception as e:
         print(f"Failed to compute area at changed position: {e} Trying smaller perturbations.")
+
+        # If the perturbation leads to area 0, find a valid perturbation step
         vehicle.initial_state.position = original_position
         if x:
             valid_perturbation = get_valid_perturbation_step(
@@ -245,7 +256,7 @@ def differentiate_reachable_set_wrt_position(
             )
         delta_pos = valid_perturbation
         if delta_pos == 0:
-            return np.array([0.0 for i in range(step_start, step_end + 1)])
+            return np.array([0.0 for _ in range(step_start, step_end + 1)])
         area_changed_position = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
 
     print("original area: ", area_original)
@@ -255,6 +266,7 @@ def differentiate_reachable_set_wrt_position(
     for time_step in range(step_start, step_end + 1):
         derivative[time_step] = (area_changed_position[time_step] - area_original[time_step]) / delta_pos
 
+    # Reset back to original position and save
     vehicle.initial_state.position = original_position
     _ = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
@@ -282,20 +294,26 @@ def get_profile_matrix(
     ----------
     scenario : Scenario
         The CommonRoad scenario.
+
     planning_problem_set : PlanningProblemSet
         The planning problem set.
+
     scenario_path : str
         The path to the scenario.
+
     step_start : int
         Start time step of reachability analysis.
+
     step_end : int
         End time step of reachability analysis.
+
     decision_variables : List[Tuple[str, str]]
         List of tuples (vehicle_id, variable_type), where:
-        - vehicle_id (str): e.g., "ego" or "1".
+        - vehicle_id (str): "ego".
         - variable_type (str): "velocity", "position", etc.
+
     semantics : str
-        The semantics.
+        Semantics to be passed to compute area.
 
     Returns
     -------
