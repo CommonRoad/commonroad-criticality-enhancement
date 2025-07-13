@@ -3,13 +3,51 @@ from typing import List, Tuple
 
 import numpy as np
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
-from commonroad.planning.planning_problem import PlanningProblemSet
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
+
+
+def apply_update(target_vehicle: PlanningProblem, variable_type: str, delta: float, direction: str = "x") -> None:
+    """
+    Applies a delta update to a specified decision variable of a vehicle. This function is used for the gradient-based optimization approach.
+
+    Parameters
+    ----------
+    target_vehicle : PlanningProblem
+        The vehicle whose velocity or position is being adjusted. Can be used as DynamicObstacle for other vehicles in the future.
+
+    variable_type : str
+        The variable to update ("velocity" or "position").
+
+    delta : float
+        The amount to adjust the variable by.
+
+    direction : str, optional
+        The direction of the variable. Default is "x".
+
+    Raises
+    ------
+    ValueError
+        If the resulting velocity is non-positive or an unsupported variable type is provided.
+    """
+    if variable_type == "velocity":
+        target_vehicle.initial_state.velocity += delta
+        if target_vehicle.initial_state.velocity <= 0:
+            raise ValueError("Velocity cannot be negative")
+    elif variable_type == "position":
+        x, y = target_vehicle.initial_state.position
+        if direction == "x":
+            new_pos = np.array([x + delta, y])
+        else:
+            new_pos = np.array([x, y + delta])
+        target_vehicle.initial_state.position = new_pos
+    else:
+        raise ValueError(f"Unsupported variable type: {variable_type}")
 
 
 def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningProblemSet) -> str:
     """
-    Saves a modified CommonRoad scenario and planning problem set to a fixed XML file path.
+    Saves a modified CommonRoad scenario and planning problem set to a fixed XML file path. This function is used for the gradient-based optimization approach.
 
     Parameters
     ----------
@@ -41,7 +79,7 @@ def apply_variables_to_scenario(
     decision_variables: List[Tuple[str, str]],
 ) -> str:
     """
-    Applies a set of variable updates (e.g. velocity or position) to a CommonRoad scenario and saves the result.
+    Applies a set of variable updates (e.g. velocity or position) to a CommonRoad scenario and saves the result. This function is used for the BO and SA approaches.
 
     Each variable in `decision_variables` is updated with the corresponding value in `params`.
     Modifications are applied directly to the scenario's initial states, and the updated scenario is saved.

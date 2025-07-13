@@ -169,44 +169,6 @@ def perform_binary_search(
     _ = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
 
 
-def apply_update(target_vehicle: PlanningProblem, variable_type: str, delta: float, direction: str = "x") -> None:
-    """
-    Applies a delta update to a specified decision variable of a vehicle.
-
-    Parameters
-    ----------
-    target_vehicle : PlanningProblem
-        The vehicle whose velocity or position is being adjusted. Can be used as DynamicObstacle for other vehicles in the future.
-
-    variable_type : str
-        The variable to update ("velocity" or "position").
-
-    delta : float
-        The amount to adjust the variable by.
-
-    direction : str, optional
-        The direction of the variable. Default is "x".
-
-    Raises
-    ------
-    ValueError
-        If the resulting velocity is non-positive or an unsupported variable type is provided.
-    """
-    if variable_type == "velocity":
-        target_vehicle.initial_state.velocity += delta
-        if target_vehicle.initial_state.velocity <= 0:
-            raise ValueError("Velocity cannot be negative")
-    elif variable_type == "position":
-        x, y = target_vehicle.initial_state.position
-        if direction == "x":
-            new_pos = np.array([x + delta, y])
-        else:
-            new_pos = np.array([x, y + delta])
-        target_vehicle.initial_state.position = new_pos
-    else:
-        raise ValueError(f"Unsupported variable type: {variable_type}")
-
-
 def optimize(
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
@@ -332,9 +294,9 @@ def optimize(
             # Apply the update
             if "position" in variable_type:
                 direction = "x" if variable_type.startswith("x") else "y"
-                apply_update(target_vehicle, "position", delta, direction=direction)
+                file_modification.apply_update(target_vehicle, "position", delta, direction=direction)
             else:
-                apply_update(target_vehicle, variable_type, delta)
+                file_modification.apply_update(target_vehicle, variable_type, delta)
             print(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
 
             # Save scenario
