@@ -1,27 +1,22 @@
-import os
-import sys
-
-# Add the parent directory (my_project) to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "core")))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scenario")))
-import pathlib
-
-from commonroad.common.file_reader import CommonRoadFileReader
-
-# from optimization import optimize
+import numpy as np
+from commonroad.scenario.lanelet import Lanelet
+from commonroad.scenario.scenario import Scenario, ScenarioID
 
 
-def test_run_without_err(scenario_path: str, decision_variables: list[tuple[str, str]]):
-    scenario_file = pathlib.Path(__file__).parent.joinpath(f"./../{scenario_path}")
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_file).open()
+def test_scenario_has_lanelet():
+    left_bound = np.array([[0, 2], [1, 2]])
+    center_line = np.array([[0, 1], [1, 1]])
+    right_bound = np.array([[0, 0], [1, 0]])
 
-    # optimize(
-    #     scenario,
-    #     planning_problem_set,
-    #     scenario_path,
-    #     vehicle=planning_problem_set,
-    #     decision_variables=decision_variables,
-    # )
+    # Create a Lanelet object with ID 51
+    lanelet = Lanelet(left_bound, center_line, right_bound, 51)
 
+    # Create a new Scenario object
+    scenario = Scenario(0.2, ScenarioID())
 
-test_run_without_err("scenarios/ZAM_Merge-1_1_T-1.xml", [("ego", "velocity")])
+    # Add the lanelet to the scenario
+    scenario.add_objects([lanelet])
+
+    # Assertions
+    assert len(scenario.lanelet_network.lanelets) == 1
+    assert scenario.lanelet_network.find_lanelet_by_id(51) is not None

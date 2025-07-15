@@ -1,0 +1,120 @@
+import sys
+import time
+from pathlib import Path
+from typing import List, Tuple
+
+import matplotlib.pyplot as plt
+from commonroad.common.file_reader import CommonRoadFileReader
+
+import reach_flow
+from bo import run_bo_multi_variable
+from optimization import optimize
+from sa import run_sa_with_scipy
+
+
+def plot_area_over_time(original_area, gradient_area, sa_area, bo_area):
+    """
+    Plots drivable area over time steps for each method.
+
+    Parameters:
+    - original_area, gradient_area, sa_area, bo_area: Areas for each time step.
+    """
+    time_steps = list(range(len(original_area)))
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(time_steps, original_area, label="Original", color="gray", linestyle="--")
+    plt.plot(time_steps, gradient_area, label="Gradient", color="blue")
+    plt.plot(time_steps, sa_area, label="Simulated Annealing", color="green")
+    plt.plot(time_steps, bo_area, label="Bayesian Optimization", color="orange")
+
+    plt.xlabel("Time Step")
+    plt.ylabel("Drivable Area")
+    plt.title("Drivable Area Over Time")
+    plt.legend()
+    plt.grid(True, linestyle="--", alpha=0.6)
+    plt.tight_layout()
+    plt.show()
+
+
+def run_comparison_pipeline(
+    scenario_path: str,
+    decision_variables: List[Tuple[str, str]],
+    iterations: int = 30,
+    a_ref_input: float = 1.0,
+    sa_max_iter: int = 500,
+    sa_initial_temp: float = 2000.0,
+    budget: int = 50,
+) -> None:
+    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
+
+    print("Computing original drivable area...")
+    area_original = reach_flow.compute_drivable_area(scenario_path)
+
+    print("\nRunning Gradient-Based Optimization (ECOS)...")
+
+    start = time.time()
+
+    velocity_gradient, area_gradient = optimize(
+        scenario,
+        planning_problem_set,
+        scenario_path,
+        decision_variables=decision_variables,
+        iterations=iterations,
+        a_ref_input=a_ref_input,
+    )
+    end = time.time()
+
+    print("\nRunning SA ...")
+    start_sa = time.time()
+    sa_best_params, sa_area = run_sa_with_scipy(
+        scenario_path=scenario_path,
+        decision_variables=decision_variables,
+        max_iter=sa_max_iter,
+        initial_temp=sa_initial_temp,
+    )
+    end_sa = time.time()
+
+    print("\nRunning Bayesian Optimization ...")
+    start_bo = time.time()
+    bo_best_params, bo_area = run_bo_multi_variable(
+        scenario_path=scenario_path,
+        decision_variables=decision_variables,
+        budget=budget,
+    )
+    end_bo = time.time()
+
+    print(f"Sum of Original drivable area: {sum(area_original)}")
+    print(f"Gradient optimization time: {end - start:.2f} seconds")
+    print(f"Gradient optimization params (vel, x-pos, y-pos): {velocity_gradient}")
+    print(f"Sum of Gradient drivable area: {sum(area_gradient)}")
+    print(f"SA optimization time: {end_sa - start_sa:.2f} seconds")
+    print(f"SA optimization params: {sa_best_params}")
+    print(f"Sum of SA drivable area: {sum(sa_area)}")
+    print(f"BO optimization time: {end_bo - start_bo:.2f} seconds")
+    print(f"BO optimization params: {bo_best_params}")
+    print(f"Sum of BO drivable area: {sum(bo_area)}")
+
+    plot_area_over_time(area_original, area_gradient, sa_area, bo_area)
+
+
+# Get the root directory (two levels up from this file)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Add src and scenario directories to sys.path
+sys.path.append(str(PROJECT_ROOT / "src"))
+sys.path.append(str(PROJECT_ROOT / "scenarios"))
+
+# For this scenario for velocity the gradient-based approach gets stuck at local optimum
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+
+scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+
+run_comparison_pipeline(
+    str(scenario_path),
+    decision_variables=[("ego", "velocity"), ("ego", "position")],
+    iterations=10,
+    a_ref_input=1.0,
+    sa_max_iter=30,
+    sa_initial_temp=1000.0,
+    budget=120,
+)

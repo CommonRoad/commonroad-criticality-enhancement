@@ -1,29 +1,52 @@
 [project]
-name = "core"
+name = "src"
 version = "0.1.4"
 description = "CommonRoad Python template repository."
 authors = [{name = "Cyber-Physical Systems Group, Technical University of Munich", email = "<commonroad@lists.lrz.de>"}]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10, <3.11"
 license = "BSD-3-Clause"
 dynamic = ["dependencies"]
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.12"
+python = ">=3.10, <3.11"
 commonroad-io = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-io.git", branch = "develop" }
-commonroad-reach = "^2025.1.0"
+
+# Following dependencies must be included to run with poetry!
+# cr_reach_flow = {  git = "git@gitlab.lrz.de:cps/commonroad/commonroad-reach-flow.git", branch = "develop" }
+# commonroad-route-planner = { git = "git@gitlab.lrz.de:cps/commonroad-route-planner.git", branch = "develop" }
+# commonroad-io = "^2024.3"
+# commonroad-reach = "^2024.1"
+# commonroad-clcs = "^2025.1.1"
+# commonroad-route-planner = "^2024.1.1"
+# commonroad-drivability-checker = "^2024.1"
+# commonroad-vehicle-models = "^3.0.2"
+
 cvxpy = "^1.6.5"
+ecos = "*"
+scikit-optimize = "*"
+scipy = "*"
+pybind11 = "*"
+#yaml-cpp = "*"
+spdlog = "*"
+boost = "*"
+eigen = "*"
+spot = "*"
+mkdocstrings = {extras = ["python"], version = "^0.29.1"}
 
 [tool.poetry.group.tests]
 optional = true
 
 [tool.poetry.group.tests.dependencies]
 coverage = {version = "^7.1.0", extras = ["toml"] }
+pytest = "*"
 
 [tool.poetry.group.docs]
 optional = true
 
 [tool.poetry.group.docs.dependencies]
+mkdocs = "*"
+mkdocstrings = {extras = ["python"], version = "^0.29.1"}
 mkdocstrings-python = "^1.8.0"
 mkdocs-material = "^9.5.12"
 
@@ -31,8 +54,11 @@ mkdocs-material = "^9.5.12"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
+pre-commit = "*"
+pytest = "*"
 pip-licenses = "^4.3.4"
 ruff = "^0.6.0"
+mkdocs-material = "^9.6.15"
 
 [build-system]
 requires = ["poetry-core"]
@@ -40,14 +66,14 @@ build-backend = "poetry.core.masonry.api"
 
 # Testing
 [tool.coverage.run]
-source = ["core"]
+source = ["src"]
 
 # Formatting
 [tool.ruff]
-line-length = 100
+line-length = 120
 indent-width = 4
 format.quote-style = "double"
-target-version = "py311"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "I"]
