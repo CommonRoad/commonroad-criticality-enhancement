@@ -11,8 +11,8 @@ dynamic = ["dependencies"]
 [tool.poetry.dependencies]
 python = ">=3.10, <3.11"
 commonroad-io = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-io.git", branch = "develop" }
-cr_reach_flow = {  git = "git@gitlab.lrz.de:cps/commonroad/commonroad-reach-flow.git", branch = "develop" }
-commonroad-route-planner = { git = "git@gitlab.lrz.de:cps/commonroad-route-planner.git", branch = "develop" }
+#cr_reach_flow = {  git = "git@gitlab.lrz.de:cps/commonroad/commonroad-reach-flow.git", branch = "develop" }
+#commonroad-route-planner = { git = "git@gitlab.lrz.de:cps/commonroad-route-planner.git", branch = "develop" }
 cvxpy = "^1.6.5"
 mkdocstrings = {extras = ["python"], version = "^0.29.1"}
 
