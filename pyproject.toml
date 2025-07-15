@@ -11,16 +11,16 @@ dynamic = ["dependencies"]
 [tool.poetry.dependencies]
 python = ">=3.10, <3.11"
 commonroad-io = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-io.git", branch = "develop" }
+
 # Following dependencies must be included to run with poetry!
 # cr_reach_flow = {  git = "git@gitlab.lrz.de:cps/commonroad/commonroad-reach-flow.git", branch = "develop" }
 # commonroad-route-planner = { git = "git@gitlab.lrz.de:cps/commonroad-route-planner.git", branch = "develop" }
-
-# commonroad-clcs==2025.1.1
-# commonroad-drivability-checker==2024.1
-# commonroad-io==2024.3
-# commonroad-reach==2024.1
-# commonroad-route-planner==2024.1.1
-# commonroad-vehicle-models==3.0.2
+# commonroad-io = "^2024.3"
+# commonroad-reach = "^2024.1"
+# commonroad-clcs = "^2025.1.1"
+# commonroad-route-planner = "^2024.1.1"
+# commonroad-drivability-checker = "^2024.1"
+# commonroad-vehicle-models = "^3.0.2"
 
 cvxpy = "^1.6.5"
 ecos = "*"
