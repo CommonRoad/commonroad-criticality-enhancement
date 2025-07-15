@@ -44,7 +44,9 @@ def objective_multi_var(
         The drivable area (we are minimizing it).
     """
     try:
-        updated_scenario_path = apply_variables_to_scenario(scenario, planning_problem_set, params, decision_variables)
+        updated_scenario_path = apply_variables_to_scenario(
+            scenario, planning_problem_set, params, decision_variables, sa=False
+        )
         area = compute_drivable_area(updated_scenario_path)
         total_squared_area = (sum(area) - a_ref) ** 2
         return total_squared_area
@@ -140,7 +142,7 @@ def run_bo_multi_variable(
     # Apply the best parameters
     best_params = result.x
     updated_scenario_path = apply_variables_to_scenario(
-        scenario, planning_problem_set, best_params, expanded_decision_variables
+        scenario, planning_problem_set, best_params, expanded_decision_variables, sa=False
     )
     best_area = compute_drivable_area(updated_scenario_path)
     return best_params, best_area

@@ -85,13 +85,13 @@ def run_comparison_pipeline(
 
     print(f"Sum of Original drivable area: {sum(area_original)}")
     print(f"Gradient optimization time: {end - start:.2f} seconds")
-    print(f"Gradient optimization velocity: {velocity_gradient} m/s")
+    print(f"Gradient optimization params (vel, x-pos, y-pos): {velocity_gradient}")
     print(f"Sum of Gradient drivable area: {sum(area_gradient)}")
     print(f"SA optimization time: {end_sa - start_sa:.2f} seconds")
-    print(f"SA optimization velocity: {sa_best_params} m/s")
+    print(f"SA optimization params: {sa_best_params}")
     print(f"Sum of SA drivable area: {sum(sa_area)}")
     print(f"BO optimization time: {end_bo - start_bo:.2f} seconds")
-    print(f"BO optimization velocity: {bo_best_params} m/s")
+    print(f"BO optimization params: {bo_best_params}")
     print(f"Sum of BO drivable area: {sum(bo_area)}")
 
     plot_area_over_time(area_original, area_gradient, sa_area, bo_area)
@@ -111,10 +111,10 @@ scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
 
 run_comparison_pipeline(
     str(scenario_path),
-    decision_variables=[("ego", "velocity"), ("ego", "velocity")],
+    decision_variables=[("ego", "velocity"), ("ego", "position")],
     iterations=10,
     a_ref_input=1.0,
-    sa_max_iter=10,
-    sa_initial_temp=2000.0,
-    budget=50,
+    sa_max_iter=30,
+    sa_initial_temp=1000.0,
+    budget=120,
 )

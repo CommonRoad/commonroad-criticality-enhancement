@@ -150,8 +150,8 @@ def run_full_optimization_pipeline(
         iterations=iterations,
         a_ref_input=a_ref_input,
     )
-    print("final_velocity_rotated:", final_velocity_rot)
-    print("final_velocity:", final_velocity)
+    print("final_params_rotated:", final_velocity_rot)
+    print("final_params:", final_velocity)
 
     compare_plot(area_original_rotated, area_original, area_rotated, area_modified)
 

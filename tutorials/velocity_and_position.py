@@ -27,7 +27,7 @@ def run_full_optimization_pipeline(
     area_original = reach_flow.compute_drivable_area(scenario_path, semantics)
 
     # Run gradient-based optimization
-    final_velocity, area_modified = optimize(
+    final_params, area_modified = optimize(
         scenario,
         planning_problem_set,
         scenario_path,
@@ -36,10 +36,10 @@ def run_full_optimization_pipeline(
         a_ref_input=a_ref_input,
         semantics=semantics,
     )
-    print("final_velocity:", final_velocity)
+    print("final_params:", final_params)
 
     # Create reach graph for modified scenario
-    mod_scenario_path = PROJECT_ROOT / "scenarios" / "modified_scenario.xml"
+    mod_scenario_path = PROJECT_ROOT / "scenarios" / "updated_scenario_gradient.xml"
     scenario, planning_problem_set = CommonRoadFileReader(mod_scenario_path).open()
 
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(

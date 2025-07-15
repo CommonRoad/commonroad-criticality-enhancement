@@ -54,7 +54,7 @@ def run_comparison_pipeline(
 
     start = time.time()
 
-    velocity_gradient, area_gradient = optimize(
+    params_gradient, area_gradient = optimize(
         scenario,
         planning_problem_set,
         scenario_path,
@@ -76,10 +76,10 @@ def run_comparison_pipeline(
 
     print(f"Sum of Original drivable area: {sum(area_original)}")
     print(f"Gradient optimization time: {end - start:.2f} seconds")
-    print(f"Gradient optimization velocity: {velocity_gradient} m/s")
+    print(f"Gradient optimization params (vel, x-pos, y-pos): {params_gradient}")
     print(f"Sum of Gradient drivable area: {sum(area_gradient)}")
     print(f"SA optimization time: {end_sa - start_sa:.2f} seconds")
-    print(f"SA optimization velocity: {sa_best_params} m/s")
+    print(f"SA optimization velocity: {sa_best_params}")
     print(f"Sum of SA drivable area: {sum(sa_area)}")
 
     plot_area_over_time(area_original, area_gradient, sa_area)

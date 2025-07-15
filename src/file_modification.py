@@ -65,10 +65,10 @@ def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningPro
 
     output_dir = Path(__file__).resolve().parent.parent / "scenarios"
     output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
-    temp_file = output_dir / "modified_scenario.xml"
+    temp_file = output_dir / "updated_scenario_gradient.xml"
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
     writer.write_to_file(str(temp_file), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
-    print("The new scenario was saved in modified_scenario.xml")
+    print("The new scenario was saved in updated_scenario_gradient.xml")
     return str(temp_file)
 
 
@@ -77,6 +77,7 @@ def apply_variables_to_scenario(
     planning_problem_set: PlanningProblemSet,
     params: List[float],
     decision_variables: List[Tuple[str, str]],
+    sa: bool,
 ) -> str:
     """
     Applies a set of variable updates (e.g. velocity or position) to a CommonRoad scenario and saves the result. This function is used for the BO and SA approaches.
@@ -100,10 +101,13 @@ def apply_variables_to_scenario(
         - vehicle_id (str): "ego" for the ego vehicle.
         - variable_type (str): Either "velocity" or "position".
 
+    sa : bool
+        if true, save the modified scenario with SA name, otherwise save the modified scenario with BO name.
+
     Returns
     -------
     str
-        The path to the updated scenario file ("scenarios/updated_scenario.xml").
+        The path to the updated scenario file.
     """
 
     for (vehicle_id, variable_type), new_value in zip(decision_variables, params):
@@ -129,8 +133,11 @@ def apply_variables_to_scenario(
     # Save the updated scenario
     output_dir = Path(__file__).resolve().parent.parent / "scenarios"
     output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
-    temp_file = output_dir / "updated_scenario.xml"
+    if sa:
+        temp_file = output_dir / "updated_scenario_sa.xml"
+    else:
+        temp_file = output_dir / "updated_scenario_bo.xml"
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
     writer.write_to_file(str(temp_file), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
-    print("The new scenario was saved in updated_scenario.xml")
+    print(f"The new scenario was saved in {str(temp_file)}")
     return str(temp_file)

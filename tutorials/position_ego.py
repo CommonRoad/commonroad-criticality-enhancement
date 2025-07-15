@@ -35,10 +35,10 @@ def run_full_optimization_pipeline(
         a_ref_input=a_ref_input,
         semantics=semantics,
     )
-    print("final_position:", final_position)
+    print("final_params:", final_position)
 
     # Create reach graph for modified scenario
-    mod_scenario_path = PROJECT_ROOT / "scenarios" / "modified_scenario.xml"
+    mod_scenario_path = PROJECT_ROOT / "scenarios" / "updated_scenario_gradient.xml"
     scenario, planning_problem_set = CommonRoadFileReader(mod_scenario_path).open()
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
         str(mod_scenario_path), semantics

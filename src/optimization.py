@@ -177,7 +177,7 @@ def optimize(
     iterations: int,
     a_ref_input: float = 1.0,
     semantics: str = "true",
-) -> (float, np.ndarray):
+) -> (List[float], np.ndarray):
     """
     Optimizes scenario variables (velocity or position of vehicles) to influence the drivable area.
 
@@ -210,8 +210,8 @@ def optimize(
 
     Returns
     -------
-    float
-        The highest feasible velocity/position found.
+    List[float]
+        List containing the final values of velocity, x-position, and y-position for the ego vehicle.
 
     np.ndarray
         The final drivable area.
@@ -332,9 +332,8 @@ def optimize(
     last_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
     area_end = reach_flow.compute_drivable_area(last_scenario_path, semantics=semantics)
 
-    if expanded_variables[-1][1] == "velocity":
-        return target_vehicle.initial_state.velocity, area_end
-    elif expanded_variables[-1][1].startswith("x"):
-        return target_vehicle.initial_state.position[0], area_end
-    else:
-        return target_vehicle.initial_state.position[1], area_end
+    velocity = target_vehicle.initial_state.velocity
+    x_pos = target_vehicle.initial_state.position[0]
+    y_pos = target_vehicle.initial_state.position[1]
+
+    return [velocity, x_pos, y_pos], area_end

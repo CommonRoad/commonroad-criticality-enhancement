@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Moritz Klischat, Edmond Irani Liu, Fabian Höltke" affiliation="Technical University of Munich, Germany" source="Scenario Factory (OpenStreetMaps, SUMO Traffic Simulator)" benchmarkID="DEU_Guetersloh-65_2_T-1" date="2025-07-10">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Moritz Klischat, Edmond Irani Liu, Fabian Höltke" affiliation="Technical University of Munich, Germany" source="Scenario Factory (OpenStreetMaps, SUMO Traffic Simulator)" benchmarkID="DEU_Guetersloh-65_2_T-1" date="2025-07-15">
   <location>
     <geoNameId>2913366</geoNameId>
     <gpsLatitude>51.90693</gpsLatitude>
@@ -7,8 +7,8 @@
   </location>
   <scenarioTags>
     <critical/>
-    <simulated/>
     <intersection/>
+    <simulated/>
   </scenarioTags>
   <lanelet id="83076">
     <leftBound>
