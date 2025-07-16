@@ -49,7 +49,7 @@ def objective_wrapper(
             total_squared_area = (sum(area) - a_ref) ** 2
             return total_squared_area
         except Exception as e:
-            print(f"[Warning] Area for this value could not be computed. {e}")
+            print(f"Area for this value could not be computed. {e} Returning 1e20 for this value.")
             # Return a value for the area bigger than the other values, so this infeasible parameter will not be used for further sampling
             return 1e20
 
