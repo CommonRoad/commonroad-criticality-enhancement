@@ -17,9 +17,9 @@ The software is written in Python 3.10.
 
 ```
 conda env create -f environment.yml
-conda activate myenv
 ```
 - All required versions are listed in the environment.yml file.
+- Activate the environment after creating it
 - The project uses CommonRoad-reach-flow
 - The dependencies for it are also included in the environment.yaml file
 - CommonRoad-reach-flow has to be installed by cloning its repository in the python environment
