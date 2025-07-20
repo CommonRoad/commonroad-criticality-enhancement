@@ -5,6 +5,7 @@ import cvxpy as cv
 import numpy as np
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
+from numpy import ndarray
 
 import file_modification
 import profile_matrix_computation
@@ -90,7 +91,7 @@ def perform_binary_search(
     var_type: str,
     semantics: str,
     iteration_limit: int = 5,
-) -> None:
+) -> ndarray:
     """
     Performs binary search to find the highest feasible velocity (or position) between `x_before` and `x_after`
     that still yields a valid reachability graph.
@@ -120,6 +121,12 @@ def perform_binary_search(
 
     iteration_limit : int, optional
         Maximum number of binary search steps. Default is 5.
+
+    Returns
+    -------
+    np.ndarray
+        1D array of drivable area values for each time step.
+
     """
 
     low = var_before
@@ -166,7 +173,8 @@ def perform_binary_search(
     elif var_type == "y-position":
         vehicle.initial_state.position = np.array([x_backup, feasible_var])
     mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
-    _ = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+    area_latest = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+    return area_latest
 
 
 def optimize(
@@ -254,7 +262,8 @@ def optimize(
 
     for i in range(iterations):
         print("Starting iteration", i)
-
+        velocity_backup = list(planning_problem_set.planning_problem_dict.values())[0].initial_state.velocity
+        position_backup = list(planning_problem_set.planning_problem_dict.values())[0].initial_state.position
         # Compute profile matrix
         profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
             scenario, planning_problem_set, current_scenario_path, step_start, step_end, expanded_variables, semantics
@@ -304,6 +313,7 @@ def optimize(
 
             # Check if the variable is feasible
             try:
+                area_previous = area_latest
                 area_latest = reach_flow.compute_drivable_area(current_scenario_path, semantics=semantics)
 
             except Exception as e:
@@ -318,7 +328,7 @@ def optimize(
                     var_after = target_vehicle.initial_state.position[index]
 
                 # Run binary search between previous valid and current, invalid variable
-                perform_binary_search(
+                area_latest = perform_binary_search(
                     scenario,
                     planning_problem_set,
                     target_vehicle,
@@ -327,6 +337,22 @@ def optimize(
                     var_type=variable_type,
                     semantics=semantics,
                 )
+
+        previous_error = np.sum((area_previous - a_ref_input) ** 2)
+        current_error = np.sum((area_latest - a_ref_input) ** 2)
+
+        if current_error > previous_error:
+            print("Current area is worse than previous (in squared error). Reverting changes.")
+
+            # Revert vehicle state
+            target_vehicle.initial_state.velocity = velocity_backup
+            target_vehicle.initial_state.position = position_backup
+
+            # Revert area
+            area_latest = area_previous
+
+            # Save reverted scenario
+            current_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
     # Save the final modified scenario and return the best solution
     last_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
