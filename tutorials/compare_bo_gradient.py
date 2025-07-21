@@ -90,8 +90,8 @@ sys.path.append(str(PROJECT_ROOT / "scenarios"))
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
 run_comparison_pipeline(
     str(scenario_path),
-    decision_variables=[("ego", "velocity")],
+    decision_variables=[("ego", "position"), ("ego", "velocity")],
     iterations=10,
     a_ref_input=1.0,
-    budget=10,
+    budget=50,
 )

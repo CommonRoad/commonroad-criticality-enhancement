@@ -260,10 +260,13 @@ def optimize(
     area_latest = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
     current_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
 
+    # Save the best area so far
+    area_best = area_latest.copy()
+    best_velocity = list(planning_problem_set.planning_problem_dict.values())[0].initial_state.velocity
+    best_position = list(planning_problem_set.planning_problem_dict.values())[0].initial_state.position.copy()
+
     for i in range(iterations):
         print("Starting iteration", i)
-        velocity_backup = list(planning_problem_set.planning_problem_dict.values())[0].initial_state.velocity
-        position_backup = list(planning_problem_set.planning_problem_dict.values())[0].initial_state.position
         # Compute profile matrix
         profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
             scenario, planning_problem_set, current_scenario_path, step_start, step_end, expanded_variables, semantics
@@ -313,7 +316,6 @@ def optimize(
 
             # Check if the variable is feasible
             try:
-                area_previous = area_latest
                 area_latest = reach_flow.compute_drivable_area(current_scenario_path, semantics=semantics)
 
             except Exception as e:
@@ -338,23 +340,14 @@ def optimize(
                     semantics=semantics,
                 )
 
-        previous_error = np.sum((area_previous - a_ref_input) ** 2)
-        current_error = np.sum((area_latest - a_ref_input) ** 2)
-
-        if current_error > previous_error:
-            print("Current area is worse than previous (in squared error). Reverting changes.")
-
-            # Revert vehicle state
-            target_vehicle.initial_state.velocity = velocity_backup
-            target_vehicle.initial_state.position = position_backup
-
-            # Revert area
-            area_latest = area_previous
-
-            # Save reverted scenario
-            current_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+        if sum((area_latest - a_ref_input) ** 2) < sum((area_best - a_ref_input) ** 2):
+            area_best = area_latest.copy()
+            best_velocity = target_vehicle.initial_state.velocity
+            best_position = target_vehicle.initial_state.position.copy()
 
     # Save the final modified scenario and return the best solution
+    target_vehicle.initial_state.velocity = best_velocity
+    target_vehicle.initial_state.position = best_position
     last_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
     area_end = reach_flow.compute_drivable_area(last_scenario_path, semantics=semantics)
 

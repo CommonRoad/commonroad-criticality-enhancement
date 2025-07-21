@@ -9,7 +9,11 @@ from optimization import optimize
 
 
 def run_full_optimization_pipeline(
-    scenario_path: str, decision_variables: list, iterations: int = 5, a_ref_input: float = 1.0, semantics: str = "true"
+    scenario_path: str,
+    decision_variables: list,
+    iterations: int = 12,
+    a_ref_input: float = 1.0,
+    semantics: str = "true",
 ) -> None:
     # Load scenario and compute the reachability graph and drivable area
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
