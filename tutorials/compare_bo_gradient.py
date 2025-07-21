@@ -39,7 +39,7 @@ def run_comparison_pipeline(
     decision_variables: List[Tuple[str, str]],
     iterations: int = 10,
     a_ref_input: float = 1.0,
-    budget: int = 500,
+    budget: int = 10,
 ) -> None:
     # Load scenario and compute the reachability graph and drivable area
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
@@ -88,6 +88,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "ZAM_two_lanes_solid.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "ITA_Empoli-2_5_T-1.xml"
 run_comparison_pipeline(
     str(scenario_path),
     decision_variables=[("ego", "position"), ("ego", "velocity")],

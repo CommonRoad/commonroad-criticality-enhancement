@@ -7,8 +7,8 @@
   </location>
   <scenarioTags>
     <critical/>
-    <intersection/>
     <simulated/>
+    <intersection/>
   </scenarioTags>
   <lanelet id="570">
     <leftBound>
@@ -34702,15 +34702,15 @@
       </time>
       <position>
         <point>
-          <x>122.0692</x>
-          <y>-44.1223</y>
+          <x>123.2252</x>
+          <y>-44.9554</y>
         </point>
       </position>
       <orientation>
         <exact>-2.6833</exact>
       </orientation>
       <velocity>
-        <exact>28.6685</exact>
+        <exact>39.5465</exact>
       </velocity>
       <acceleration>
         <exact>0.0</exact>

@@ -59,8 +59,8 @@ def objective_wrapper(
 def run_sa_with_scipy(
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
-    max_iter: int = 500,
-    initial_temp: float = 2000.0,
+    max_iter: int = 30,
+    initial_temp: float = 500.0,
     a_ref: float = 1.0,
 ) -> Tuple[List[float], ndarray]:
     """

@@ -5,6 +5,7 @@ from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
+from networkx.generators import ego
 
 import reach_flow
 from optimization import optimize
@@ -98,9 +99,9 @@ scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
 
 run_comparison_pipeline(
     scenario_path=str(scenario_path),
-    decision_variables=[("ego", "velocity")],
+    decision_variables=[("ego", "velocity"), ("ego", "position")],
     iterations=10,
     a_ref_input=1.0,
-    sa_max_iter=10,
-    sa_initial_temp=2000.0,
+    sa_max_iter=30,
+    sa_initial_temp=500.0,
 )
