@@ -210,7 +210,7 @@ def create_reach_graph(
     # point_mass_params.a_lat_min = -2.0
     # point_mass_params.a_lat_max = 2.0
 
-    # point_mass_params.v_lon_min = 0.0
+    point_mass_params.v_lon_min = 0.0
     # point_mass_params.v_lon_max = 50.8
     # point_mass_params.v_lat_min = -4.0
     # point_mass_params.v_lat_max = 4.0

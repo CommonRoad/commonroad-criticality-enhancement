@@ -4,6 +4,7 @@ from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
 
+import file_modification
 import reach_flow
 from optimization import optimize
 
@@ -11,7 +12,7 @@ from optimization import optimize
 def run_full_optimization_pipeline(
     scenario_path: str,
     decision_variables: list,
-    iterations: int = 12,
+    iterations: int = 10,
     a_ref_input: float = 1.0,
     semantics: str = "true",
 ) -> None:
@@ -19,7 +20,6 @@ def run_full_optimization_pipeline(
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path, semantics)
     print(f"initial velocity: {planning_problem.initial_state.velocity}")
-    reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
     area_original = reach_flow.compute_drivable_area(scenario_path, semantics)
 
     # Run gradient-based optimization

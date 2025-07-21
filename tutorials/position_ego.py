@@ -62,5 +62,5 @@ scenario_path_2 = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
 # run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V310")
 # run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V36")
 
-run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")])
-# run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")], semantics="Behind_V35")
+# run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")])
+run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")], semantics="Behind_V35")

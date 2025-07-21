@@ -31,9 +31,11 @@ def apply_update(target_vehicle: PlanningProblem, variable_type: str, delta: flo
         If the resulting velocity is non-positive or an unsupported variable type is provided.
     """
     if variable_type == "velocity":
-        target_vehicle.initial_state.velocity += delta
-        if target_vehicle.initial_state.velocity <= 0:
-            raise ValueError("Velocity cannot be negative")
+        new_velocity = target_vehicle.initial_state.velocity + delta
+        if new_velocity > 1:
+            target_vehicle.initial_state.velocity = new_velocity
+        else:
+            print(f"Skipping update: velocity would become {new_velocity:.3f}, which is non-positive or too small.")
     elif variable_type == "position":
         x, y = target_vehicle.initial_state.position
         if direction == "x":
