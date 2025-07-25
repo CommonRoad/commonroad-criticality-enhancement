@@ -10,6 +10,7 @@ import reach_flow
 
 def get_valid_perturbation_step(
     scenario: Scenario,
+    scenario_path: str,
     planning_problem_set: PlanningProblemSet,
     vehicle: PlanningProblem,
     semantics: str,
@@ -24,6 +25,9 @@ def get_valid_perturbation_step(
     ----------
     scenario : Scenario
         The CommonRoad scenario.
+
+    scenario_path : str
+        The path to the scenario.
 
     planning_problem_set : PlanningProblemSet
         The planning problem set.
@@ -61,7 +65,7 @@ def get_valid_perturbation_step(
             vehicle.initial_state.position = np.array([original_position[0] + step, original_position[1]])
         elif decision_variable == "y-position":
             vehicle.initial_state.position = np.array([original_position[0], original_position[1] + step])
-        mod_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+        mod_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
         # If step is valid, return it, else try with a smaller step
         try:
@@ -75,7 +79,7 @@ def get_valid_perturbation_step(
     print("All perturbation steps failed. Returning 0.")
     vehicle.initial_state.velocity = original_velocity
     vehicle.initial_state.position = original_position
-    _ = file_modification.save_modified_scenario(scenario, planning_problem_set)
+    _ = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
     return 0.0
 
 
@@ -140,7 +144,7 @@ def differentiate_reachable_set_wrt_velocity(
     vehicle.initial_state.velocity += h
 
     # Save the modified scenario
-    mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+    mod_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
     # Recompute for the modified scenario
     try:
@@ -151,7 +155,7 @@ def differentiate_reachable_set_wrt_velocity(
         # If the perturbation leads to area 0, find a valid perturbation step
         vehicle.initial_state.velocity = original_velocity
         valid_perturbation = get_valid_perturbation_step(
-            scenario, planning_problem_set, vehicle, semantics, "velocity", h
+            scenario, scenario_path, planning_problem_set, vehicle, semantics, "velocity", h
         )
         h = valid_perturbation
         if h == 0:
@@ -164,7 +168,7 @@ def differentiate_reachable_set_wrt_velocity(
 
     # Reset back to original velocity and save
     vehicle.initial_state.velocity = original_velocity
-    _ = file_modification.save_modified_scenario(scenario, planning_problem_set)
+    _ = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
     return derivative
 
@@ -236,7 +240,7 @@ def differentiate_reachable_set_wrt_position(
     print("modified position: ", vehicle.initial_state.position)
 
     # Save the modified scenario
-    mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+    mod_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
     # Recompute for the modified scenario
     try:
@@ -248,11 +252,11 @@ def differentiate_reachable_set_wrt_position(
         vehicle.initial_state.position = original_position
         if x:
             valid_perturbation = get_valid_perturbation_step(
-                scenario, planning_problem_set, vehicle, semantics, "x-position"
+                scenario, scenario_path, planning_problem_set, vehicle, semantics, "x-position"
             )
         else:
             valid_perturbation = get_valid_perturbation_step(
-                scenario, planning_problem_set, vehicle, semantics, "y-position"
+                scenario, scenario_path, planning_problem_set, vehicle, semantics, "y-position"
             )
         delta_pos = valid_perturbation
         if delta_pos == 0:
@@ -268,7 +272,7 @@ def differentiate_reachable_set_wrt_position(
 
     # Reset back to original position and save
     vehicle.initial_state.position = original_position
-    _ = file_modification.save_modified_scenario(scenario, planning_problem_set)
+    _ = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
     return derivative
 

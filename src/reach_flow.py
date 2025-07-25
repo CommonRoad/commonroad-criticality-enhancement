@@ -201,15 +201,12 @@ def create_reach_graph(
     step_end = 20
     initial_uncertainty = 0.01
 
-    # Adjusting those parameters can help compute area more realistically
-    #   e.g. by excluding negative velocity, the area will not be behind the vehicle
-    # Define physical constraints for a point-mass vehicle model, including acceleration and velocity bounds, comment out to set manually
+    # Define physical constraints for a point-mass vehicle model, including acceleration and velocity bounds
     point_mass_params = core.layers.propagation.PointMassParameters()
     # point_mass_params.a_lon_min = -9.5
     # point_mass_params.a_lon_max = 11.5
     # point_mass_params.a_lat_min = -2.0
     # point_mass_params.a_lat_max = 2.0
-
     point_mass_params.v_lon_min = 0.0
     # point_mass_params.v_lon_max = 50.8
     # point_mass_params.v_lat_min = -4.0

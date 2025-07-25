@@ -12,7 +12,7 @@ from optimization import optimize
 def run_full_optimization_pipeline(
     scenario_path: str,
     decision_variables: list,
-    iterations: int = 10,
+    iterations: int = 5,
     a_ref_input: float = 1.0,
     semantics: str = "true",
 ) -> None:
@@ -20,6 +20,7 @@ def run_full_optimization_pipeline(
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path, semantics)
     print(f"initial velocity: {planning_problem.initial_state.velocity}")
+    reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
     area_original = reach_flow.compute_drivable_area(scenario_path, semantics)
 
     # Run gradient-based optimization
@@ -37,7 +38,8 @@ def run_full_optimization_pipeline(
     print("final_params:", final_params)
 
     # Create reach graph for modified scenario
-    mod_scenario_path = PROJECT_ROOT / "scenarios" / "updated_scenario_gradient.xml"
+    name = Path(scenario_path).stem
+    mod_scenario_path = PROJECT_ROOT / "scenarios" / f"{name}_updated_gradient.xml"
     scenario, planning_problem_set = CommonRoadFileReader(mod_scenario_path).open()
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
         str(mod_scenario_path), semantics
@@ -48,8 +50,8 @@ def run_full_optimization_pipeline(
 
     # Plot areas
     reach_flow.plot(area_original, area_modified)
-    print(f"original area: {sum(area_original)}")
-    print(f"final area: {sum(area_modified)}")
+    print(f"first: {sum((area_original - a_ref_input) ** 2)}")
+    print(f"second: {sum((area_modified - a_ref_input) ** 2)}")
     print(f"Gradient optimization time: {end - start:.2f} seconds")
 
 
@@ -62,7 +64,8 @@ sys.path.append(str(PROJECT_ROOT / "scenarios"))
 # Choose a scenario as an input
 # scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Guetersloh-65_2_T-1.xml"
-scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-26_1_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "ZAM_two_lanes_solid.xml"
 
 run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")])

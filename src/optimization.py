@@ -84,6 +84,7 @@ def optimize_iteration(
 
 def perform_binary_search(
     scenario: Scenario,
+    scenario_path: str,
     planning_problem_set: PlanningProblemSet,
     vehicle: PlanningProblem,
     var_before: float,
@@ -100,6 +101,9 @@ def perform_binary_search(
     ----------
     scenario : Scenario
         The CommonRoad scenario being modified.
+
+    scenario_path : str
+        The path of the scenario
 
     planning_problem_set : PlanningProblemSet
         Planning problems associated with the scenario.
@@ -150,7 +154,7 @@ def perform_binary_search(
         else:
             raise ValueError(f"Unsupported variable type: {var_type}")
 
-        mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+        mod_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
         # Reload and compute reachability
         try:
@@ -172,7 +176,7 @@ def perform_binary_search(
         vehicle.initial_state.position = np.array([feasible_var, y_backup])
     elif var_type == "y-position":
         vehicle.initial_state.position = np.array([x_backup, feasible_var])
-    mod_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+    mod_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
     area_latest = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
     return area_latest
 
@@ -258,7 +262,7 @@ def optimize(
 
     # Compute area
     area_latest = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
-    current_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+    current_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
     # Save the best area so far
     area_best = area_latest.copy()
@@ -312,7 +316,7 @@ def optimize(
             print(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
 
             # Save scenario
-            current_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+            current_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
             # Check if the variable is feasible
             try:
@@ -332,6 +336,7 @@ def optimize(
                 # Run binary search between previous valid and current, invalid variable
                 area_latest = perform_binary_search(
                     scenario,
+                    scenario_path,
                     planning_problem_set,
                     target_vehicle,
                     var_before,
@@ -348,7 +353,7 @@ def optimize(
     # Save the final modified scenario and return the best solution
     target_vehicle.initial_state.velocity = best_velocity
     target_vehicle.initial_state.position = best_position
-    last_scenario_path = file_modification.save_modified_scenario(scenario, planning_problem_set)
+    last_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
     area_end = reach_flow.compute_drivable_area(last_scenario_path, semantics=semantics)
 
     velocity = target_vehicle.initial_state.velocity

@@ -107,14 +107,23 @@ sys.path.append(str(PROJECT_ROOT / "scenarios"))
 # For this scenario for velocity the gradient-based approach gets stuck at local optimum
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
 
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "BEL_Aarschot-6_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Moelln-7_1_T-1.xml"
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "ZAM_two_lanes_solid.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "BEL_Putte-3_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "C-DEU_B471-1_3_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_IV21-2_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-11_4_T-1.xml"
 
 run_comparison_pipeline(
     str(scenario_path),
     decision_variables=[("ego", "velocity"), ("ego", "position")],
-    iterations=10,
+    iterations=8,
     a_ref_input=1.0,
-    sa_max_iter=30,
-    sa_initial_temp=1000.0,
-    budget=120,
+    sa_max_iter=50,
+    sa_initial_temp=500.0,
+    budget=100,
 )

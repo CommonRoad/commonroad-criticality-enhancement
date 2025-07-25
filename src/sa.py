@@ -75,10 +75,10 @@ def run_sa_with_scipy(
         Variables to optimize, e.g. [("ego", "velocity")].
 
     max_iter : int, optional
-        Maximum number of iterations for the optimizer. Defaults to 500.
+        Maximum number of iterations for the optimizer. Defaults to 30.
 
     initial_temp : float, optional
-        Initial temperature parameter for simulated annealing. Default is 2000.0.
+        Initial temperature parameter for simulated annealing. Defaults to 500.0.
 
     a_ref : float, optional
         The reference area. Defaults to 1.0.

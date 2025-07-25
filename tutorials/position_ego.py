@@ -38,7 +38,8 @@ def run_full_optimization_pipeline(
     print("final_params:", final_position)
 
     # Create reach graph for modified scenario
-    mod_scenario_path = PROJECT_ROOT / "scenarios" / "updated_scenario_gradient.xml"
+    name = Path(scenario_path).stem
+    mod_scenario_path = PROJECT_ROOT / "scenarios" / f"{name}_updated_gradient.xml"
     scenario, planning_problem_set = CommonRoadFileReader(mod_scenario_path).open()
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
         str(mod_scenario_path), semantics
@@ -62,5 +63,5 @@ scenario_path_2 = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
 # run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V310")
 # run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V36")
 
-# run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")])
+run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")])
 run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")], semantics="Behind_V35")

@@ -47,7 +47,7 @@ def apply_update(target_vehicle: PlanningProblem, variable_type: str, delta: flo
         raise ValueError(f"Unsupported variable type: {variable_type}")
 
 
-def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningProblemSet) -> str:
+def save_modified_scenario(scenario: Scenario, path: str, planning_problem_set: PlanningProblemSet) -> str:
     """
     Saves a modified CommonRoad scenario and planning problem set to a fixed XML file path. This function is used for the gradient-based optimization approach.
 
@@ -55,6 +55,9 @@ def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningPro
     ----------
     scenario : Scenario
         The modified CommonRoad scenario.
+
+    path : str
+        The path of the scenario.
 
     planning_problem_set : PlanningProblemSet
         The associated planning problem set.
@@ -67,11 +70,13 @@ def save_modified_scenario(scenario: Scenario, planning_problem_set: PlanningPro
 
     output_dir = Path(__file__).resolve().parent.parent / "scenarios"
     output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
-    temp_file = output_dir / "updated_scenario_gradient.xml"
-    writer = CommonRoadFileWriter(scenario, planning_problem_set)
-    writer.write_to_file(str(temp_file), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
-    print("The new scenario was saved in updated_scenario_gradient.xml")
-    return str(temp_file)
+    if "updated_gradient" not in path:
+        path_obj = Path(path)
+        path = path_obj.with_name(path_obj.stem + "_updated_gradient" + path_obj.suffix)
+    writer = CommonRoadFileWriter(scenario=scenario, planning_problem_set=planning_problem_set, decimal_precision=10)
+    writer.write_to_file(str(path), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
+    print(f"The new scenario was saved in {path}")
+    return str(path)
 
 
 def apply_variables_to_scenario(
