@@ -6,7 +6,6 @@ from pathlib import Path
 from velocity_and_position import run_full_optimization_pipeline
 
 # Get the root directory (two levels up from this file)
-# Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # Add src and scenario directories to sys.path
 sys.path.append(str(PROJECT_ROOT / "src"))

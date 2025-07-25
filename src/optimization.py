@@ -316,7 +316,9 @@ def optimize(
             print(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
 
             # Save scenario
-            current_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
+            current_scenario_path = file_modification.save_modified_scenario(
+                scenario, scenario_path, planning_problem_set
+            )
 
             # Check if the variable is feasible
             try:
