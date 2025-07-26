@@ -4,9 +4,13 @@ from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
 
-import file_modification
+# Get the root directory (two levels up from this file)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Add src and scenario directories to sys.path
+sys.path.append(str(PROJECT_ROOT / "src"))
+sys.path.append(str(PROJECT_ROOT / "scenarios"))
+import optimization
 import reach_flow
-from optimization import optimize
 
 
 def run_full_optimization_pipeline(
@@ -25,7 +29,7 @@ def run_full_optimization_pipeline(
 
     # Run gradient-based optimization
     start = time.time()
-    final_params, area_modified = optimize(
+    final_params, area_modified = optimization.optimize(
         scenario,
         planning_problem_set,
         scenario_path,
@@ -54,12 +58,6 @@ def run_full_optimization_pipeline(
     print(f"second: {sum((area_modified - a_ref_input) ** 2)}")
     print(f"Gradient optimization time: {end - start:.2f} seconds")
 
-
-# Get the root directory (two levels up from this file)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# Add src and scenario directories to sys.path
-sys.path.append(str(PROJECT_ROOT / "src"))
-sys.path.append(str(PROJECT_ROOT / "scenarios"))
 
 # Choose a scenario as an input
 # scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"

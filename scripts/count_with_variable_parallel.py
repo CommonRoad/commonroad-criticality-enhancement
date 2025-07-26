@@ -5,7 +5,8 @@ import sys
 from multiprocessing import current_process
 from pathlib import Path
 
-from velocity_and_position import run_full_optimization_pipeline
+from commonroad.common.file_reader import CommonRoadFileReader
+from numpy import ndarray
 
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -13,8 +14,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 sys.path.append(str(PROJECT_ROOT / "tutorials"))
+from velocity_and_position import run_full_optimization_pipeline
 
-# from velocity_and_position import run_full_optimization_pipeline
+import reach_flow
+from optimization import optimize
 
 SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.joinpath("scenarios")
 
