@@ -6,15 +6,11 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 
+from src import optimization, reach_flow, sa
+
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-# Add src and scenario directories to sys.path
-sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
-import reach_flow
-from optimization import optimize
-from sa import run_sa_with_scipy
 
 
 def plot_area_over_time(original_area, gradient_area, sa_area):
@@ -60,7 +56,7 @@ def run_comparison_pipeline(
 
     start = time.time()
 
-    params_gradient, area_gradient = optimize(
+    params_gradient, area_gradient = optimization.optimize(
         scenario,
         planning_problem_set,
         scenario_path,
@@ -72,7 +68,7 @@ def run_comparison_pipeline(
 
     print("\nRunning SA Optimization...")
     start_sa = time.time()
-    sa_best_params, sa_area = run_sa_with_scipy(
+    sa_best_params, sa_area = sa.run_sa_with_scipy(
         scenario_path=scenario_path,
         decision_variables=decision_variables,
         max_iter=sa_max_iter,

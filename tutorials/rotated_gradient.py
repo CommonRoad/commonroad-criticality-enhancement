@@ -10,13 +10,11 @@ from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.state import KSState
 from matplotlib import pyplot as plt
 
+from src import optimization, reach_flow
+
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# Add src and scenario directories to sys.path
-sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
-import reach_flow
-from optimization import optimize
 
 
 def rotate_point_90_ccw(point):
@@ -130,7 +128,7 @@ def run_full_optimization_pipeline(
     area_original_rotated = reach_flow.compute_drivable_area(rotated_scenario_path)
 
     # Optimize rotated scenario
-    final_velocity_rot, area_rotated = optimize(
+    final_velocity_rot, area_rotated = optimization.optimize(
         scenario,
         planning_problem_set,
         rotated_scenario_path,
@@ -147,7 +145,7 @@ def run_full_optimization_pipeline(
     area_original = reach_flow.compute_drivable_area(scenario_path)
 
     # Optimize original scenario
-    final_velocity, area_modified = optimize(
+    final_velocity, area_modified = optimization.optimize(
         scenario,
         planning_problem_set,
         scenario_path,
