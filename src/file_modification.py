@@ -70,7 +70,7 @@ def save_modified_scenario(scenario: Scenario, path: str, planning_problem_set: 
 
     output_dir = Path(__file__).resolve().parent.parent / "scenarios"
     output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
-    if "updated_gradient" not in path:
+    if "_updated_gradient" not in path:
         path_obj = Path(path)
         path = path_obj.with_name(path_obj.stem + "_updated_gradient" + path_obj.suffix)
     writer = CommonRoadFileWriter(scenario=scenario, planning_problem_set=planning_problem_set, decimal_precision=10)
@@ -81,6 +81,7 @@ def save_modified_scenario(scenario: Scenario, path: str, planning_problem_set: 
 
 def apply_variables_to_scenario(
     scenario: Scenario,
+    path: str,
     planning_problem_set: PlanningProblemSet,
     params: List[float],
     decision_variables: List[Tuple[str, str]],
@@ -97,6 +98,9 @@ def apply_variables_to_scenario(
     scenario : Scenario
         The CommonRoad scenario to be modified.
 
+    path : str
+        The path of the scenario.
+
     planning_problem_set : PlanningProblemSet
         Set of planning problems (used to locate the 'ego' vehicle).
 
@@ -109,7 +113,7 @@ def apply_variables_to_scenario(
         - variable_type (str): Either "velocity" or "position".
 
     sa : bool
-        if true, save the modified scenario with SA name, otherwise save the modified scenario with BO name.
+        If true, save the modified scenario with SA name, otherwise save the modified scenario with BO name.
 
     Returns
     -------
@@ -140,11 +144,14 @@ def apply_variables_to_scenario(
     # Save the updated scenario
     output_dir = Path(__file__).resolve().parent.parent / "scenarios"
     output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
+    path_obj = Path(path)
     if sa:
-        temp_file = output_dir / "updated_scenario_sa.xml"
+        if "_updated_sa" not in path:
+            path = path_obj.with_name(path_obj.stem + "_updated_sa" + path_obj.suffix)
     else:
-        temp_file = output_dir / "updated_scenario_bo.xml"
+        if "_updated_bo" not in path:
+            path = path_obj.with_name(path_obj.stem + "_updated_bo" + path_obj.suffix)
     writer = CommonRoadFileWriter(scenario, planning_problem_set)
-    writer.write_to_file(str(temp_file), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
-    print(f"The new scenario was saved in {str(temp_file)}")
-    return str(temp_file)
+    writer.write_to_file(str(path), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
+    print(f"The new scenario was saved in {str(path)}")
+    return str(path)

@@ -7,12 +7,13 @@ from numpy import ndarray
 from skopt import gp_minimize
 from skopt.space import Real
 
-from file_modification import apply_variables_to_scenario
-from reach_flow import compute_drivable_area
+from .file_modification import apply_variables_to_scenario
+from .reach_flow import compute_drivable_area
 
 
 def objective_multi_var(
     scenario: Scenario,
+    path: str,
     planning_problem_set: PlanningProblemSet,
     params: List[float],
     decision_variables: List[Tuple[str, str]],
@@ -25,6 +26,9 @@ def objective_multi_var(
     ----------
     scenario : Scenario
         The CommonRoad scenario.
+
+    path : str
+        The path of the scenario.
 
     planning_problem_set : PlanningProblemSet
         The associated planning problem set.
@@ -45,7 +49,7 @@ def objective_multi_var(
     """
     try:
         updated_scenario_path = apply_variables_to_scenario(
-            scenario, planning_problem_set, params, decision_variables, sa=False
+            scenario, path, planning_problem_set, params, decision_variables, sa=False
         )
         area = compute_drivable_area(updated_scenario_path)
         total_squared_area = (sum(area) - a_ref) ** 2
@@ -128,7 +132,9 @@ def run_bo_multi_variable(
 
     # Prepare the objective function
     def wrapped_objective(params):
-        return objective_multi_var(scenario, planning_problem_set, params, expanded_decision_variables, a_ref)
+        return objective_multi_var(
+            scenario, scenario_path, planning_problem_set, params, expanded_decision_variables, a_ref
+        )
 
     # Run Gaussian Process-based Bayesian Optimization
     result = gp_minimize(
@@ -142,7 +148,7 @@ def run_bo_multi_variable(
     # Apply the best parameters
     best_params = result.x
     updated_scenario_path = apply_variables_to_scenario(
-        scenario, planning_problem_set, best_params, expanded_decision_variables, sa=False
+        scenario, scenario_path, planning_problem_set, best_params, expanded_decision_variables, sa=False
     )
     best_area = compute_drivable_area(updated_scenario_path)
     return best_params, best_area

@@ -6,12 +6,13 @@ from commonroad.scenario.scenario import Scenario
 from numpy import ndarray
 from scipy.optimize import dual_annealing
 
-from file_modification import apply_variables_to_scenario
-from reach_flow import compute_drivable_area
+from .file_modification import apply_variables_to_scenario
+from .reach_flow import compute_drivable_area
 
 
 def objective_wrapper(
     scenario: Scenario,
+    path: str,
     planning_problem_set: PlanningProblemSet,
     decision_variables: List[Tuple[str, str]],
     a_ref: float = 1.0,
@@ -24,6 +25,9 @@ def objective_wrapper(
     ----------
     scenario : Scenario
         The CommonRoad scenario.
+
+    path : str
+        The path to the scenario.
 
     planning_problem_set : PlanningProblemSet
         The associated planning problem set.
@@ -43,7 +47,7 @@ def objective_wrapper(
     def objective(params: List[float]) -> float:
         try:
             updated_path = apply_variables_to_scenario(
-                scenario, planning_problem_set, list(params), decision_variables, sa=True
+                scenario, path, planning_problem_set, list(params), decision_variables, sa=True
             )
             area = compute_drivable_area(updated_path)
             total_squared_area = (sum(area) - a_ref) ** 2
@@ -131,7 +135,7 @@ def run_sa_with_scipy(
             raise ValueError(f"Unknown decision variable type: {variable_type}")
 
     # Prepare the objective function
-    objective = objective_wrapper(scenario, planning_problem_set, expanded_decision_variables, a_ref)
+    objective = objective_wrapper(scenario, scenario_path, planning_problem_set, expanded_decision_variables, a_ref)
 
     # Run SciPy's Simulated Annealing
     result = dual_annealing(objective, bounds=bounds, maxiter=max_iter, initial_temp=initial_temp, seed=42)
@@ -139,7 +143,7 @@ def run_sa_with_scipy(
     # Apply the best parameters
     best_params = list(result.x)
     updated_path = apply_variables_to_scenario(
-        scenario, planning_problem_set, best_params, expanded_decision_variables, sa=True
+        scenario, scenario_path, planning_problem_set, best_params, expanded_decision_variables, sa=True
     )
     best_area = compute_drivable_area(updated_path)
 

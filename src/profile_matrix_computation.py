@@ -4,8 +4,7 @@ import numpy as np
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
 
-import file_modification
-import reach_flow
+from . import file_modification, reach_flow
 
 
 def get_valid_perturbation_step(

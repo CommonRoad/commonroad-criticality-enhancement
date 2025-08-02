@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
-from numpy import ndarray
 
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -17,10 +16,10 @@ from optimization import optimize
 def run_full_optimization_pipeline(
     scenario_path: str,
     decision_variables: list,
-    iterations: int = 40,
+    iterations: int = 10,
     a_ref_input: float = 1.0,
     semantics: str = "true",
-) -> ndarray:
+) -> int:
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     # Print vehicle IDs for easier defining semantics (e.g. "Behind_V311")
@@ -63,10 +62,8 @@ def run_full_optimization_pipeline(
     # reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
     # reach_flow.plot(area_original, area_modified)
 
-    print(f"original area: {sum(area_original)}")
-    print(f"modified area: {sum(area_modified)}")
-    print(f"first: {sum((area_original - a_ref_input) ** 2)}")
-    print(f"second: {sum((area_modified - a_ref_input) ** 2)}")
+    print(f"original area: {sum((area_original - a_ref_input) ** 2)}")
+    print(f"modified area: {sum((area_modified - a_ref_input) ** 2)}")
 
     return sum((area_modified - a_ref_input) ** 2)
 
@@ -79,6 +76,8 @@ def run_full_optimization_pipeline(
 # scenario_path = PROJECT_ROOT / "scenarios" / "BEL_Putte-3_1_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "C-DEU_B471-1_3_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_IV21-2_1_T-1.xml"
-scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-26_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-26_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "ITA_Foggia-6_1_T-1.xml"
 
-run_full_optimization_pipeline(str(scenario_path), [("ego", "position"), ("ego", "velocity")])
+
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "position"), ("ego", "velocity")])

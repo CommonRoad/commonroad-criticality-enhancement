@@ -7,9 +7,7 @@ from commonroad.planning.planning_problem import PlanningProblem, PlanningProble
 from commonroad.scenario.scenario import Scenario
 from numpy import ndarray
 
-import file_modification
-import profile_matrix_computation
-import reach_flow
+from . import file_modification, profile_matrix_computation, reach_flow
 
 
 def optimize_iteration(

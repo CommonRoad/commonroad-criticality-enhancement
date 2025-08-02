@@ -49,7 +49,7 @@ def run_comparison_pipeline(
     a_ref_input: float = 1.0,
     sa_max_iter: int = 100,
     sa_initial_temp: float = 2000.0,
-    budget: int = 50,
+    budget: int = 200,
 ) -> None:
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
@@ -106,104 +106,104 @@ def run_comparison_pipeline(
 # For this scenario for velocity the gradient-based approach gets stuck at local optimum
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
 
-scenario_path1 = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
 scenario_path2 = PROJECT_ROOT / "scenarios" / "BEL_Aarschot-6_1_T-1.xml"
 scenario_path3 = PROJECT_ROOT / "scenarios" / "ZAM_Over-1_1.xml"
 scenario_path4 = PROJECT_ROOT / "scenarios" / "DEU_Moelln-7_1_T-1.xml"
-scenario_path5 = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+scenario_path5 = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
 scenario_path6 = PROJECT_ROOT / "scenarios" / "ZAM_two_lanes_solid.xml"
 scenario_path7 = PROJECT_ROOT / "scenarios" / "BEL_Putte-3_1_T-1.xml"
 scenario_path8 = PROJECT_ROOT / "scenarios" / "C-DEU_B471-1_3_T-1.xml"
 scenario_path9 = PROJECT_ROOT / "scenarios" / "DEU_IV21-2_1_T-1.xml"
 scenario_path10 = PROJECT_ROOT / "scenarios" / "USA_US101-11_4_T-1.xml"
+scenario_path1 = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
 
 # run_comparison_pipeline(
 #     str(scenario_path1),
 #     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=50,
+#     iterations=3,
 #     a_ref_input=1.0,
-#     sa_max_iter=200,
+#     sa_max_iter=6,
 #     sa_initial_temp=500.0,
-#     budget=500,
+#     budget=25,
 # )
 # run_comparison_pipeline(
 #     str(scenario_path2),
 #     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=30,
+#     iterations=4,
 #     a_ref_input=1.0,
-#     sa_max_iter=50,
+#     sa_max_iter=8,
 #     sa_initial_temp=500.0,
-#     budget=150,
+#     budget=30,
 # )
 # run_comparison_pipeline(
 #     str(scenario_path3),
 #     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=30,
+#     iterations=3,
 #     a_ref_input=1.0,
-#     sa_max_iter=50,
+#     sa_max_iter=6,
 #     sa_initial_temp=500.0,
-#     budget=150,
+#     budget=18,
 # )
 # run_comparison_pipeline(
 #     str(scenario_path4),
 #     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=30,
+#     iterations=3,
 #     a_ref_input=1.0,
-#     sa_max_iter=50,
+#     sa_max_iter=10,
 #     sa_initial_temp=500.0,
-#     budget=150,
+#     budget=20,
 # )
 # run_comparison_pipeline(
 #     str(scenario_path5),
 #     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=30,
+#     iterations=3,
 #     a_ref_input=1.0,
-#     sa_max_iter=50,
+#     sa_max_iter=8,
 #     sa_initial_temp=500.0,
-#     budget=150,
+#     budget=40,
 # )
 # run_comparison_pipeline(
 #     str(scenario_path6),
 #     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=30,
+#     iterations=5,
 #     a_ref_input=1.0,
-#     sa_max_iter=50,
+#     sa_max_iter=1,
 #     sa_initial_temp=500.0,
-#     budget=150,
+#     budget=13,
 # )
 # run_comparison_pipeline(
 #     str(scenario_path7),
 #     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=30,
+#     iterations=3,
 #     a_ref_input=1.0,
-#     sa_max_iter=50,
+#     sa_max_iter=9,
 #     sa_initial_temp=500.0,
-#     budget=150,
+#     budget=29,
 # )
 # run_comparison_pipeline(
 #     str(scenario_path8),
 #     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=28,
+#     iterations=3,
 #     a_ref_input=1.0,
-#     sa_max_iter=50,
+#     sa_max_iter=6,
 #     sa_initial_temp=500.0,
-#     budget=150,
+#     budget=15,
 # )
 # run_comparison_pipeline(
 #     str(scenario_path9),
 #     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=30,
+#     iterations=4,
 #     a_ref_input=1.0,
-#     sa_max_iter=50,
+#     sa_max_iter=4,
 #     sa_initial_temp=500.0,
-#     budget=150,
+#     budget=17,
 # )
-# run_comparison_pipeline(
-#     str(scenario_path10),
-#     decision_variables=[("ego", "velocity"), ("ego", "position")],
-#     iterations=30,
-#     a_ref_input=1.0,
-#     sa_max_iter=50,
-#     sa_initial_temp=500.0,
-#     budget=150,
-# )
+run_comparison_pipeline(
+    str(scenario_path10),
+    decision_variables=[("ego", "velocity"), ("ego", "position")],
+    iterations=3,
+    a_ref_input=1.0,
+    sa_max_iter=3,
+    sa_initial_temp=500.0,
+    budget=20,
+)
