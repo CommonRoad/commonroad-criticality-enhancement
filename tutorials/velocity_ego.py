@@ -4,13 +4,11 @@ from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
 
+from src import optimization, reach_flow
+
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# Add src and scenario directories to sys.path
-sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
-import optimization
-import reach_flow
 
 
 def run_full_optimization_pipeline(
