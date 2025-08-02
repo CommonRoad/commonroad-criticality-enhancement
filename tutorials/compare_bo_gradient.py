@@ -6,6 +6,12 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 
+# Get the root directory (two levels up from this file)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Add src and scenario directories to sys.path
+sys.path.append(str(PROJECT_ROOT / "src"))
+sys.path.append(str(PROJECT_ROOT / "scenarios"))
 import reach_flow
 from bo import run_bo_multi_variable
 from optimization import optimize
@@ -81,19 +87,13 @@ def run_comparison_pipeline(
     plot_area_over_time(area_original, area_gradient, bo_area)
 
 
-# Get the root directory (two levels up from this file)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-# Add src and scenario directories to sys.path
-sys.path.append(str(PROJECT_ROOT / "src"))
-sys.path.append(str(PROJECT_ROOT / "scenarios"))
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "ZAM_two_lanes_solid.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "ITA_Empoli-2_5_T-1.xml"
 run_comparison_pipeline(
     str(scenario_path),
     decision_variables=[("ego", "position"), ("ego", "velocity")],
-    iterations=10,
+    iterations=1,
     a_ref_input=1.0,
-    budget=50,
+    budget=500,
 )

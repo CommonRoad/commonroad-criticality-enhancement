@@ -1,12 +1,16 @@
+"""
+This script can be run using the following command:
+    $> python3 <path_to_script> > output.log 2>&1 &
+Now the main process is running detached. You can check the progress with the following command:
+    $> tail -n 100 output.log | nl
+"""
+
 import json
 import multiprocessing
 import os
 import sys
 from multiprocessing import current_process
 from pathlib import Path
-
-from commonroad.common.file_reader import CommonRoadFileReader
-from numpy import ndarray
 
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -16,14 +20,12 @@ sys.path.append(str(PROJECT_ROOT / "scenarios"))
 sys.path.append(str(PROJECT_ROOT / "tutorials"))
 from velocity_and_position import run_full_optimization_pipeline
 
-import reach_flow
-from optimization import optimize
-
 SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.joinpath("scenarios")
 
 SCENARIOS_LIST = [os.path.join(SCENARIOS_ROOT, name) for name in os.listdir(SCENARIOS_ROOT)]
+# SCENARIOS_LIST = [os.path.join(SCENARIOS_ROOT, "DEU_Flensburg-94_1_T-1.xml")]
 
-ITERATIONS_DEFAULT = 15
+ITERATIONS_DEFAULT = 5
 
 
 ### WRAPPERS START
@@ -58,9 +60,9 @@ scores = {
     "position": {"files": [], "score": 0},
     "both": {"files": [], "score": 0},
 }
-corrupted_scenarios = []
 
-with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+with multiprocessing.Pool(processes=multiprocessing.cpu_count() - 32) as pool:
+    print(f"CPU COUNT: {multiprocessing.cpu_count()}")
     params = SCENARIOS_LIST
     try:
         result_velocity = pool.map(run_velocity, params)
@@ -78,12 +80,16 @@ with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         print(f"[ERROR] Exception encountered: {e}")
 
 for i in range(len(SCENARIOS_LIST)):
-    results = {"velocity": result_velocity[i], "position": result_position[i], "both": result_both[i]}
+    scenario_path = SCENARIOS_LIST[i]
+    v = result_velocity[i]
+    p = result_position[i]
+    b = result_both[i]
 
+    results = {"velocity": v, "position": p, "both": b}
     best_optimized = min(results, key=results.get)
-    print(best_optimized, results[best_optimized])
+    print(f"[OK] {scenario_path}: best = {best_optimized} ({results[best_optimized]})")
 
-    scores[best_optimized]["files"].append(SCENARIOS_LIST[i])
+    scores[best_optimized]["files"].append(scenario_path)
     scores[best_optimized]["score"] += 1
 
 print(f"""{scores["velocity"]["score"]=}""")
@@ -92,9 +98,5 @@ print(f"""{scores["both"]["score"]=}""")
 
 with open("results.json", "w") as file:
     json.dump(scores, file, indent=4)
-
-with open("corrupted_scenarios.txt", "w") as file:
-    for scenario in corrupted_scenarios:
-        file.write(scenario + "\n")
 
 print("Done writing to file!")

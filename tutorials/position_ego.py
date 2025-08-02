@@ -3,6 +3,12 @@ from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
 
+# Get the root directory (two levels up from this file)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Add src and scenario directories to sys.path
+sys.path.append(str(PROJECT_ROOT / "src"))
+sys.path.append(str(PROJECT_ROOT / "scenarios"))
 import reach_flow
 from optimization import optimize
 
@@ -49,13 +55,6 @@ def run_full_optimization_pipeline(
 
     reach_flow.plot(area_original, area_modified)
 
-
-# Get the root directory (two levels up from this file)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-# Add src and scenario directories to sys.path
-sys.path.append(str(PROJECT_ROOT / "src"))
-sys.path.append(str(PROJECT_ROOT / "scenarios"))
 
 # Choose a scenario to optimize
 # scenario_path_1 = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
