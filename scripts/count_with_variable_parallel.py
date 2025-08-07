@@ -12,27 +12,25 @@ import sys
 from multiprocessing import current_process
 from pathlib import Path
 
+from tutorials import velocity_and_position
+
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# Add src and scenario directories to sys.path
-sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
-sys.path.append(str(PROJECT_ROOT / "tutorials"))
-from velocity_and_position import run_full_optimization_pipeline
 
 SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.joinpath("scenarios")
 
 SCENARIOS_LIST = [os.path.join(SCENARIOS_ROOT, name) for name in os.listdir(SCENARIOS_ROOT)]
 # SCENARIOS_LIST = [os.path.join(SCENARIOS_ROOT, "DEU_Flensburg-94_1_T-1.xml")]
 
-ITERATIONS_DEFAULT = 5
+ITERATIONS_DEFAULT = 50
 
 
 ### WRAPPERS START
 def run_velocity(scenario, iterations=ITERATIONS_DEFAULT):
     p = current_process()
     print(f"[PID {p.pid}] Started process '{p.name}' for scenario: {scenario}")
-    return run_full_optimization_pipeline(
+    return velocity_and_position.run_full_optimization_pipeline(
         scenario_path=scenario, decision_variables=[("ego", "velocity")], iterations=iterations
     )
 
@@ -40,7 +38,7 @@ def run_velocity(scenario, iterations=ITERATIONS_DEFAULT):
 def run_position(scenario, iterations=ITERATIONS_DEFAULT):
     p = current_process()
     print(f"[PID {p.pid}] Started process '{p.name}' for scenario: {scenario}")
-    return run_full_optimization_pipeline(
+    return velocity_and_position.run_full_optimization_pipeline(
         scenario_path=scenario, decision_variables=[("ego", "position")], iterations=iterations
     )
 
@@ -48,7 +46,7 @@ def run_position(scenario, iterations=ITERATIONS_DEFAULT):
 def run_both(scenario, iterations=ITERATIONS_DEFAULT):
     p = current_process()
     print(f"[PID {p.pid}] Started process '{p.name}' for scenario: {scenario}")
-    return run_full_optimization_pipeline(
+    return velocity_and_position.run_full_optimization_pipeline(
         scenario_path=scenario, decision_variables=[("ego", "velocity"), ("ego", "position")], iterations=iterations
     )
 

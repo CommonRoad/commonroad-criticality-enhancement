@@ -13,7 +13,7 @@ python = ">=3.10, <3.11"
 commonroad-io = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-io.git", branch = "develop" }
 
 # Following dependencies must be included to run with poetry!
-# cr_reach_flow = {  git = "git@gitlab.lrz.de:cps/commonroad/commonroad-reach-flow.git", branch = "develop" }
+# cr_reach_flow = {  git = "git@gitlab.lrz.de:cps/commonroad/commonroad-reach-flow.git", branch = "develop", commit_SHA = "49006bfeff12a1a3fc10bafa9381901ca10f8e4c" }
 # commonroad-route-planner = { git = "git@gitlab.lrz.de:cps/commonroad-route-planner.git", branch = "develop" }
 # commonroad-io = "^2024.3"
 # commonroad-reach = "^2024.1"

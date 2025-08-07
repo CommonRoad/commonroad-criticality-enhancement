@@ -1,9 +1,10 @@
 import time
 from typing import Tuple
 
-import commonroad_dc.pycrccosy as pycrccosy
+import commonroad_clcs.pycrccosy as pycrccosy
 import commonroad_route_planner.fast_api.fast_api as route_planner
 import cr_reach_flow.cr_reach_flow_core as core
+import matplot2tikz
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblem
@@ -74,7 +75,7 @@ def draw_reach_sets_end(
     plt.show()
 
 
-def plot(area_original: np.ndarray, area_modified: np.ndarray) -> None:
+def plot(area_original: np.ndarray, area_modified: np.ndarray, output_path="plot.tex") -> None:
     """
     Plots a comparison of drivable area over time for original and modified scenarios.
 
@@ -85,6 +86,8 @@ def plot(area_original: np.ndarray, area_modified: np.ndarray) -> None:
 
     area_modified : np.ndarray
         1D array of drivable area values for the modified scenario.
+    output_path : str
+        Path to save the TikZ output (e.g., 'myplot.tex')
 
     Returns
     -------
@@ -92,14 +95,14 @@ def plot(area_original: np.ndarray, area_modified: np.ndarray) -> None:
     """
     time_steps = np.arange(len(area_original))
     plt.figure(figsize=(10, 5))
-    plt.plot(time_steps, area_original, label="Original Scenario", marker="o")
-    plt.plot(time_steps, area_modified, label="Modified Scenario", marker="s")
+    plt.plot(time_steps, area_original, label="Original")
+    plt.plot(time_steps, area_modified, label="Modified")
     plt.xlabel("Time Step")
     plt.ylabel("Drivable Area")
-    plt.title("Comparison of Drivable Areas Over Time")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    matplot2tikz.save(output_path, axis_width="7cm", axis_height="5cm")
     plt.show()
 
 
@@ -132,7 +135,6 @@ def compute_area(graph: DynamicReachGraph, step_start: int, step_end: int) -> np
             nodes = graph.get_nodes_at_step(t)
             if not nodes:
                 print(f"Warning: No reachable nodes at step {t}")
-                print(f"Area is 0 at step {t}")
                 raise ValueError()
 
         except AttributeError:
@@ -239,7 +241,7 @@ def create_reach_graph(
     # Resample the reference path at 2.0-meter intervals to ensure uniform spacing
     reference_path = pycrccosy.Util.resample_polyline(route.reference_path, 2.0)
     clcs = pycrccosy.CurvilinearCoordinateSystem(reference_path)
-    print(f"Route lanelet IDs: {lanelet_ids}")
+    # print(f"Route lanelet IDs: {lanelet_ids}")
 
     # create collision checker
     cc = CollisionCheckerFactory(step_start, step_end, inflation_radius).create_curvilinear_collision_checker(
@@ -289,22 +291,13 @@ def create_reach_graph(
     rs = core.executors.DynamicReachExecutor(step_start, step_end, init, layer, post)
 
     # Initialization of the reachable sets from the planning problem
-    tic = time.perf_counter()
     rs.initialize(*initialize_from_planning_problem(planning_problem))
-    toc = time.perf_counter()
-    print(f"Initialization took {toc - tic:3f} seconds")
 
     # The actual computation of the reachable set
-    tic = time.perf_counter()
     rs.compute()
-    toc = time.perf_counter()
-    print(f"Reachable set computation took {toc - tic:3f} seconds")
 
     # Create reachability graph
-    tic = time.perf_counter()
     graph = rs.get_post_processed_reach_graph()
-    toc = time.perf_counter()
-    print(f"Graph creation took {toc - tic:3f} seconds")
 
     # Check if the graph contains any reachable nodes
     has_nodes = any(len(graph.get_nodes_at_step(t)) > 0 for t in range(step_start + 1, step_end + 1))

@@ -235,9 +235,6 @@ def differentiate_reachable_set_wrt_position(
     else:
         vehicle.initial_state.position = np.array([original_position[0], original_position[1] + delta_pos])
 
-    print("original position: ", original_position)
-    print("modified position: ", vehicle.initial_state.position)
-
     # Save the modified scenario
     mod_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 

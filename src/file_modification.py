@@ -70,7 +70,7 @@ def save_modified_scenario(scenario: Scenario, path: str, planning_problem_set: 
 
     output_dir = Path(__file__).resolve().parent.parent / "scenarios"
     output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
-    if "_updated_gradient" not in path:
+    if "_updated_gradient" not in str(path):
         path_obj = Path(path)
         path = path_obj.with_name(path_obj.stem + "_updated_gradient" + path_obj.suffix)
     writer = CommonRoadFileWriter(scenario=scenario, planning_problem_set=planning_problem_set, decimal_precision=10)

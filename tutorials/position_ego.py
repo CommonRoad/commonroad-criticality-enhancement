@@ -13,7 +13,7 @@ sys.path.append(str(PROJECT_ROOT / "scenarios"))
 def run_full_optimization_pipeline(
     scenario_path: str,
     decision_variables: list,
-    iterations: int = 20,
+    iterations: int = 10,
     a_ref_input: float = 1.0,
     semantics: str = "true",
 ) -> None:
@@ -54,10 +54,10 @@ def run_full_optimization_pipeline(
 
 
 # Choose a scenario to optimize
-# scenario_path_1 = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
-scenario_path_2 = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
-# run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V310")
+scenario_path_1 = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+# scenario_path_2 = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
+run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")])
 # run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V36")
 
-run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")])
-run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")], semantics="Behind_V35")
+# run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")])
+# run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")], semantics="Behind_V8")
