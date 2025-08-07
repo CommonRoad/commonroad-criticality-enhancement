@@ -302,7 +302,7 @@ def optimize(
                 continue
 
             # Scale update to ensure conservative changes for feasibility
-            delta = (float(d_x.value[var_index])) * 0.5
+            delta = float(d_x.value[var_index]) * 0.5
             last_change = delta
 
             # Apply the update

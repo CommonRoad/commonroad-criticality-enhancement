@@ -13,7 +13,7 @@ sys.path.append(str(PROJECT_ROOT / "scenarios"))
 def run_full_optimization_pipeline(
     scenario_path: str,
     decision_variables: list,
-    iterations: int = 10,
+    iterations: int = 3,
     a_ref_input: float = 1.0,
     semantics: str = "true",
 ) -> int:
@@ -74,7 +74,8 @@ def run_full_optimization_pipeline(
 # scenario_path = PROJECT_ROOT / "scenarios" / "C-DEU_B471-1_3_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_IV21-2_1_T-1.xml"
 # scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-26_1_T-1.xml"
-# scenario_path = PROJECT_ROOT / "scenarios" / "ITA_Foggia-6_1_T-1.xml"
+scenario_path = PROJECT_ROOT / "scenarios" / "ITA_Foggia-6_1_T-1.xml"
 
 
-# run_full_optimization_pipeline(str(scenario_path), [("ego", "position"), ("ego", "velocity")])
+run_full_optimization_pipeline(str(scenario_path), [("ego", "position"), ("ego", "velocity")])
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity"), ("ego", "position")])

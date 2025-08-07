@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+import matplot2tikz
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
@@ -103,17 +104,18 @@ def compare_plot(
     - None
     """
     time_steps = np.arange(len(area_original))
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(12, 4))
     plt.plot(time_steps, area_original, label="Original", color="gray", linestyle="--")
+    plt.plot(time_steps, area_modified, label="Modified", color="green")
     plt.plot(time_steps, area_original_rotated, label="Original Rotated", color="blue")
     plt.plot(time_steps, area_rotated, label="Modified Rotated", color="red")
-    plt.plot(time_steps, area_modified, label="Modified", color="green")
     plt.xlabel("Time Step")
     plt.ylabel("Drivable Area")
     plt.title("Comparison of Drivable Areas Over Time")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    matplot2tikz.save("rotated.tex", axis_width="12cm", axis_height="6cm")
     plt.show()
 
 

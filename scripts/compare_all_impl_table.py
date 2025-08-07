@@ -101,7 +101,7 @@ with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
     except Exception as e:
         print(f"[ERROR] Exception occurred: {e}")
 
-# Printing the thingies to put directly into LaTeX
+# Printing to put directly into LaTeX
 
 print("""\\begin{table}[H]""")
 print("""\t\\centering""")
