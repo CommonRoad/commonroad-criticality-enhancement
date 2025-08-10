@@ -115,6 +115,7 @@ def compare_plot(
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    plt.margins(x=0)
     matplot2tikz.save("rotated.tex", axis_width="12cm", axis_height="6cm")
     plt.show()
 

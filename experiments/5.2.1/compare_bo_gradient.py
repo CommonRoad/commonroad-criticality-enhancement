@@ -85,7 +85,8 @@ def run_comparison_pipeline(
 
 
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
-
+# scenario_path = PROJECT_ROOT / "scenarios" / "ZAM_two_lanes_solid.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "ITA_Empoli-2_5_T-1.xml"
 run_comparison_pipeline(
     str(scenario_path),
     decision_variables=[("ego", "position"), ("ego", "velocity")],

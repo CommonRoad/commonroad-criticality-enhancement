@@ -55,10 +55,9 @@ def run_full_optimization_pipeline(
 
 # Choose a scenario to optimize
 scenario_path_1 = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+# scenario_path_2 = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
 run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")])
-run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V36")
+# run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V36")
 
-
-scenario_path_2 = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
-run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")])
-run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")], semantics="Behind_V8")
+# run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")])
+# run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")], semantics="Behind_V8")

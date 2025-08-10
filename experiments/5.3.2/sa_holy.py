@@ -1,5 +1,6 @@
-from src import sa
 from pathlib import Path
+
+from src import sa
 
 # ===== CONFIGURATION ===== #
 SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.joinpath("scenarios")
@@ -21,11 +22,12 @@ DECISION_VARS = [("ego", "velocity")]
 A_REF = 1.0
 
 iteration_counter = {"count": 0}
+
+
 def checkpoint_saver_SA(x, f, context):
     iteration_counter["count"] += 1
     print(
-        f"Current SA Iteration: {iteration_counter['count']} "
-        f"(after {sa.evaluation_counter['count']} evaluations)"
+        f"Current SA Iteration: {iteration_counter['count']} " f"(after {sa.evaluation_counter['count']} evaluations)"
     )
 
     milestones = (5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80)
@@ -36,7 +38,7 @@ def checkpoint_saver_SA(x, f, context):
         f_out.write(f"Best f(x) so far: {f}\n")
         f_out.write(f"Evaluations so far: {sa.evaluation_counter['count']}\n")
 
-sa.run_sa_with_scipy(scenario_path=SCENARIOS_LIST[9],
-                     decision_variables=DECISION_VARS,
-                     max_iter=400,
-                     callback=checkpoint_saver_SA)
+
+sa.run_sa_with_scipy(
+    scenario_path=SCENARIOS_LIST[9], decision_variables=DECISION_VARS, max_iter=400, callback=checkpoint_saver_SA
+)

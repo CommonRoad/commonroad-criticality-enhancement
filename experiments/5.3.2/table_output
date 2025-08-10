@@ -1,0 +1,32 @@
+### This table was printed in the end of the output, for the thesis the table was slightly reformated,
+### but all measurements are the same
+\begin{table}[H]
+	\centering
+	\caption{Drivable Area for each Optimizer}
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		\textbf{Approach:} & Original Area & Gradient & SA & BO \\
+		\hline
+		\textbf{DEU\_Flensburg-94\_1\_T-1.xml} & 463139 & 2546 & 12933 & 70128 \\
+		\hline
+		\textbf{BEL\_Aarschot-6\_1\_T-1.xml} & 559121 & 32095 & 115285 & 210098 \\
+		\hline
+		\textbf{ZAM\_Over-1\_1.xml} & 5594 & 196 & 86 & 32716 \\
+		\hline
+		\textbf{DEU\_Moelln-7\_1\_T-1.xml} & 374114 & 134864 & 58037 & 12232 \\
+		\hline
+		\textbf{DEU\_Lohmar-32\_1\_T-1.xml} & 388671 & 15359 & 485 & 12499 \\
+		\hline
+		\textbf{ZAM\_two\_lanes\_solid.xml} & 51629 & 225 & 249 & 53208 \\
+		\hline
+		\textbf{BEL\_Putte-3\_1\_T-1.xml} & 406980 & 365907 & 40340 & 162681 \\
+		\hline
+		\textbf{C-DEU\_B471-1\_3\_T-1.xml} & 11903 & 157 & 133 & 19248 \\
+		\hline
+		\textbf{DEU\_IV21-2\_1\_T-1.xml} & 709739 & 311106 & 835 & 4440 \\
+		\hline
+		\textbf{USA\_US101-11\_4\_T-1.xml} & 787464 & 354229 & 1682 & 19142 \\
+		\hline
+	\end{tabular}
+	\label{tab:combined}
+\end{table}

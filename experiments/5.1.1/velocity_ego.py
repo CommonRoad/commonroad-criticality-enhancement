@@ -15,7 +15,7 @@ sys.path.append(str(PROJECT_ROOT / "scenarios"))
 def run_full_optimization_pipeline(
     scenario_path: str,
     decision_variables: list,
-    iterations: int = 10,
+    iterations: int = 1,
     a_ref_input: float = 1.0,
     semantics: str = "true",
 ) -> None:
@@ -88,5 +88,11 @@ def run_full_optimization_pipeline(
     print(f"Gradient optimization time: {end - start:.2f} seconds")
 
 
+# Choose a scenario as an input
+# scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Guetersloh-65_2_T-1.xml"
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-26_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "ZAM_two_lanes_solid.xml"
+
 run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")])
