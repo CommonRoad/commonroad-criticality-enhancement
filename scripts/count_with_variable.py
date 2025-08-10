@@ -3,13 +3,11 @@ import os
 import sys
 from pathlib import Path
 
+from tutorials import velocity_and_position
+
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# Add src and scenario directories to sys.path
-sys.path.append(str(PROJECT_ROOT / "src"))
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
-sys.path.append(str(PROJECT_ROOT / "tutorials"))
-from velocity_and_position import run_full_optimization_pipeline
 
 SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.joinpath("scenarios")
 
@@ -30,15 +28,15 @@ for scenario in SCENARIOS_LIST:
     print(f"RUN {count} of {TOTAL}")
     print("**********************************************")
     try:
-        result_velocity = run_full_optimization_pipeline(
+        result_velocity = velocity_and_position.run_full_optimization_pipeline(
             scenario_path=str(SCENARIOS_ROOT / scenario), decision_variables=[("ego", "velocity")]
         )
         print("********** >>>> VELOCITY DONE <<<< **********")
-        result_position = run_full_optimization_pipeline(
+        result_position = velocity_and_position.run_full_optimization_pipeline(
             scenario_path=str(SCENARIOS_ROOT / scenario), decision_variables=[("ego", "position")]
         )
         print("********** >>>> POSITION DONE <<<< **********")
-        result_both = run_full_optimization_pipeline(
+        result_both = velocity_and_position.run_full_optimization_pipeline(
             scenario_path=str(SCENARIOS_ROOT / scenario), decision_variables=[("ego", "position"), ("ego", "velocity")]
         )
         print("********** >>>> BOTH DONE <<<< **********")

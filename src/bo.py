@@ -63,7 +63,7 @@ def objective_multi_var(
 def run_bo_multi_variable(
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
-    budget: int = 50,
+    budget: int = 100,
     a_ref: float = 1.0,
 ) -> Tuple[List[float], ndarray]:
     """
@@ -78,7 +78,7 @@ def run_bo_multi_variable(
         Variables to optimize, e.g. [("ego", "velocity")]
 
     budget : int, optional
-        Number of evaluations allowed. Defaults to 50.
+        Number of evaluations allowed. Defaults to 100.
 
     a_ref : float, optional
         The reference area. Defaults to 1.0.

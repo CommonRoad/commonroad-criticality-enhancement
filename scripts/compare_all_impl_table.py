@@ -70,11 +70,11 @@ def wrapper_rc_pipeline(path: str):
     return run_comparison_pipeline(
         path,
         decision_variables=[("ego", "velocity"), ("ego", "position")],
-        iterations=3,
+        iterations=50,
         a_ref_input=1.0,
-        sa_max_iter=50,
+        sa_max_iter=200,
         sa_initial_temp=500.0,
-        budget=150,
+        budget=500,
     )
 
 
