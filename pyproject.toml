@@ -33,6 +33,7 @@ boost = "*"
 eigen = "*"
 spot = "*"
 mkdocstrings = {extras = ["python"], version = "^0.29.1"}
+matplot2tikz = "^0.4.1"
 
 [tool.poetry.group.tests]
 optional = true
