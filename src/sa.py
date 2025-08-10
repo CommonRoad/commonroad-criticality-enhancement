@@ -9,6 +9,8 @@ from scipy.optimize import dual_annealing
 from .file_modification import apply_variables_to_scenario
 from .reach_flow import compute_drivable_area
 
+evaluation_counter = {"count": 0}
+
 
 def objective_wrapper(
     scenario: Scenario,
@@ -46,6 +48,10 @@ def objective_wrapper(
 
     def objective(params: List[float]) -> float:
         try:
+            # Increment evaluation count
+            evaluation_counter["count"] += 1
+            print(f"Objective evaluation #{evaluation_counter['count']}")
+
             updated_path = apply_variables_to_scenario(
                 scenario, path, planning_problem_set, list(params), decision_variables, sa=True
             )
@@ -66,6 +72,7 @@ def run_sa_with_scipy(
     max_iter: int = 30,
     initial_temp: float = 500.0,
     a_ref: float = 1.0,
+    callback: any = None,
 ) -> Tuple[List[float], ndarray]:
     """
     Runs simulated annealing optimization on decision variables to minimize drivable area.
@@ -86,6 +93,9 @@ def run_sa_with_scipy(
 
     a_ref : float, optional
         The reference area. Defaults to 1.0.
+
+    callback : any
+        The callback which is directly passed to the SA method.
 
     Returns
     -------
@@ -138,7 +148,9 @@ def run_sa_with_scipy(
     objective = objective_wrapper(scenario, scenario_path, planning_problem_set, expanded_decision_variables, a_ref)
 
     # Run SciPy's Simulated Annealing
-    result = dual_annealing(objective, bounds=bounds, maxiter=max_iter, initial_temp=initial_temp, seed=42)
+    result = dual_annealing(
+        objective, bounds=bounds, maxiter=max_iter, initial_temp=initial_temp, seed=42, callback=callback
+    )
 
     # Apply the best parameters
     best_params = list(result.x)

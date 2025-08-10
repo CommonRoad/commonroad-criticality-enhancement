@@ -101,6 +101,7 @@ def plot(area_original: np.ndarray, area_modified: np.ndarray, output_path="plot
     plt.ylabel("Drivable Area")
     plt.legend()
     plt.grid(True)
+    plt.margins(x=0)
     plt.tight_layout()
     matplot2tikz.save(output_path, axis_width="7cm", axis_height="5cm")
     plt.show()

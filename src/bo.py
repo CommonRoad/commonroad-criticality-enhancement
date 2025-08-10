@@ -65,6 +65,7 @@ def run_bo_multi_variable(
     decision_variables: List[Tuple[str, str]],
     budget: int = 100,
     a_ref: float = 1.0,
+    callback: any = None,
 ) -> Tuple[List[float], ndarray]:
     """
     Runs Bayesian Optimization over multiple decision variables to minimize drivable area.
@@ -82,6 +83,9 @@ def run_bo_multi_variable(
 
     a_ref : float, optional
         The reference area. Defaults to 1.0.
+
+    callback : any
+        The callbacks are directly passed onto the underlying BO method.
 
     Returns
     -------
@@ -137,13 +141,7 @@ def run_bo_multi_variable(
         )
 
     # Run Gaussian Process-based Bayesian Optimization
-    result = gp_minimize(
-        wrapped_objective,
-        space,
-        n_calls=budget,
-        random_state=42,
-        verbose=False,
-    )
+    result = gp_minimize(wrapped_objective, space, n_calls=budget, random_state=42, verbose=False, callback=callback)
 
     # Apply the best parameters
     best_params = result.x
