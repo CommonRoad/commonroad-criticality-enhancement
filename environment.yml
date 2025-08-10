@@ -1,4 +1,4 @@
-name: new_setup
+name: myenv
 channels:
 - conda-forge
 - defaults
@@ -33,6 +33,7 @@ dependencies:
   - commonroad-io==2024.3
   - commonroad-route-planner==2024.1.1
   - commonroad-vehicle-models==3.0.2
+  - matplot2tikz
 
 # **IMPORTANT**
 # NOTE: This script lists all project dependencies file for creating a conda environment.
