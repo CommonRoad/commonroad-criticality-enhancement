@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 from src import optimization, reach_flow
 
 # Get the root directory (two levels up from this file)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 
 
@@ -163,7 +163,6 @@ def run_full_optimization_pipeline(
 
 
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Guetersloh-65_2_T-1.xml"
-# scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
 reader = CommonRoadFileReader(str(scenario_path))
 scenario, pps = reader.open()
 
@@ -173,6 +172,6 @@ rotated_scenario, rotated_pps = rotate_scenario_90_ccw(scenario, pps)
 # Save rotated scenario
 rotated_path = PROJECT_ROOT / "scenarios" / "rotated_scenario.xml"
 writer = CommonRoadFileWriter(rotated_scenario, rotated_pps, scenario.author, scenario.affiliation)
-writer.write_to_file(rotated_path, OverwriteExistingFile.ALWAYS)
+writer.write_to_file(str(rotated_path), OverwriteExistingFile.ALWAYS)
 
-run_full_optimization_pipeline(rotated_path, scenario_path, [("ego", "velocity")])
+run_full_optimization_pipeline(str(rotated_path), str(scenario_path), [("ego", "velocity")])

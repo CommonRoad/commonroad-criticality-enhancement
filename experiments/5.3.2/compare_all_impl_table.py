@@ -9,6 +9,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from src import bo, optimization, reach_flow, sa
 
 
+# This script runs all approaches for the 10 scenarios an parallel and generates the table.
 def run_comparison_pipeline(
     scenario_path: str,
     decision_variables: List[Tuple[str, str]],
@@ -78,7 +79,7 @@ def wrapper_rc_pipeline(path: str):
     )
 
 
-SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.joinpath("scenarios")
+SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.parent.joinpath("scenarios")
 SCENARIOS_LIST = [
     "DEU_Flensburg-94_1_T-1.xml",
     "BEL_Aarschot-6_1_T-1.xml",
@@ -94,6 +95,7 @@ SCENARIOS_LIST = [
 SCENARIOS_LIST = [os.path.join(SCENARIOS_ROOT, name) for name in SCENARIOS_LIST]
 print(SCENARIOS_LIST)
 
+# Run in parallel
 with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
     params = SCENARIOS_LIST
     try:

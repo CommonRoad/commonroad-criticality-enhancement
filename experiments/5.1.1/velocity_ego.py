@@ -8,7 +8,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from src import optimization, reach_flow
 
 # Get the root directory (two levels up from this file)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 
 
@@ -88,11 +88,13 @@ def run_full_optimization_pipeline(
     print(f"Gradient optimization time: {end - start:.2f} seconds")
 
 
-# Choose a scenario as an input
-# scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
-# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Guetersloh-65_2_T-1.xml"
 scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
-# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-26_1_T-1.xml"
-# scenario_path = PROJECT_ROOT / "scenarios" / "ZAM_two_lanes_solid.xml"
 
-run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")])
+
+# Run all to reproduce the table values
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")], iterations=1)
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")], iterations=2)
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")], iterations=4)
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")], iterations=6)
+# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")], iterations=8)
+run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")], iterations=10)

@@ -6,7 +6,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from src import optimization, reach_flow
 
 # Get the root directory (two levels up from this file)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 
 
@@ -53,11 +53,8 @@ def run_full_optimization_pipeline(
     reach_flow.plot(area_original, area_modified)
 
 
-# Choose a scenario to optimize
 scenario_path_1 = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
-# scenario_path_2 = PROJECT_ROOT / "scenarios" / "USA_US101-8_1_T-1.xml"
-run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")])
-# run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V36")
 
-# run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")])
-# run_full_optimization_pipeline(str(scenario_path_2), [("ego", "position")], semantics="Behind_V8")
+# Run both to reproduce the figures
+run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")])
+run_full_optimization_pipeline(str(scenario_path_1), [("ego", "position")], semantics="Behind_V36")

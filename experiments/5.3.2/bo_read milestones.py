@@ -5,7 +5,7 @@ from scipy.optimize import OptimizeResult
 from src import bo
 
 # ===== CONFIGURATION ===== #
-SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.joinpath("scenarios")
+SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.parent.joinpath("scenarios")
 SCENARIOS_LIST = [
     "DEU_Flensburg-94_1_T-1.xml",
     "BEL_Aarschot-6_1_T-1.xml",
@@ -75,6 +75,7 @@ def checkpoint_saver_BO(res: OptimizeResult):
         400,
     )
     current_iteration = len(res.x_iters)
+    # Save data when a milestone iteration is reached
     if current_iteration in milestones:
         with open(f"""BO_{current_iteration}.txt""", "w") as f:
             f.write("Milestone achieved in Iteration: " + str(len(res.x_iters)) + "\n")
@@ -85,8 +86,11 @@ def progress_reporter_BO(res: OptimizeResult):
     print(f"""Current BO Iteration: {len(res.x_iters)}""")
 
 
+# Run bo for many iterations and the objective values will get saved at milestones
+# The results of this script were used to generate the data for the plot (mean_plot.py)
+# Run for all 10 scenarios
 bo.run_bo_multi_variable(
-    scenario_path=SCENARIOS_LIST[9],
+    scenario_path=SCENARIOS_LIST[0],
     decision_variables=DECISION_VARS,
     budget=400,
     a_ref=A_REF,

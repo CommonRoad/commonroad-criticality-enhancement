@@ -3,7 +3,7 @@ from pathlib import Path
 from src import sa
 
 # ===== CONFIGURATION ===== #
-SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.joinpath("scenarios")
+SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.parent.joinpath("scenarios")
 SCENARIOS_LIST = [
     "DEU_Flensburg-94_1_T-1.xml",
     "BEL_Aarschot-6_1_T-1.xml",
@@ -29,16 +29,16 @@ def checkpoint_saver_SA(x, f, context):
     print(
         f"Current SA Iteration: {iteration_counter['count']} " f"(after {sa.evaluation_counter['count']} evaluations)"
     )
-
-    milestones = (5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80)
-
-    # if iteration_counter["count"] in milestones:
+    # Write to file when a better objective value is computed and the samples so far (used for generating the plot)
     with open(f"SA_{iteration_counter['count']}.txt", "w") as f_out:
         f_out.write(f"Milestone achieved in Iteration: {iteration_counter['count']}\n")
         f_out.write(f"Best f(x) so far: {f}\n")
         f_out.write(f"Evaluations so far: {sa.evaluation_counter['count']}\n")
 
 
+# Run bo for many iterations and the objective values will get saved any time when it changes
+# The results of this script were used to generate the data for the plot (mean_plot.py)
+# Run for all 10 scenarios
 sa.run_sa_with_scipy(
-    scenario_path=SCENARIOS_LIST[9], decision_variables=DECISION_VARS, max_iter=400, callback=checkpoint_saver_SA
+    scenario_path=SCENARIOS_LIST[9], decision_variables=DECISION_VARS, max_iter=150, callback=checkpoint_saver_SA
 )

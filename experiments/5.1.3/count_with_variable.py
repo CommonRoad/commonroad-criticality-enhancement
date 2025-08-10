@@ -6,11 +6,12 @@ from pathlib import Path
 from tutorials import velocity_and_position
 
 # Get the root directory (two levels up from this file)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_ROOT / "scenarios"))
 
 SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.joinpath("scenarios")
 
+# Prepare all scenarios
 SCENARIOS_LIST = os.listdir(SCENARIOS_ROOT)
 
 
@@ -28,6 +29,7 @@ for scenario in SCENARIOS_LIST:
     print(f"RUN {count} of {TOTAL}")
     print("**********************************************")
     try:
+        # Run each scenario with the 3 options for decision variables
         result_velocity = velocity_and_position.run_full_optimization_pipeline(
             scenario_path=str(SCENARIOS_ROOT / scenario), decision_variables=[("ego", "velocity")]
         )
@@ -54,7 +56,7 @@ for scenario in SCENARIOS_LIST:
     scores[best_optimized]["score"] += 1
     count += 1
 
-
+# Print the counts for each decision variable
 print(f"""{scores["velocity"]["score"]=}""")
 print(f"""{scores["position"]["score"]=}""")
 print(f"""{scores["both"]["score"]=}""")
@@ -62,6 +64,7 @@ print(f"""{scores["both"]["score"]=}""")
 with open("results.json", "w") as file:
     json.dump(scores, file, indent=4)
 
+# Save scenarios that throw exception
 with open("corrupted_scenarios.txt", "w") as file:
     for scenario in corrupted_scenarios:
         file.write(scenario + "\n")

@@ -2,6 +2,7 @@ import matplot2tikz
 import matplotlib.pyplot as plt
 import numpy as np
 
+# This script contains the data from the other scripts and plots the graph
 bo1 = [
     5694373,
     3319643,

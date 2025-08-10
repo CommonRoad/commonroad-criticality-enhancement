@@ -18,6 +18,7 @@ def run_full_optimization_pipeline(
     semantics: str = "true",
 ) -> int:
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
+
     area_original = reach_flow.compute_drivable_area(scenario_path, semantics)
 
     # Run gradient-based optimization
@@ -32,17 +33,22 @@ def run_full_optimization_pipeline(
     )
     print("final_params:", final_params)
 
-    print(f"original objective: {(sum(area_original) - a_ref_input) ** 2}")
+    print(f"original area: {(sum(area_original) - a_ref_input) ** 2}")
     print(f"modified area: {(sum(area_modified) - a_ref_input) ** 2}")
 
-    return sum((area_modified - a_ref_input) ** 2)
+    return (sum(area_modified) - a_ref_input) ** 2
 
 
-scenario_path = PROJECT_ROOT / "scenarios" / "ITA_Foggia-6_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Flensburg-94_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "BEL_Aarschot-6_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "ZAM_Over-1_1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Moelln-7_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_Lohmar-32_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "ZAM_two_lanes_solid.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "BEL_Putte-3_1_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "C-DEU_B471-1_3_T-1.xml"
+# scenario_path = PROJECT_ROOT / "scenarios" / "DEU_IV21-2_1_T-1.xml"
+scenario_path = PROJECT_ROOT / "scenarios" / "USA_US101-11_4_T-1.xml"
 
-
-# Run all 4 to reproduce the table values
-run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity"), ("ego", "position")])
-# run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")])
-# run_full_optimization_pipeline(str(scenario_path), [("ego", "position")])
-# run_full_optimization_pipeline(str(scenario_path), [("ego", "position"), ("ego", "velocity")])
+# Run for all scenarios and for all milestone iteration counts to get the data for mean_plot.py
+run_full_optimization_pipeline(str(scenario_path), [("ego", "velocity")])
