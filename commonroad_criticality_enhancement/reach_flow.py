@@ -1,4 +1,4 @@
-import time
+import logging
 from typing import Tuple
 
 import commonroad_clcs.pycrccosy as pycrccosy
@@ -16,6 +16,8 @@ from cr_reach_flow.visualization.scenario import draw_with_reach_set
 from crcpp import World
 from matplotlib import pyplot as plt
 from numpy import ndarray
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def compute_drivable_area(scenario_path: str, semantics: str = "true") -> np.ndarray:
@@ -136,7 +138,7 @@ def compute_area(graph: DynamicReachGraph, step_start: int, step_end: int) -> np
             # Get all nodes for the time step
             nodes = graph.get_nodes_at_step(t)
             if not nodes:
-                print(f"Warning: No reachable nodes at step {t}")
+                _LOGGER.warning(f"Warning: No reachable nodes at step {t}")
                 raise ValueError()
 
         except AttributeError:
@@ -160,15 +162,15 @@ def compute_area(graph: DynamicReachGraph, step_start: int, step_end: int) -> np
                     area += width * height
 
                 except AttributeError:
-                    print(f"Warning: Node at step {t} has an incomplete set.")
+                    _LOGGER.warning(f"Warning: Node at step {t} has an incomplete set.")
                     continue
             else:
-                print(f"Warning: Node at step {t} has no 'set' attribute.")
+                _LOGGER.warning(f"Warning: Node at step {t} has no 'set' attribute.")
                 continue
 
         # Check if the area is too small
         if area < 1e-5:
-            print(f"Area is too small at step {t}: {area}")
+            _LOGGER.warning(f"Area is too small at step {t}: {area}")
             raise ValueError()
         areas[t] = area if area > 0 else 0.0
 
@@ -243,7 +245,6 @@ def create_reach_graph(
     # Resample the reference path at 2.0-meter intervals to ensure uniform spacing
     reference_path = pycrccosy.Util.resample_polyline(route.reference_path, 2.0)
     clcs = pycrccosy.CurvilinearCoordinateSystem(reference_path)
-    # print(f"Route lanelet IDs: {lanelet_ids}")
 
     # create collision checker
     cc = CollisionCheckerFactory(step_start, step_end, inflation_radius).create_curvilinear_collision_checker(
@@ -253,7 +254,7 @@ def create_reach_graph(
     # Add semantics for vehicle to stay on the road
     lanelet_conditions = " | ".join(f"InLanelet_{lid}" for lid in lanelet_ids)
     specs = [f"G (({lanelet_conditions}) & ({semantics}))"]
-    print(specs)
+    _LOGGER.debug("Specs %s", specs)
 
     world = World(scenario)
 

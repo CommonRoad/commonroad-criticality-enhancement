@@ -1,3 +1,4 @@
+import logging
 from typing import List, Tuple
 
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -9,6 +10,8 @@ from skopt.space import Real
 
 from .file_modification import apply_variables_to_scenario
 from .reach_flow import compute_drivable_area
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def objective_multi_var(
@@ -55,7 +58,7 @@ def objective_multi_var(
         total_squared_area = (sum(area) - a_ref) ** 2
         return total_squared_area
     except Exception as e:
-        print(f"Area for this value could not be computed. {e} Returning 1e20 for this value.")
+        _LOGGER.error(f"Area for this value could not be computed. {e} Returning 1e20 for this value.")
         # Return a value for the area bigger than the other values, so this infeasible parameter will not be used for further sampling
         return 1e20
 

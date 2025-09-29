@@ -1,3 +1,4 @@
+import logging
 from typing import List, Tuple
 
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -10,6 +11,8 @@ from .file_modification import apply_variables_to_scenario
 from .reach_flow import compute_drivable_area
 
 evaluation_counter = {"count": 0}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def objective_wrapper(
@@ -50,7 +53,7 @@ def objective_wrapper(
         try:
             # Increment evaluation count
             evaluation_counter["count"] += 1
-            print(f"Objective evaluation #{evaluation_counter['count']}")
+            _LOGGER.debug(f"Objective evaluation #{evaluation_counter['count']}")
 
             updated_path = apply_variables_to_scenario(
                 scenario, path, planning_problem_set, list(params), decision_variables, sa=True
@@ -59,7 +62,7 @@ def objective_wrapper(
             total_squared_area = (sum(area) - a_ref) ** 2
             return total_squared_area
         except Exception as e:
-            print(f"Area for this value could not be computed. {e} Returning 1e20 for this value.")
+            _LOGGER.error(f"Area for this value could not be computed. {e} Returning 1e20 for this value.")
             # Return a value for the area bigger than the other values, so this infeasible parameter will not be used for further sampling
             return 1e20
 

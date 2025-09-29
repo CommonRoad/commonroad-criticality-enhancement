@@ -1,3 +1,4 @@
+import logging
 import warnings
 from typing import List, Tuple
 
@@ -5,9 +6,10 @@ import cvxpy as cv
 import numpy as np
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
-from numpy import ndarray
 
 from . import file_modification, profile_matrix_computation, reach_flow
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def optimize_iteration(
@@ -90,7 +92,7 @@ def perform_binary_search(
     var_type: str,
     semantics: str,
     iteration_limit: int = 5,
-) -> ndarray:
+) -> np.ndarray:
     """
     Performs binary search to find the highest feasible velocity (or position) between `x_before` and `x_after`
     that still yields a valid reachability graph.
@@ -140,7 +142,7 @@ def perform_binary_search(
 
     for iteration in range(iteration_limit):
         step_var = (low + high) / 2
-        print(f"Binary search iteration {iteration + 1}: Trying {var_type} = {step_var:.6f}")
+        _LOGGER.debug(f"Binary search iteration {iteration + 1}: Trying {var_type} = {step_var:.6f}")
 
         # Update ego's velocity/position
         if var_type == "velocity":
@@ -166,7 +168,7 @@ def perform_binary_search(
             # Else search lower half
             high = step_var
 
-    print(f"Binary search complete with best feasible {var_type}: {feasible_var:.6f}")
+    _LOGGER.debug(f"Binary search complete with best feasible {var_type}: {feasible_var:.6f}")
     # Update final feasible ego's velocity/position
     if var_type == "velocity":
         vehicle.initial_state.velocity = feasible_var
@@ -268,12 +270,12 @@ def optimize(
     best_position = list(planning_problem_set.planning_problem_dict.values())[0].initial_state.position.copy()
 
     for i in range(iterations):
-        print("Starting iteration", i)
+        _LOGGER.debug("Starting iteration", i)
         # Compute profile matrix
         profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
             scenario, planning_problem_set, current_scenario_path, step_start, step_end, expanded_variables, semantics
         )
-        print(f"Profile: {profile_matrix}")
+        _LOGGER.debug(f"Profile: {profile_matrix}")
 
         # Solve QP
         d_x = optimize_iteration(
@@ -298,7 +300,7 @@ def optimize(
             var_index = profile_index_map.get((vehicle_id, variable_type))
 
             if var_index is None:
-                print(f"Warning: No profile found for ({vehicle_id}, {variable_type})")
+                _LOGGER.warning(f"Warning: No profile found for ({vehicle_id}, {variable_type})")
                 continue
 
             # Scale update to ensure conservative changes for feasibility
@@ -311,7 +313,7 @@ def optimize(
                 file_modification.apply_update(target_vehicle, "position", delta, direction=direction)
             else:
                 file_modification.apply_update(target_vehicle, variable_type, delta)
-            print(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
+            _LOGGER.debug(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
 
             # Save scenario
             current_scenario_path = file_modification.save_modified_scenario(
@@ -323,7 +325,7 @@ def optimize(
                 area_latest = reach_flow.compute_drivable_area(current_scenario_path, semantics=semantics)
 
             except Exception as e:
-                print(f"Reachability failed: {e}. Performing binary search.")
+                _LOGGER.debug(f"Reachability failed: {e}. Performing binary search.")
 
                 if variable_type == "velocity":
                     var_before = target_vehicle.initial_state.velocity - last_change
