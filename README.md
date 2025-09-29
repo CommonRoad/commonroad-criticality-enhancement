@@ -11,13 +11,16 @@ The software is written in Python 3.10.
 
 ## Building the code
 
+
+### With Anaconda
+
 - The code can be built using Anaconda to manage a virtual python environment.
-- Note that currently the poetry package manager is not used
 - All dependencies can be installed with the following command:
 
 ```
 conda env create -f environment.yml
 ```
+
 - All required versions are listed in the environment.yml file.
 - Activate the environment after creating it
 - The project uses CommonRoad-reach-flow
@@ -27,6 +30,7 @@ conda env create -f environment.yml
 - Checkout the commit with commit_SHA = "49006bfeff12a1a3fc10bafa9381901ca10f8e4c" , as the current version of the repository works with this commit of cr-reach-flow.
 - Run the following command in the CommonRoad-reach-flow repository:
 
+
 ```
 pip install -v .
 ```
@@ -35,6 +39,15 @@ pip install -v .
 - Before running the code, ensure Python can find the project modules by setting the PYTHONPATH environment variable::
 ```
 export PYTHONPATH=$(pwd)
+```
+
+
+### With Poetry
+
+The project and all required dependencies can be installed with poetry:
+
+```
+poetry install --extras tests --extras dev
 ```
 
 ## Pre-commit hooks

@@ -13,6 +13,7 @@ from cr_reach_flow.collision_checker.collision_checker_factory import CollisionC
 from cr_reach_flow.cr_reach_flow_core.graphs import DynamicReachGraph
 from cr_reach_flow.scenario.resampling import resample_scenario
 from cr_reach_flow.visualization.scenario import draw_with_reach_set
+from crcpp import World
 from matplotlib import pyplot as plt
 from numpy import ndarray
 
@@ -254,13 +255,15 @@ def create_reach_graph(
     specs = [f"G (({lanelet_conditions}) & ({semantics}))"]
     print(specs)
 
+    world = World(scenario)
+
     # Create a finite automaton from the specifications
     automaton = core.model_checking.FiniteAutomaton(specs)
     init = core.initializers.base_set.CurvilinearUncertaintyInitializer(clcs, *([initial_uncertainty] * 4))
     # Define the core layers used in the reachability analysis pipeline
     layers = {
         "propagation": core.layers.propagation.PointMassPropagator(dt, point_mass_params),
-        "splitting": core.layers.semantic.SemanticSplitter(automaton, str(scenario_path), dt, clcs, splitter_params),
+        "splitting": core.layers.semantic.SemanticSplitter(automaton, world, clcs, splitter_params),
         "repartitioning": core.layers.meta.GroupedByAutomatonStates(core.layers.repartition.PositionRepartitioner()),
         "collision_checking": core.layers.collision.CollisionFilter(cc),
     }
