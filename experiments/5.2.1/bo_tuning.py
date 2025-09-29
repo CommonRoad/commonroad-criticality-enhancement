@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from typing import List, Tuple
 
-from src import bo, reach_flow
+from commonroad_criticality_enhancement import bo, reach_flow
 
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent

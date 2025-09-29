@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 
 from commonroad.common.file_reader import CommonRoadFileReader
-
 from src import optimization, reach_flow
 
 # Get the root directory (two levels up from this file)

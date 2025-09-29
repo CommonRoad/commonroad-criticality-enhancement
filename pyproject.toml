@@ -1,65 +1,55 @@
 [project]
-name = "src"
+name = "commonroad-criticality-enhancement"
 version = "0.1.4"
 description = "CommonRoad Python template repository."
 authors = [{name = "Cyber-Physical Systems Group, Technical University of Munich", email = "<commonroad@lists.lrz.de>"}]
 readme = "README.md"
-requires-python = ">=3.10, <3.11"
+requires-python = ">=3.10, <3.12"
 license = "BSD-3-Clause"
-dynamic = ["dependencies"]
+dependencies = [
+    "cr_reach_flow",
+    "commonroad-io (>=2024.3,<2025)",
+    "commonroad-clcs (>=2025.1.1,<2026)",
+    "commonroad-route-planner (>=2025.0,<2026)",
+    "commonroad-drivability-checker (>=2025.3.1,<2026)",
+    "commonroad-vehicle-models (>=3.0.2,<4)",
+    "cvxpy (>=1.7.1,<2.0.0)",
+    "ecos",
+    "scikit-optimize",
+    "scipy",
+    "pybind11",
+    "spdlog",
+    "boost",
+    "eigen",
+    "spot",
+    "matplot2tikz"
+]
+
+[project.optional-dependencies]
+tests = [
+    "coverage[toml]>=7.1.0,<8",
+    "pytest",
+]
+docs = [
+    "mkdocs",
+    "mkdocstrings[python]>=0.29.1,<1",
+    "mkdocstrings-python>=1.8.0,<2",
+    "mkdocs-material>=9.5.12,<10",
+]
+dev = [
+    "pre-commit",
+    "pip-licenses>=4.3.4,<5",
+    "ruff>=0.6.0,<1",
+]
+
+[[tool.poetry.source]]
+name = "cr_reach_flow-gitlab"
+url = "https://gitlab.lrz.de/api/v4/projects/179657/packages/pypi/simple"
+priority = "supplemental"
+
 
 [tool.poetry.dependencies]
-python = ">=3.10, <3.11"
-commonroad-io = { git = "git@gitlab.lrz.de:cps/commonroad/commonroad-io.git", branch = "develop" }
-
-# Following dependencies must be included to run with poetry!
-# cr_reach_flow = {  git = "git@gitlab.lrz.de:cps/commonroad/commonroad-reach-flow.git", branch = "develop", commit_SHA = "49006bfeff12a1a3fc10bafa9381901ca10f8e4c" }
-# commonroad-route-planner = { git = "git@gitlab.lrz.de:cps/commonroad-route-planner.git", branch = "develop" }
-# commonroad-io = "^2024.3"
-# commonroad-reach = "^2024.1"
-# commonroad-clcs = "^2025.1.1"
-# commonroad-route-planner = "^2024.1.1"
-# commonroad-drivability-checker = "^2024.1"
-# commonroad-vehicle-models = "^3.0.2"
-
-cvxpy = "^1.6.5"
-ecos = "*"
-scikit-optimize = "*"
-scipy = "*"
-pybind11 = "*"
-#yaml-cpp = "*"
-spdlog = "*"
-boost = "*"
-eigen = "*"
-spot = "*"
-mkdocstrings = {extras = ["python"], version = "^0.29.1"}
-matplot2tikz = "^0.4.1"
-
-[tool.poetry.group.tests]
-optional = true
-
-[tool.poetry.group.tests.dependencies]
-coverage = {version = "^7.1.0", extras = ["toml"] }
-pytest = "*"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-mkdocs = "*"
-mkdocstrings = {extras = ["python"], version = "^0.29.1"}
-mkdocstrings-python = "^1.8.0"
-mkdocs-material = "^9.5.12"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-pre-commit = "*"
-pytest = "*"
-pip-licenses = "^4.3.4"
-ruff = "^0.6.0"
-mkdocs-material = "^9.6.15"
+cr_reach_flow = { version = "*", source = "cr_reach_flow-gitlab"}
 
 [build-system]
 requires = ["poetry-core"]
@@ -67,7 +57,7 @@ build-backend = "poetry.core.masonry.api"
 
 # Testing
 [tool.coverage.run]
-source = ["src"]
+source = ["commonroad_criticality_enhancement"]
 
 # Formatting
 [tool.ruff]

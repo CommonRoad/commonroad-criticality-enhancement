@@ -2,7 +2,7 @@ from pathlib import Path
 
 from scipy.optimize import OptimizeResult
 
-from src import bo
+from commonroad_criticality_enhancement import bo
 
 # ===== CONFIGURATION ===== #
 SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.parent.joinpath("scenarios")

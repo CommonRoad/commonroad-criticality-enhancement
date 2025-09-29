@@ -140,7 +140,7 @@ def perform_binary_search(
 
     for iteration in range(iteration_limit):
         step_var = (low + high) / 2
-        print(f"Binary search iteration {iteration+1}: Trying {var_type} = {step_var:.6f}")
+        print(f"Binary search iteration {iteration + 1}: Trying {var_type} = {step_var:.6f}")
 
         # Update ego's velocity/position
         if var_type == "velocity":

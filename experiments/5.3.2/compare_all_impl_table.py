@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 from commonroad.common.file_reader import CommonRoadFileReader
 
-from src import bo, optimization, reach_flow, sa
+from commonroad_criticality_enhancement import bo, optimization, reach_flow, sa
 
 
 # This script runs all approaches for the 10 scenarios an parallel and generates the table.

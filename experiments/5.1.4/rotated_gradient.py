@@ -11,7 +11,7 @@ from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.state import KSState
 from matplotlib import pyplot as plt
 
-from src import optimization, reach_flow
+from commonroad_criticality_enhancement import optimization, reach_flow
 
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
