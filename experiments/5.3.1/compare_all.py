@@ -1,3 +1,4 @@
+import copy
 import sys
 import time
 from pathlib import Path
@@ -50,16 +51,15 @@ def run_comparison_pipeline(
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     print("Computing original drivable area...")
-    area_original = reach_flow.compute_drivable_area(scenario_path)
+    area_original = reach_flow.compute_drivable_area(scenario, planning_problem_set)
 
     print("\nRunning Gradient-Based Optimization (ECOS)...")
 
     start = time.time()
 
     velocity_gradient, area_gradient = optimization.optimize(
-        scenario,
-        planning_problem_set,
-        scenario_path,
+        copy.deepcopy(scenario),
+        copy.deepcopy(planning_problem_set),
         decision_variables=decision_variables,
         iterations=iterations,
         a_ref_input=a_ref_input,
@@ -69,7 +69,8 @@ def run_comparison_pipeline(
     print("\nRunning SA ...")
     start_sa = time.time()
     sa_best_params, sa_area = sa.run_sa_with_scipy(
-        scenario_path=scenario_path,
+        copy.deepcopy(scenario),
+        copy.deepcopy(planning_problem_set),
         decision_variables=decision_variables,
         max_iter=sa_max_iter,
         initial_temp=sa_initial_temp,
@@ -79,7 +80,8 @@ def run_comparison_pipeline(
     print("\nRunning Bayesian Optimization ...")
     start_bo = time.time()
     bo_best_params, bo_area = bo.run_bo_multi_variable(
-        scenario_path=scenario_path,
+        copy.deepcopy(scenario),
+        copy.deepcopy(planning_problem_set),
         decision_variables=decision_variables,
         budget=budget,
     )

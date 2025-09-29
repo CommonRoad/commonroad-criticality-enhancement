@@ -84,7 +84,6 @@ def optimize_iteration(
 
 def perform_binary_search(
     scenario: Scenario,
-    scenario_path: str,
     planning_problem_set: PlanningProblemSet,
     vehicle: PlanningProblem,
     var_before: float,
@@ -101,9 +100,6 @@ def perform_binary_search(
     ----------
     scenario : Scenario
         The CommonRoad scenario being modified.
-
-    scenario_path : str
-        The path of the scenario
 
     planning_problem_set : PlanningProblemSet
         Planning problems associated with the scenario.
@@ -154,12 +150,10 @@ def perform_binary_search(
         else:
             raise ValueError(f"Unsupported variable type: {var_type}")
 
-        mod_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
-
         # Reload and compute reachability
         try:
             # Check if area can be computed
-            _ = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+            _ = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
 
             # On success search upper half
             feasible_var = step_var
@@ -176,20 +170,18 @@ def perform_binary_search(
         vehicle.initial_state.position = np.array([feasible_var, y_backup])
     elif var_type == "y-position":
         vehicle.initial_state.position = np.array([x_backup, feasible_var])
-    mod_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
-    area_latest = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+    area_latest = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
     return area_latest
 
 
 def optimize(
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
-    scenario_path: str,
-    decision_variables: List[Tuple[str, str]],
+    decision_variables: list[tuple[str, str]],
     iterations: int,
     a_ref_input: float = 1.0,
     semantics: str = "true",
-) -> (List[float], np.ndarray):
+) -> tuple[list[float], np.ndarray]:
     """
     Optimizes scenario variables (velocity or position of vehicles) to influence the drivable area.
 
@@ -203,9 +195,6 @@ def optimize(
 
     planning_problem_set : PlanningProblemSet
         The set of planning problems in the scenario.
-
-    scenario_path : str
-        Path to the scenario.
 
     decision_variables : List[Tuple[str, str]]
         List of decision variables to optimize.
@@ -253,16 +242,15 @@ def optimize(
 
     # Try computing reachability with current velocity
     try:
-        graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-            scenario_path, semantics=semantics
+        _, step_start, step_end, _, _ = reach_flow.create_reach_graph(
+            scenario, planning_problem_set, semantics=semantics
         )
 
     except Exception as e:
         raise Exception(f"Reachability failed: {e}")
 
     # Compute area
-    area_latest = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
-    current_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
+    area_latest = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
 
     # Save the best area so far
     area_best = area_latest.copy()
@@ -273,7 +261,7 @@ def optimize(
         _LOGGER.debug("Starting iteration", i)
         # Compute profile matrix
         profile_matrix, profile_index_map = profile_matrix_computation.get_profile_matrix(
-            scenario, planning_problem_set, current_scenario_path, step_start, step_end, expanded_variables, semantics
+            scenario, planning_problem_set, step_start, step_end, expanded_variables, semantics
         )
         _LOGGER.debug(f"Profile: {profile_matrix}")
 
@@ -315,14 +303,9 @@ def optimize(
                 file_modification.apply_update(target_vehicle, variable_type, delta)
             _LOGGER.debug(f"Updated {variable_type} of {vehicle_id} by {delta:.4f}")
 
-            # Save scenario
-            current_scenario_path = file_modification.save_modified_scenario(
-                scenario, scenario_path, planning_problem_set
-            )
-
             # Check if the variable is feasible
             try:
-                area_latest = reach_flow.compute_drivable_area(current_scenario_path, semantics=semantics)
+                area_latest = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
 
             except Exception as e:
                 _LOGGER.debug(f"Reachability failed: {e}. Performing binary search.")
@@ -338,7 +321,6 @@ def optimize(
                 # Run binary search between previous valid and current, invalid variable
                 area_latest = perform_binary_search(
                     scenario,
-                    scenario_path,
                     planning_problem_set,
                     target_vehicle,
                     var_before,
@@ -355,8 +337,7 @@ def optimize(
     # Save the final modified scenario and return the best solution
     target_vehicle.initial_state.velocity = best_velocity
     target_vehicle.initial_state.position = best_position
-    last_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
-    area_end = reach_flow.compute_drivable_area(last_scenario_path, semantics=semantics)
+    area_end = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
 
     velocity = target_vehicle.initial_state.velocity
     x_pos = target_vehicle.initial_state.position[0]

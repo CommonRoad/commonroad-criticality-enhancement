@@ -18,13 +18,12 @@ def run_full_optimization_pipeline(
 ) -> int:
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
-    area_original = reach_flow.compute_drivable_area(scenario_path, semantics)
+    area_original = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics)
 
     # Run gradient-based optimization
     final_params, area_modified = optimization.optimize(
         scenario,
         planning_problem_set,
-        scenario_path,
         decision_variables=decision_variables,
         iterations=iterations,
         a_ref_input=a_ref_input,

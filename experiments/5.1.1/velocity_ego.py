@@ -51,17 +51,18 @@ def run_full_optimization_pipeline(
 
     print(f"Ego not in lanelet{ego_lanelet}")
 
-    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path, semantics)
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
+        scenario, planning_problem_set, semantics
+    )
     print(f"initial velocity: {planning_problem.initial_state.velocity}")
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
-    area_original = reach_flow.compute_drivable_area(scenario_path, semantics)
+    area_original = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics)
 
     # Run gradient-based optimization
     start = time.time()
     final_params, area_modified = optimization.optimize(
         scenario,
         planning_problem_set,
-        scenario_path,
         decision_variables=decision_variables,
         iterations=iterations,
         a_ref_input=a_ref_input,
@@ -70,12 +71,8 @@ def run_full_optimization_pipeline(
     end = time.time()
     print("final_params:", final_params)
 
-    # Create reach graph for modified scenario
-    name = Path(scenario_path).stem
-    mod_scenario_path = PROJECT_ROOT / "scenarios" / f"{name}_updated_gradient.xml"
-    scenario, planning_problem_set = CommonRoadFileReader(mod_scenario_path).open()
     graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(
-        str(mod_scenario_path), semantics
+        scenario, planning_problem_set, semantics
     )
 
     # Draw reachable sets for modified scenario

@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from commonroad_criticality_enhancement import sa
+from commonroad.common.file_reader import CommonRoadFileReader
+
+from commonroad_criticality_enhancement import file_modification, sa
 
 # ===== CONFIGURATION ===== #
 SCENARIOS_ROOT = Path(__file__).resolve().parent.parent.parent.joinpath("scenarios")
@@ -34,9 +36,12 @@ def checkpoint_saver_SA(x, f, context):
         f_out.write(f"Evaluations so far: {sa.evaluation_counter['count']}\n")
 
 
+scenario, planning_problem_set = CommonRoadFileReader(SCENARIOS_LIST[9]).open()
 # Run bo for many iterations and the objective values will get saved any time when it changes
 # The results of this script were used to generate the data for the plot (mean_plot.py)
 # Run for all 10 scenarios
 sa.run_sa_with_scipy(
-    scenario_path=SCENARIOS_LIST[9], decision_variables=DECISION_VARS, max_iter=150, callback=checkpoint_saver_SA
+    scenario, planning_problem_set, decision_variables=DECISION_VARS, max_iter=150, callback=checkpoint_saver_SA
 )
+
+file_modification.save_modified_scenario(scenario, SCENARIOS_LIST[9], planning_problem_set, "sa")

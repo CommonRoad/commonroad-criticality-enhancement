@@ -125,16 +125,15 @@ def run_full_optimization_pipeline(
 ) -> None:
     # Create reach graph for rotated original scenario and compute rotated original area
     scenario, planning_problem_set = CommonRoadFileReader(rotated_scenario_path).open()
-    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(rotated_scenario_path)
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario, planning_problem_set)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
-    area_original_rotated = reach_flow.compute_drivable_area(rotated_scenario_path)
+    area_original_rotated = reach_flow.compute_drivable_area(scenario, planning_problem_set)
 
     # Optimize rotated scenario
     final_velocity_rot, area_rotated = optimization.optimize(
         scenario,
         planning_problem_set,
-        rotated_scenario_path,
         decision_variables=decision_variables,
         iterations=iterations,
         a_ref_input=a_ref_input,
@@ -142,16 +141,15 @@ def run_full_optimization_pipeline(
 
     # Create reach graph for original scenario and compute original area
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
-    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario, planning_problem_set)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
-    area_original = reach_flow.compute_drivable_area(scenario_path)
+    area_original = reach_flow.compute_drivable_area(scenario, planning_problem_set)
 
     # Optimize original scenario
     final_velocity, area_modified = optimization.optimize(
         scenario,
         planning_problem_set,
-        scenario_path,
         decision_variables=decision_variables,
         iterations=iterations,
         a_ref_input=a_ref_input,

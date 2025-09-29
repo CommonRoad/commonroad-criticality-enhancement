@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from commonroad.common.file_reader import CommonRoadFileReader
 from scipy.optimize import OptimizeResult
 
 from commonroad_criticality_enhancement import bo
@@ -86,11 +87,13 @@ def progress_reporter_BO(res: OptimizeResult):
     print(f"""Current BO Iteration: {len(res.x_iters)}""")
 
 
+scenario, planning_problem_set = CommonRoadFileReader(SCENARIOS_LIST[0]).open()
 # Run bo for many iterations and the objective values will get saved at milestones
 # The results of this script were used to generate the data for the plot (mean_plot.py)
 # Run for all 10 scenarios
 bo.run_bo_multi_variable(
-    scenario_path=SCENARIOS_LIST[0],
+    scenario,
+    planning_problem_set,
     decision_variables=DECISION_VARS,
     budget=400,
     a_ref=A_REF,

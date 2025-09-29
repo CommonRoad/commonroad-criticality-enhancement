@@ -7,7 +7,7 @@ import cr_reach_flow.cr_reach_flow_core as core
 import matplot2tikz
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
-from commonroad.planning.planning_problem import PlanningProblem
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
 from cr_reach_flow.collision_checker.collision_checker_factory import CollisionCheckerFactory
 from cr_reach_flow.cr_reach_flow_core.graphs import DynamicReachGraph
@@ -20,7 +20,9 @@ from numpy import ndarray
 _LOGGER = logging.getLogger(__name__)
 
 
-def compute_drivable_area(scenario_path: str, semantics: str = "true") -> np.ndarray:
+def compute_drivable_area(
+    scenario: Scenario, planning_problem_set: PlanningProblemSet, semantics: str = "true"
+) -> np.ndarray:
     """
     Computes the drivable area for a given scenario.
 
@@ -37,7 +39,7 @@ def compute_drivable_area(scenario_path: str, semantics: str = "true") -> np.nda
     np.ndarray
         An array containing the computed drivable area over time.
     """
-    graph, step_start, step_end, planning_problem, clcs = create_reach_graph(scenario_path, semantics=semantics)
+    graph, step_start, step_end, _, _ = create_reach_graph(scenario, planning_problem_set, semantics=semantics)
     area = compute_area(graph, step_start, step_end)
     return area
 
@@ -178,7 +180,7 @@ def compute_area(graph: DynamicReachGraph, step_start: int, step_end: int) -> np
 
 
 def create_reach_graph(
-    scenario_path: str, semantics: str = "true"
+    scenario: Scenario, planning_problem_set: PlanningProblemSet, semantics: str = "true"
 ) -> Tuple[DynamicReachGraph, int, int, PlanningProblem, pycrccosy.CurvilinearCoordinateSystem]:
     """
     Loads a CommonRoad scenario, configures the reachability executor, and computes the reachability graph.
@@ -232,8 +234,7 @@ def create_reach_graph(
     splitter_params.lanelet_inflation_radius = inflation_radius
 
     # Read the scenario
-    scenario, planning_problems = CommonRoadFileReader(scenario_path).open()
-    scenario, planning_problems = resample_scenario(scenario, planning_problems, dt)
+    scenario, planning_problems = resample_scenario(scenario, planning_problem_set, dt)
     planning_problem = list(planning_problems.planning_problem_dict.values())[0]
 
     # Plan route through lanelets and create clcs

@@ -3,6 +3,8 @@ import time
 from pathlib import Path
 from typing import List, Tuple
 
+from commonroad.common.file_reader import CommonRoadFileReader
+
 from commonroad_criticality_enhancement import bo, reach_flow
 
 # Get the root directory (two levels up from this file)
@@ -16,12 +18,14 @@ def run_pipeline(
     budget: int = 10,
 ) -> None:
     print("Computing original drivable area...")
-    area_original = reach_flow.compute_drivable_area(scenario_path)
+    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
+    area_original = reach_flow.compute_drivable_area(scenario, planning_problem_set)
 
     print("\nRunning Bayesian Optimization ...")
     start_bo = time.time()
     bo_best_params, bo_area = bo.run_bo_multi_variable(
-        scenario_path=scenario_path,
+        scenario,
+        planning_problem_set,
         decision_variables=decision_variables,
         budget=budget,
     )

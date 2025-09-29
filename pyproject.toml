@@ -8,7 +8,7 @@ requires-python = ">=3.10, <3.12"
 license = "BSD-3-Clause"
 dependencies = [
     "cr_reach_flow (==0.1.0)",
-    "commonroad_cpp (==2023.0rc6.dev355+g6786c281)", 
+    "commonroad_cpp (==2023.0rc6.dev355+g6786c281)",
     "commonroad-io (>=2024.3,<2025)",
     "commonroad-clcs (>=2025.1.1,<2026)",
     "commonroad-route-planner (>=2025.0,<2026)",
