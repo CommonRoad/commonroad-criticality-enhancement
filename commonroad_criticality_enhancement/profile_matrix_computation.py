@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -6,10 +7,11 @@ from commonroad.scenario.scenario import Scenario
 
 from . import file_modification, reach_flow
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def get_valid_perturbation_step(
     scenario: Scenario,
-    scenario_path: str,
     planning_problem_set: PlanningProblemSet,
     vehicle: PlanningProblem,
     semantics: str,
@@ -64,28 +66,25 @@ def get_valid_perturbation_step(
             vehicle.initial_state.position = np.array([original_position[0] + step, original_position[1]])
         elif decision_variable == "y-position":
             vehicle.initial_state.position = np.array([original_position[0], original_position[1] + step])
-        mod_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
         # If step is valid, return it, else try with a smaller step
         try:
-            _ = reach_flow.compute_drivable_area(mod_path, semantics=semantics)
+            _ = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
             return step
         except Exception as e:
-            print(f"Perturbation step {step:.5f} failed: {e}")
+            _LOGGER.error(f"Perturbation step {step:.5f} failed: {e}")
             step /= 2.0
 
     # If the step is too small, return 0
-    print("All perturbation steps failed. Returning 0.")
+    _LOGGER.error("All perturbation steps failed. Returning 0.")
     vehicle.initial_state.velocity = original_velocity
     vehicle.initial_state.position = original_position
-    _ = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
     return 0.0
 
 
 def differentiate_reachable_set_wrt_velocity(
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
-    scenario_path: str,
     step_start: int,
     step_end: int,
     vehicle: PlanningProblem,
@@ -137,29 +136,26 @@ def differentiate_reachable_set_wrt_velocity(
     derivative = np.array([-1.0 for _ in range(step_start, step_end + 1)])
 
     # Compute reachable area for original velocity
-    area_original = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
+    area_original = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
 
     # Slightly increase velocity
     vehicle.initial_state.velocity += h
 
-    # Save the modified scenario
-    mod_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
-
     # Recompute for the modified scenario
     try:
-        area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+        area_changed_velocity = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
     except Exception as e:
-        print(f"Failed to compute area at changed velocity: {e} Trying smaller perturbations.")
+        _LOGGER.error(f"Failed to compute area at changed velocity: {e} Trying smaller perturbations.")
 
         # If the perturbation leads to area 0, find a valid perturbation step
         vehicle.initial_state.velocity = original_velocity
         valid_perturbation = get_valid_perturbation_step(
-            scenario, scenario_path, planning_problem_set, vehicle, semantics, "velocity", h
+            scenario, planning_problem_set, vehicle, semantics, "velocity", h
         )
         h = valid_perturbation
         if h == 0:
             return np.array([0.0 for _ in range(step_start, step_end + 1)])
-        area_changed_velocity = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+        area_changed_velocity = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
 
     # Derivative using h method
     for time_step in range(step_start, step_end + 1):
@@ -167,7 +163,6 @@ def differentiate_reachable_set_wrt_velocity(
 
     # Reset back to original velocity and save
     vehicle.initial_state.velocity = original_velocity
-    _ = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
     return derivative
 
@@ -176,7 +171,6 @@ def differentiate_reachable_set_wrt_position(
     x: bool,
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
-    scenario_path: str,
     step_start: int,
     step_end: int,
     vehicle: PlanningProblem,
@@ -227,7 +221,7 @@ def differentiate_reachable_set_wrt_position(
     derivative = np.array([-1.0 for _ in range(step_start, step_end + 1)])
 
     # Compute reachable area for original position
-    area_original = reach_flow.compute_drivable_area(scenario_path, semantics=semantics)
+    area_original = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
 
     # Apply the perturbation
     if x:
@@ -235,32 +229,29 @@ def differentiate_reachable_set_wrt_position(
     else:
         vehicle.initial_state.position = np.array([original_position[0], original_position[1] + delta_pos])
 
-    # Save the modified scenario
-    mod_scenario_path = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
-
     # Recompute for the modified scenario
     try:
-        area_changed_position = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+        area_changed_position = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
     except Exception as e:
-        print(f"Failed to compute area at changed position: {e} Trying smaller perturbations.")
+        _LOGGER.error(f"Failed to compute area at changed position: {e} Trying smaller perturbations.")
 
         # If the perturbation leads to area 0, find a valid perturbation step
         vehicle.initial_state.position = original_position
         if x:
             valid_perturbation = get_valid_perturbation_step(
-                scenario, scenario_path, planning_problem_set, vehicle, semantics, "x-position"
+                scenario, planning_problem_set, vehicle, semantics, "x-position"
             )
         else:
             valid_perturbation = get_valid_perturbation_step(
-                scenario, scenario_path, planning_problem_set, vehicle, semantics, "y-position"
+                scenario, planning_problem_set, vehicle, semantics, "y-position"
             )
         delta_pos = valid_perturbation
         if delta_pos == 0:
             return np.array([0.0 for _ in range(step_start, step_end + 1)])
-        area_changed_position = reach_flow.compute_drivable_area(mod_scenario_path, semantics=semantics)
+        area_changed_position = reach_flow.compute_drivable_area(scenario, planning_problem_set, semantics=semantics)
 
-    print("original area: ", area_original)
-    print("modified area: ", area_changed_position)
+    _LOGGER.debug("original area: ", area_original)
+    _LOGGER.debug("modified area: ", area_changed_position)
 
     # Derivative using h method
     for time_step in range(step_start, step_end + 1):
@@ -268,7 +259,6 @@ def differentiate_reachable_set_wrt_position(
 
     # Reset back to original position and save
     vehicle.initial_state.position = original_position
-    _ = file_modification.save_modified_scenario(scenario, scenario_path, planning_problem_set)
 
     return derivative
 
@@ -276,12 +266,11 @@ def differentiate_reachable_set_wrt_position(
 def get_profile_matrix(
     scenario: Scenario,
     planning_problem_set: PlanningProblemSet,
-    scenario_path: str,
     step_start: int,
     step_end: int,
-    decision_variables: List[Tuple[str, str]],
+    decision_variables: list[tuple[str, str]],
     semantics: str,
-) -> Tuple[np.ndarray, Dict[Tuple[str, str], int]]:
+) -> tuple[np.ndarray, dict[tuple[str, str], int]]:
     """
     Constructs a profile matrix showing the sensitivity of drivable area to specified decision variables.
 
@@ -336,13 +325,13 @@ def get_profile_matrix(
             raise ValueError(f"Program supports only ego vehicle currently")
 
         if vehicle is None:
-            print(f"Warning: Vehicle {vehicle_id} not found.")
+            _LOGGER.warning(f"Warning: Vehicle {vehicle_id} not found.")
             continue
 
         # Velocity derivative
         if variable_type == "velocity":
             deriv = differentiate_reachable_set_wrt_velocity(
-                scenario, planning_problem_set, scenario_path, step_start, step_end, vehicle, semantics
+                scenario, planning_problem_set, step_start, step_end, vehicle, semantics
             )
             result.append(deriv)
             profile_index_map[(vehicle_id, "velocity")] = row_idx
@@ -354,7 +343,6 @@ def get_profile_matrix(
                 x=True,
                 scenario=scenario,
                 planning_problem_set=planning_problem_set,
-                scenario_path=scenario_path,
                 step_start=step_start,
                 step_end=step_end,
                 vehicle=vehicle,
@@ -370,7 +358,6 @@ def get_profile_matrix(
                 x=False,
                 scenario=scenario,
                 planning_problem_set=planning_problem_set,
-                scenario_path=scenario_path,
                 step_start=step_start,
                 step_end=step_end,
                 vehicle=vehicle,
@@ -380,7 +367,7 @@ def get_profile_matrix(
             profile_index_map[(vehicle_id, "y-position")] = row_idx
             row_idx += 1
         else:
-            print(f"Warning: Unknown variable type: {variable_type}")
+            _LOGGER.warning(f"Warning: Unknown variable type: {variable_type}")
             continue
 
     # Transform List to matrix

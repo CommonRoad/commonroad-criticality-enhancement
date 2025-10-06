@@ -1,10 +1,13 @@
+import logging
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Literal, Tuple
 
 import numpy as np
 from commonroad.common.file_writer import CommonRoadFileWriter, OverwriteExistingFile
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def apply_update(target_vehicle: PlanningProblem, variable_type: str, delta: float, direction: str = "x") -> None:
@@ -35,7 +38,9 @@ def apply_update(target_vehicle: PlanningProblem, variable_type: str, delta: flo
         if new_velocity > 1:
             target_vehicle.initial_state.velocity = new_velocity
         else:
-            print(f"Skipping update: velocity would become {new_velocity:.3f}, which is non-positive or too small.")
+            _LOGGER.warning(
+                f"Skipping update: velocity would become {new_velocity:.3f}, which is non-positive or too small."
+            )
     elif variable_type == "position":
         x, y = target_vehicle.initial_state.position
         if direction == "x":
@@ -47,7 +52,12 @@ def apply_update(target_vehicle: PlanningProblem, variable_type: str, delta: flo
         raise ValueError(f"Unsupported variable type: {variable_type}")
 
 
-def save_modified_scenario(scenario: Scenario, path: str, planning_problem_set: PlanningProblemSet) -> str:
+def save_modified_scenario(
+    scenario: Scenario,
+    path: str,
+    planning_problem_set: PlanningProblemSet,
+    optimizer: Literal["sa", "bo", "gradient"] = "gradient",
+) -> str:
     """
     Saves a modified CommonRoad scenario and planning problem set to a fixed XML file path. This function is used for the gradient-based optimization approach.
 
@@ -70,23 +80,27 @@ def save_modified_scenario(scenario: Scenario, path: str, planning_problem_set: 
 
     output_dir = Path(__file__).resolve().parent.parent / "scenarios"
     output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
-    if "_updated_gradient" not in str(path):
-        path_obj = Path(path)
-        path = path_obj.with_name(path_obj.stem + "_updated_gradient" + path_obj.suffix)
+
+    path_obj = Path(path)
+    if optimizer == "gradient" and "_updated_gradient" not in str(path):
+        path_obj = path_obj.with_name(path_obj.stem + "_updated_gradient" + path_obj.suffix)
+    if optimizer == "sa" and "_updated_sa" not in path:
+        path_obj = path_obj.with_name(path_obj.stem + "_updated_sa" + path_obj.suffix)
+    if optimizer == "bo" and "_updated_bo" not in path:
+        path_obj = path_obj.with_name(path_obj.stem + "_updated_bo" + path_obj.suffix)
+
     writer = CommonRoadFileWriter(scenario=scenario, planning_problem_set=planning_problem_set, decimal_precision=10)
-    writer.write_to_file(str(path), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
-    print(f"The new scenario was saved in {path}")
-    return str(path)
+    writer.write_to_file(str(path_obj), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
+    _LOGGER.info(f"The new scenario was saved in {path_obj}")
+    return str(path_obj)
 
 
 def apply_variables_to_scenario(
     scenario: Scenario,
-    path: str,
     planning_problem_set: PlanningProblemSet,
-    params: List[float],
-    decision_variables: List[Tuple[str, str]],
-    sa: bool,
-) -> str:
+    params: list[float],
+    decision_variables: list[Tuple[str, str]],
+) -> None:
     """
     Applies a set of variable updates (e.g. velocity or position) to a CommonRoad scenario and saves the result. This function is used for the BO and SA approaches.
 
@@ -97,9 +111,6 @@ def apply_variables_to_scenario(
     ----------
     scenario : Scenario
         The CommonRoad scenario to be modified.
-
-    path : str
-        The path of the scenario.
 
     planning_problem_set : PlanningProblemSet
         Set of planning problems (used to locate the 'ego' vehicle).
@@ -112,13 +123,9 @@ def apply_variables_to_scenario(
         - vehicle_id (str): "ego" for the ego vehicle.
         - variable_type (str): Either "velocity" or "position".
 
-    sa : bool
-        If true, save the modified scenario with SA name, otherwise save the modified scenario with BO name.
-
     Returns
     -------
-    str
-        The path to the updated scenario file.
+    Nothing
     """
 
     for (vehicle_id, variable_type), new_value in zip(decision_variables, params):
@@ -140,18 +147,3 @@ def apply_variables_to_scenario(
             init_state.position = np.array([x, new_value])
         else:
             print(f"Unknown variable type: {variable_type}")
-
-    # Save the updated scenario
-    output_dir = Path(__file__).resolve().parent.parent / "scenarios"
-    output_dir.mkdir(parents=True, exist_ok=True)  # ensure 'scenarios/' exists
-    path_obj = Path(path)
-    if sa:
-        if "_updated_sa" not in path:
-            path = path_obj.with_name(path_obj.stem + "_updated_sa" + path_obj.suffix)
-    else:
-        if "_updated_bo" not in path:
-            path = path_obj.with_name(path_obj.stem + "_updated_bo" + path_obj.suffix)
-    writer = CommonRoadFileWriter(scenario, planning_problem_set)
-    writer.write_to_file(str(path), overwrite_existing_file=OverwriteExistingFile.ALWAYS)
-    print(f"The new scenario was saved in {str(path)}")
-    return str(path)

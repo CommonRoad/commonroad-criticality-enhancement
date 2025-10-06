@@ -10,10 +10,13 @@ before_script:
   - apt-get install -y libgl1
   - pip install poetry
   - poetry config virtualenvs.in-project true
+  - poetry config http-basic.cr_reach_flow-gitlab gitlab-ci-token $CI_JOB_TOKEN
+  - poetry config http-basic.commonroad_cpp-gitlab gitlab-ci-token $CI_JOB_TOKEN
   - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
   # if job is triggered by a schedule, run poetry update to update dependencies
   - if [ "$CI_PIPELINE_SOURCE" == "schedule" ]; then poetry update; fi
-  - poetry install --with tests
+  - poetry install -vvv --extras tests
   - source .venv/bin/activate
 
 .run_test_with_coverage: &run_test_with_coverage

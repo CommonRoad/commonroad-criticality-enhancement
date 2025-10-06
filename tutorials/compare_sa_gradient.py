@@ -1,3 +1,4 @@
+import copy
 import sys
 import time
 from pathlib import Path
@@ -6,7 +7,7 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 
-from src import optimization, reach_flow, sa
+from commonroad_criticality_enhancement import optimization, reach_flow, sa
 
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -46,20 +47,19 @@ def run_comparison_pipeline(
 ) -> None:
     # Load scenario and compute the reachability graph and drivable area
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
-    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario_path)
+    graph, step_start, step_end, planning_problem, clcs = reach_flow.create_reach_graph(scenario, planning_problem_set)
     reach_flow.draw_reach_sets_end(step_end, scenario, planning_problem, graph, clcs)
 
     print("Computing original drivable area...")
-    area_original = reach_flow.compute_drivable_area(scenario_path)
+    area_original = reach_flow.compute_drivable_area(scenario, planning_problem_set)
 
     print("\nRunning Gradient-Based Optimization (ECOS)...")
 
     start = time.time()
 
     params_gradient, area_gradient = optimization.optimize(
-        scenario,
-        planning_problem_set,
-        scenario_path,
+        copy.deepcopy(scenario),
+        copy.deepcopy(planning_problem_set),
         decision_variables=decision_variables,
         iterations=iterations,
         a_ref_input=a_ref_input,
@@ -69,7 +69,8 @@ def run_comparison_pipeline(
     print("\nRunning SA Optimization...")
     start_sa = time.time()
     sa_best_params, sa_area = sa.run_sa_with_scipy(
-        scenario_path=scenario_path,
+        copy.deepcopy(scenario),
+        copy.deepcopy(planning_problem_set),
         decision_variables=decision_variables,
         max_iter=sa_max_iter,
         initial_temp=sa_initial_temp,

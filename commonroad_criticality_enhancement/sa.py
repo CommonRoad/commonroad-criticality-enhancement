@@ -1,6 +1,6 @@
+import logging
 from typing import List, Tuple
 
-from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
 from numpy import ndarray
@@ -11,12 +11,13 @@ from .reach_flow import compute_drivable_area
 
 evaluation_counter = {"count": 0}
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def objective_wrapper(
     scenario: Scenario,
-    path: str,
     planning_problem_set: PlanningProblemSet,
-    decision_variables: List[Tuple[str, str]],
+    decision_variables: list[tuple[str, str]],
     a_ref: float = 1.0,
 ):
     """
@@ -27,9 +28,6 @@ def objective_wrapper(
     ----------
     scenario : Scenario
         The CommonRoad scenario.
-
-    path : str
-        The path to the scenario.
 
     planning_problem_set : PlanningProblemSet
         The associated planning problem set.
@@ -50,16 +48,14 @@ def objective_wrapper(
         try:
             # Increment evaluation count
             evaluation_counter["count"] += 1
-            print(f"Objective evaluation #{evaluation_counter['count']}")
+            _LOGGER.debug(f"Objective evaluation #{evaluation_counter['count']}")
 
-            updated_path = apply_variables_to_scenario(
-                scenario, path, planning_problem_set, list(params), decision_variables, sa=True
-            )
-            area = compute_drivable_area(updated_path)
+            apply_variables_to_scenario(scenario, planning_problem_set, list(params), decision_variables)
+            area = compute_drivable_area(scenario, planning_problem_set)
             total_squared_area = (sum(area) - a_ref) ** 2
             return total_squared_area
         except Exception as e:
-            print(f"Area for this value could not be computed. {e} Returning 1e20 for this value.")
+            _LOGGER.error(f"Area for this value could not be computed. {e} Returning 1e20 for this value.")
             # Return a value for the area bigger than the other values, so this infeasible parameter will not be used for further sampling
             return 1e20
 
@@ -67,7 +63,8 @@ def objective_wrapper(
 
 
 def run_sa_with_scipy(
-    scenario_path: str,
+    scenario: Scenario,
+    planning_problem_set: PlanningProblemSet,
     decision_variables: List[Tuple[str, str]],
     max_iter: int = 30,
     initial_temp: float = 500.0,
@@ -106,9 +103,6 @@ def run_sa_with_scipy(
         Drivable area array computed with the best parameters.
     """
 
-    # Load scenario
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
-
     # Compute bounds based on decision variable
     bounds = []
     expanded_decision_variables = []
@@ -145,7 +139,7 @@ def run_sa_with_scipy(
             raise ValueError(f"Unknown decision variable type: {variable_type}")
 
     # Prepare the objective function
-    objective = objective_wrapper(scenario, scenario_path, planning_problem_set, expanded_decision_variables, a_ref)
+    objective = objective_wrapper(scenario, planning_problem_set, expanded_decision_variables, a_ref)
 
     # Run SciPy's Simulated Annealing
     result = dual_annealing(
@@ -154,9 +148,7 @@ def run_sa_with_scipy(
 
     # Apply the best parameters
     best_params = list(result.x)
-    updated_path = apply_variables_to_scenario(
-        scenario, scenario_path, planning_problem_set, best_params, expanded_decision_variables, sa=True
-    )
-    best_area = compute_drivable_area(updated_path)
+    apply_variables_to_scenario(scenario, planning_problem_set, best_params, expanded_decision_variables)
+    best_area = compute_drivable_area(scenario, planning_problem_set)
 
     return best_params, best_area

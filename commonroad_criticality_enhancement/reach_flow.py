@@ -1,4 +1,4 @@
-import time
+import logging
 from typing import Tuple
 
 import commonroad_clcs.pycrccosy as pycrccosy
@@ -7,17 +7,22 @@ import cr_reach_flow.cr_reach_flow_core as core
 import matplot2tikz
 import numpy as np
 from commonroad.common.file_reader import CommonRoadFileReader
-from commonroad.planning.planning_problem import PlanningProblem
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
 from cr_reach_flow.collision_checker.collision_checker_factory import CollisionCheckerFactory
 from cr_reach_flow.cr_reach_flow_core.graphs import DynamicReachGraph
 from cr_reach_flow.scenario.resampling import resample_scenario
 from cr_reach_flow.visualization.scenario import draw_with_reach_set
+from crcpp import World
 from matplotlib import pyplot as plt
 from numpy import ndarray
 
+_LOGGER = logging.getLogger(__name__)
 
-def compute_drivable_area(scenario_path: str, semantics: str = "true") -> np.ndarray:
+
+def compute_drivable_area(
+    scenario: Scenario, planning_problem_set: PlanningProblemSet, semantics: str = "true"
+) -> np.ndarray:
     """
     Computes the drivable area for a given scenario.
 
@@ -34,7 +39,7 @@ def compute_drivable_area(scenario_path: str, semantics: str = "true") -> np.nda
     np.ndarray
         An array containing the computed drivable area over time.
     """
-    graph, step_start, step_end, planning_problem, clcs = create_reach_graph(scenario_path, semantics=semantics)
+    graph, step_start, step_end, _, _ = create_reach_graph(scenario, planning_problem_set, semantics=semantics)
     area = compute_area(graph, step_start, step_end)
     return area
 
@@ -135,7 +140,7 @@ def compute_area(graph: DynamicReachGraph, step_start: int, step_end: int) -> np
             # Get all nodes for the time step
             nodes = graph.get_nodes_at_step(t)
             if not nodes:
-                print(f"Warning: No reachable nodes at step {t}")
+                _LOGGER.warning(f"Warning: No reachable nodes at step {t}")
                 raise ValueError()
 
         except AttributeError:
@@ -159,15 +164,15 @@ def compute_area(graph: DynamicReachGraph, step_start: int, step_end: int) -> np
                     area += width * height
 
                 except AttributeError:
-                    print(f"Warning: Node at step {t} has an incomplete set.")
+                    _LOGGER.warning(f"Warning: Node at step {t} has an incomplete set.")
                     continue
             else:
-                print(f"Warning: Node at step {t} has no 'set' attribute.")
+                _LOGGER.warning(f"Warning: Node at step {t} has no 'set' attribute.")
                 continue
 
         # Check if the area is too small
         if area < 1e-5:
-            print(f"Area is too small at step {t}: {area}")
+            _LOGGER.warning(f"Area is too small at step {t}: {area}")
             raise ValueError()
         areas[t] = area if area > 0 else 0.0
 
@@ -175,7 +180,7 @@ def compute_area(graph: DynamicReachGraph, step_start: int, step_end: int) -> np
 
 
 def create_reach_graph(
-    scenario_path: str, semantics: str = "true"
+    scenario: Scenario, planning_problem_set: PlanningProblemSet, semantics: str = "true"
 ) -> Tuple[DynamicReachGraph, int, int, PlanningProblem, pycrccosy.CurvilinearCoordinateSystem]:
     """
     Loads a CommonRoad scenario, configures the reachability executor, and computes the reachability graph.
@@ -229,8 +234,7 @@ def create_reach_graph(
     splitter_params.lanelet_inflation_radius = inflation_radius
 
     # Read the scenario
-    scenario, planning_problems = CommonRoadFileReader(scenario_path).open()
-    scenario, planning_problems = resample_scenario(scenario, planning_problems, dt)
+    scenario, planning_problems = resample_scenario(scenario, planning_problem_set, dt)
     planning_problem = list(planning_problems.planning_problem_dict.values())[0]
 
     # Plan route through lanelets and create clcs
@@ -242,7 +246,6 @@ def create_reach_graph(
     # Resample the reference path at 2.0-meter intervals to ensure uniform spacing
     reference_path = pycrccosy.Util.resample_polyline(route.reference_path, 2.0)
     clcs = pycrccosy.CurvilinearCoordinateSystem(reference_path)
-    # print(f"Route lanelet IDs: {lanelet_ids}")
 
     # create collision checker
     cc = CollisionCheckerFactory(step_start, step_end, inflation_radius).create_curvilinear_collision_checker(
@@ -252,7 +255,9 @@ def create_reach_graph(
     # Add semantics for vehicle to stay on the road
     lanelet_conditions = " | ".join(f"InLanelet_{lid}" for lid in lanelet_ids)
     specs = [f"G (({lanelet_conditions}) & ({semantics}))"]
-    print(specs)
+    _LOGGER.debug("Specs %s", specs)
+
+    world = World(scenario)
 
     # Create a finite automaton from the specifications
     automaton = core.model_checking.FiniteAutomaton(specs)
@@ -260,7 +265,7 @@ def create_reach_graph(
     # Define the core layers used in the reachability analysis pipeline
     layers = {
         "propagation": core.layers.propagation.PointMassPropagator(dt, point_mass_params),
-        "splitting": core.layers.semantic.SemanticSplitter(automaton, str(scenario_path), dt, clcs, splitter_params),
+        "splitting": core.layers.semantic.SemanticSplitter(automaton, world, clcs, splitter_params),
         "repartitioning": core.layers.meta.GroupedByAutomatonStates(core.layers.repartition.PositionRepartitioner()),
         "collision_checking": core.layers.collision.CollisionFilter(cc),
     }

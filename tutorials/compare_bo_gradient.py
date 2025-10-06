@@ -1,3 +1,4 @@
+import copy
 import sys
 import time
 from pathlib import Path
@@ -6,7 +7,7 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 from commonroad.common.file_reader import CommonRoadFileReader
 
-from src import bo, optimization, reach_flow
+from commonroad_criticality_enhancement import bo, optimization, reach_flow
 
 # Get the root directory (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -48,16 +49,15 @@ def run_comparison_pipeline(
     scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     print("Computing original drivable area...")
-    area_original = reach_flow.compute_drivable_area(scenario_path)
+    area_original = reach_flow.compute_drivable_area(scenario, planning_problem_set)
 
     print("\nRunning Gradient-Based Optimization (ECOS)...")
 
     start = time.time()
 
     params_gradient, area_gradient = optimization.optimize(
-        scenario,
-        planning_problem_set,
-        scenario_path,
+        copy.deepcopy(scenario),
+        copy.deepcopy(planning_problem_set),
         decision_variables=decision_variables,
         iterations=iterations,
         a_ref_input=a_ref_input,
@@ -67,7 +67,8 @@ def run_comparison_pipeline(
     print("\nRunning Bayesian Optimization ...")
     start_bo = time.time()
     bo_best_params, bo_area = bo.run_bo_multi_variable(
-        scenario_path=scenario_path,
+        copy.deepcopy(scenario),
+        copy.deepcopy(planning_problem_set),
         decision_variables=decision_variables,
         budget=budget,
     )

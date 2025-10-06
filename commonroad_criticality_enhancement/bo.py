@@ -1,6 +1,6 @@
+import logging
 from typing import List, Tuple
 
-from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.scenario import Scenario
 from numpy import ndarray
@@ -10,10 +10,11 @@ from skopt.space import Real
 from .file_modification import apply_variables_to_scenario
 from .reach_flow import compute_drivable_area
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def objective_multi_var(
     scenario: Scenario,
-    path: str,
     planning_problem_set: PlanningProblemSet,
     params: List[float],
     decision_variables: List[Tuple[str, str]],
@@ -26,9 +27,6 @@ def objective_multi_var(
     ----------
     scenario : Scenario
         The CommonRoad scenario.
-
-    path : str
-        The path of the scenario.
 
     planning_problem_set : PlanningProblemSet
         The associated planning problem set.
@@ -48,20 +46,19 @@ def objective_multi_var(
         The drivable area (we are minimizing it).
     """
     try:
-        updated_scenario_path = apply_variables_to_scenario(
-            scenario, path, planning_problem_set, params, decision_variables, sa=False
-        )
-        area = compute_drivable_area(updated_scenario_path)
+        apply_variables_to_scenario(scenario, planning_problem_set, params, decision_variables, sa=False)
+        area = compute_drivable_area(scenario, planning_problem_set)
         total_squared_area = (sum(area) - a_ref) ** 2
         return total_squared_area
     except Exception as e:
-        print(f"Area for this value could not be computed. {e} Returning 1e20 for this value.")
+        _LOGGER.error(f"Area for this value could not be computed. {e} Returning 1e20 for this value.")
         # Return a value for the area bigger than the other values, so this infeasible parameter will not be used for further sampling
         return 1e20
 
 
 def run_bo_multi_variable(
-    scenario_path: str,
+    scenario: Scenario,
+    planning_problem_set: PlanningProblemSet,
     decision_variables: List[Tuple[str, str]],
     budget: int = 100,
     a_ref: float = 1.0,
@@ -69,6 +66,8 @@ def run_bo_multi_variable(
 ) -> Tuple[List[float], ndarray]:
     """
     Runs Bayesian Optimization over multiple decision variables to minimize drivable area.
+
+    Modifies the scenario in place.
 
     Parameters
     ----------
@@ -95,8 +94,6 @@ def run_bo_multi_variable(
     best_area : ndarray
         The minimized drivable area array.
     """
-
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
 
     # Compute bounds based on decision variables
     space = []
@@ -136,17 +133,13 @@ def run_bo_multi_variable(
 
     # Prepare the objective function
     def wrapped_objective(params):
-        return objective_multi_var(
-            scenario, scenario_path, planning_problem_set, params, expanded_decision_variables, a_ref
-        )
+        return objective_multi_var(scenario, planning_problem_set, params, expanded_decision_variables, a_ref)
 
     # Run Gaussian Process-based Bayesian Optimization
     result = gp_minimize(wrapped_objective, space, n_calls=budget, random_state=42, verbose=False, callback=callback)
 
     # Apply the best parameters
     best_params = result.x
-    updated_scenario_path = apply_variables_to_scenario(
-        scenario, scenario_path, planning_problem_set, best_params, expanded_decision_variables, sa=False
-    )
-    best_area = compute_drivable_area(updated_scenario_path)
+    apply_variables_to_scenario(scenario, planning_problem_set, best_params, expanded_decision_variables)
+    best_area = compute_drivable_area(scenario, planning_problem_set)
     return best_params, best_area
