@@ -5,23 +5,17 @@ stages:
   - test
   - deploy
 
-before_script:
+before_script: &default_before_script
   - apt-get update
   - apt-get install -y libgl1
   - pip install poetry
   - poetry config virtualenvs.in-project true
-  - poetry config http-basic.cr_reach_flow-gitlab gitlab-ci-token $CI_JOB_TOKEN
-  - poetry config http-basic.commonroad_cpp-gitlab gitlab-ci-token $CI_JOB_TOKEN
   - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
   - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
-  # if job is triggered by a schedule, run poetry update to update dependencies
-  - if [ "$CI_PIPELINE_SOURCE" == "schedule" ]; then poetry update; fi
-  - poetry install -vvv --extras tests
-  - source .venv/bin/activate
 
 .run_test_with_coverage: &run_test_with_coverage
-  - coverage run tests/test_basic.py
-  - coverage report -m || true
+  - poetry run coverage run tests/test_basic.py
+  - poetry run coverage report -m || true
 
 ## linting
 pre_commit:
@@ -38,6 +32,9 @@ test_python_versions:
   parallel:
     matrix:
       - PYTHON_VERSIONS: [ "3.10" ]
+  before_script:
+    - *default_before_script
+    - poetry install --extras tests
   script:
     - *run_test_with_coverage
 
@@ -45,21 +42,22 @@ test_python_versions:
 # deploy
 pages:
   # push the latest documentation of the main branch to the Gitlab pages.
-  # available at https://cps.pages.gitlab.lrz.de/commonroad/commonroad-template
+  # available at https://cps.pages.gitlab.lrz.de/commonroad/criticality-enhancement
   stage: deploy
-  # when: manual
   only:
     - dev
   publish: site
+  before_script:
+    - *default_before_script
+    - poetry install --extras docs
   script:
-    - poetry install --with docs
     - mkdocs build
   artifacts:
     paths:
       - site
   environment:
     name: Gitlab Pages
-    url: https://cps.pages.gitlab.lrz.de/commonroad/commonroad-template
+    url: https://cps.pages.gitlab.lrz.de/commonroad/criticality-enhancement
 
 build_and_push_to_pypi_test:
   stage: deploy
