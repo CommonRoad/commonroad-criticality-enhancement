@@ -1,6 +1,6 @@
 # CommonRoad Criticality Enhancement
 
-CommonRoad Criticality Enhancement is a toolbox to increase the criticality of CommonRoad scenario by reducing the drivable area.
+CommonRoad Criticality Enhancement is a toolbox to increase the criticality of CommonRoad scenarios by reducing their drivable area.
 
 ## Quick Start
 
@@ -24,14 +24,9 @@ $ poetry install
 The `tutorials/` folder contains several scripts to get started with the functionality of this project. The scripts can be executed like so:
 
 ```
-poetry run python tutorials/compare_all.py.py
+poetry run python tutorials/compare_all.py
 ```
 
 ## Supported Criticality Enhancement Methods
 
-Currently, the program supports gradient-based optimization, simulated annealing, and Bayesian optimization to adjust ego vehicle's velocity and position.
-
-## Documentation
-
-The full documentation can be found at [cps.pages.gitlab.lrz.de/commonroad/criticality-enhancement](https://cps.pages.gitlab.lrz.de/commonroad/criticality-enhancement/).
-
+Currently, the program supports gradient-based optimization, simulated annealing, and Bayesian optimization to adjust the ego vehicle's velocity and position.
