@@ -51,7 +51,7 @@ pages:
     - *default_before_script
     - poetry install --extras docs
   script:
-    - mkdocs build
+    - poetry run mkdocs build
   artifacts:
     paths:
       - site
