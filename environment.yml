@@ -1,0 +1,40 @@
+name: myenv
+channels:
+- conda-forge
+- defaults
+dependencies:
+- python=3.10
+- cvxpy
+- pip
+- ecos
+# for running the pre-commits
+- pre-commit
+# dependencies for commonroad-reach-flow
+- spot
+- boost
+- eigen
+- yaml-cpp
+- spdlog
+- pybind11
+- gtest
+- gcc_linux-64=10.4.0
+- gxx_linux-64=10.4.0
+- scikit-optimize
+- scipy
+- pytest
+# for documentation
+- mkdocs
+- mkdocs-material
+- mkdocstrings
+- mkdocstrings-python
+- pip:
+  - commonroad-clcs==2025.1.1
+  - commonroad-drivability-checker==2024.1
+  - commonroad-io==2024.3
+  - commonroad-route-planner==2024.1.1
+  - commonroad-vehicle-models==3.0.2
+  - matplot2tikz
+
+# **IMPORTANT**
+# NOTE: This script lists all project dependencies file for creating a conda environment.
+# conda command to create the environment: conda env create -f environment.yml

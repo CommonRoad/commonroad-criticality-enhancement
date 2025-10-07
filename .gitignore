@@ -1,6 +1,9 @@
 .idea
+.log
 __pycache__
 site
+outputs
 *.pyc
 public
 .coverage
+.vscode

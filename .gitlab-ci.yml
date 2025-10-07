@@ -1,23 +1,70 @@
-build-job:
-  stage: build
-  script:
-    - echo "Hello, $GITLAB_USER_LOGIN!"
+image: python:3.10
 
-test-job1:
+stages:
+  - linting
+  - test
+  - deploy
+
+before_script: &default_before_script
+  - apt-get update
+  - apt-get install -y libgl1
+  - pip install poetry
+  - poetry config virtualenvs.in-project true
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de".insteadOf "ssh://git@gitlab.lrz.de"
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
+
+.run_test_with_coverage: &run_test_with_coverage
+  - poetry run coverage run tests/test_basic.py
+  - poetry run coverage report -m || true
+
+## linting
+pre_commit:
+  stage: linting
+  before_script:
+    - pip install pre-commit
+  script:
+    - pre-commit run --all-files --show-diff-on-failure
+
+## test
+test_python_versions:
   stage: test
+  image: python:$PYTHON_VERSIONS
+  parallel:
+    matrix:
+      - PYTHON_VERSIONS: [ "3.10" ]
+  before_script:
+    - *default_before_script
+    - poetry install --extras tests
   script:
-    - echo "This job tests something"
+    - *run_test_with_coverage
 
-test-job2:
-  stage: test
-  script:
-    - echo "This job tests something, but takes more time than test-job1."
-    - echo "After the echo commands complete, it runs the sleep command for 20 seconds"
-    - echo "which simulates a test that runs 20 seconds longer than test-job1"
-    - sleep 20
 
-deploy-prod:
+# deploy
+pages:
+  # push the latest documentation of the main branch to the Gitlab pages.
+  # available at https://cps.pages.gitlab.lrz.de/commonroad/criticality-enhancement
   stage: deploy
+  only:
+    - dev
+  publish: site
+  before_script:
+    - *default_before_script
+    - poetry install --extras docs
   script:
-    - echo "This job deploys something from the $CI_COMMIT_BRANCH branch."
-  environment: production
+    - poetry run mkdocs build
+  artifacts:
+    paths:
+      - site
+  environment:
+    name: Gitlab Pages
+    url: https://cps.pages.gitlab.lrz.de/commonroad/criticality-enhancement
+
+build_and_push_to_pypi_test:
+  stage: deploy
+  when: manual
+  only:
+    - main
+  script:
+    - poetry config repositories.test https://test.pypi.org/legacy/  # skip for official pypi
+    - poetry build
+    - poetry publish --repository test -u __token__ -p ${CR_PYPI_TEST_API_TOKEN}  # use ${CR_PYPI_RELEASE_API_TOKEN} for official pypi
